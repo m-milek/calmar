@@ -1,11 +1,10 @@
 use std::io::{self, Write};
-use std::process;
-mod help;
 mod event;
+mod help;
 
-pub fn run(){
-	let mut input = String::new();
-	loop {
+pub fn run() {
+    let mut input = String::new();
+    loop {
         input.clear();
         print!("[calmar] ");
         io::stdout().flush().expect("Failed to flush stdout");
@@ -15,7 +14,7 @@ pub fn run(){
         input.pop(); // pops the newline character '\n'
         match &input as &str {
             "" => (),
-            "exit" => process::exit(0),
+            "exit" => break,
             "help" => help::print_help(),
             _ => println!("Undefined command"),
         }
