@@ -1,6 +1,6 @@
 use chrono::{DateTime, Duration, Local};
 
-struct Event {
+pub struct Event {
     name: String,
     start: DateTime<Local>,
     duration: Duration,
