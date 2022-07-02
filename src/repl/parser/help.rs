@@ -1,10 +1,19 @@
+use colored::*;
+
 pub fn print_help() {
     println!(
-        "
-List of available commands:
-- show (s)
-- new (n)
-- remove (r)
 "
-    );
+The list of available commands:
+
+{}, {} -- display events or calendars
+{}, {} -- create events or calendars
+{}, {} -- remove specified events or calendars
+
+Type \"help\" followed by command name for full documentation.
+",
+
+"show".bold(), "sho, sh, s".dimmed(),
+"new".bold(), "ne, n".dimmed(),
+"remove".bold(), "rem, re, r".dimmed());
 }
+
