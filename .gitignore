@@ -1,1 +1,4 @@
+# Ignore rust build files
 /target
+# Ignore backup files created by GNU Emacs
+*~

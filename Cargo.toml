@@ -14,3 +14,4 @@ edition = "2021"
 [dependencies]
 chrono = "0.4.19"
 home = "0.5.3"
+colored = "2.0.0"
