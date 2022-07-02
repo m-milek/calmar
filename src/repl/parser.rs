@@ -160,7 +160,11 @@ pub fn new_calendar(name: String) {
         false => match fs::create_dir(&calmar_dir) {
             Ok(_) => (),
             Err(err) => {
-                println!("Failed to create directory {}\n{}", calmar_dir.display(), err);
+                println!(
+                    "Failed to create directory {}\n{}",
+                    calmar_dir.display(),
+                    err
+                );
                 return ();
             }
         },
