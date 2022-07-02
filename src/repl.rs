@@ -1,5 +1,5 @@
 use std::io::{self, Write};
-mod parser;
+pub mod parser;
 
 fn get_input() -> String {
     let mut input = String::new();

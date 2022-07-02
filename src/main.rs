@@ -1,6 +1,6 @@
 mod event;
 mod repl;
-mod verifier;
+mod validator;
 
 fn main() {
     repl::run();
