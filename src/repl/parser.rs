@@ -7,6 +7,10 @@ use std::fs;
 use std::fs::File;
 use std::path::Path;
 
+/*
+Get all data necessary to construct a valid Event object and return an Event.
+Validate all input and ask for it until it's valid
+*/
 pub fn get_new_event() -> Event {
     println!("Getting new event data...");
 
@@ -133,10 +137,21 @@ pub fn get_new_event() -> Event {
     }
 }
 
+/*
+Given 'name' of a new calendar, the function gets the home directory,
+verifies the existence of a $HOME/.calmar directory,
+creates a JSON file with the given 'name' under $HOME/.calmar.
+If file named 'name' already exists, it asks the user for confirmation.
+*/
 pub fn new_calendar(name: String) {
+    //TODO: check if the calendar already exists and ask user for a confirmation or refusal
+
     let mut calmar_dir = match home::home_dir() {
-        Some(calmar_dir) => calmar_dir,
-        None => panic!("Failed to acquire home dir"),
+        Some(dir) => dir,
+        None => {
+            println!("Failed to acquire home dir");
+            return ();
+        }
     };
     calmar_dir.push(".calmar");
 
@@ -144,18 +159,31 @@ pub fn new_calendar(name: String) {
         true => (),
         false => match fs::create_dir(&calmar_dir) {
             Ok(_) => (),
-            Err(_) => panic!("Failed to create directory {}", calmar_dir.display()),
+            Err(err) => {
+                println!("Failed to create directory {}\n{}", calmar_dir.display(), err);
+                return ();
+            }
         },
     }
 
     match File::create(calmar_dir.join(name).with_extension("json")) {
         Ok(_) => (),
-        Err(_) => panic!("Failed to create file"),
+        Err(err) => {
+            println!("Failed to create file\n{}", err);
+            return ();
+        }
     }
 
-    println!("I have created a calendar");
+    println!(
+        "Successfully created a new calendar at {}",
+        calmar_dir.display()
+    );
 }
 
+/*
+Accepts and splits input into an array of string slices.
+Then the function matches words in the input in order to call appropriate functions.
+*/
 pub fn parse(input: String) {
     let split_input: Vec<&str> = input.split_whitespace().collect();
     match split_input[0] {
@@ -164,8 +192,8 @@ pub fn parse(input: String) {
             "calendar" => new_calendar(split_input[2].to_owned()),
             _ => println!("Unknown command. What do you want to create? [event/calendar]"),
         },
-        "remove" | "r" => println!("REMOVE"),
-        "show" | "s" => println!("SHOW"),
+        "remove" | "r" => todo!(),
+        "show" | "s" => todo!(),
         "exit" | "e" => std::process::exit(0),
         "help" | "h" => help::print_help(),
         _ => println!("Unknown command"),
