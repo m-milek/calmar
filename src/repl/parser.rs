@@ -188,18 +188,72 @@ pub fn new_calendar(name: String) {
 Accepts and splits input into an array of string slices.
 Then the function matches words in the input in order to call appropriate functions.
 */
+fn yesno(text: &str) -> bool {
+    match text.to_lowercase().as_str() {
+        "yes"|"y" => true,
+	_ => false
+    }
+}
+fn new(args: &Vec<&str>) {
+    let questions = ["Type [event/calendar]: ", "Name: "];
+    let mut entry_type: String;
+    let mut name: String;
+    let mut i = 0; // Determines the currently processed property
+    for arg in args.iter(){
+        match i {
+	0 => (),
+	1 => {
+        match arg.to_lowercase().as_str() {
+	    "" => {
+	        i-=1;
+		break;
+	    },
+            "event"|"calendar" => {
+	        entry_type = arg.to_string();
+            }
+            _ => {
+                println!("Incorrect type of new entry: {}", arg);
+                println!("Do you want to try again in interactive mode? [y/n]");
+		let mut input;
+		input = get_input();
+		if !yesno(&input) {
+                    return ()
+		}
+                i -=1;
+		break;
+            }
+        }},
+	2 => {
+            match arg.to_lowercase().as_str() {
+	    "" => {
+	        i-=1;
+		break;
+	    },
+            _ => name = arg.to_string()
+	    }
+	},
+	_ => println!("Received too many arguments!")
+	}
+        i += 1;
+    }
+    let mut input;
+    while i < questions.len() {
+        print!("{}", questions[i]);
+	input = get_input();
+	println!("Now we should process the input");
+        i += 1;
+    }
+    // To use: new_calendar(split_input[2].to_owned());
+}
 pub fn parse(input: String) {
-    let split_input: Vec<&str> = input.split_whitespace().collect();
-    match split_input[0] {
-        "new" | "n" => match split_input[1] {
-            "event" => todo!(),
-            "calendar" => new_calendar(split_input[2].to_owned()),
-            _ => println!("Unknown command. What do you want to create? [event/calendar]"),
-        },
-        "remove" | "r" => todo!(),
-        "show" | "s" => todo!(),
-        "exit" | "e" => std::process::exit(0),
-        "help" | "h" => help::print_help(),
+    let mut split_input: Vec<&str> = input.split_whitespace().collect();
+    split_input.push("");
+    match split_input[0].to_lowercase().as_str() {
+        "new"|"ne"|"n" => new(&split_input),
+        "remove"|"rem"|"re"|"r" => todo!(),
+        "show"|"sho"|"sh"|"s" => todo!(),
+        "exit"|"ex"|"e" => std::process::exit(0),
+        "help"|"hel"|"he"|"h" => help::print_help(split_input[1]),
         _ => println!("Unknown command"),
     }
 }
