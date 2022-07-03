@@ -6,16 +6,20 @@ pub fn print_help(arg: &str) {
         println!(
         "
         The list of available commands:
-
+	
+	{}, {} -- print this information or command documentation
         {}, {} -- display events or calendars
         {}, {} -- create events or calendars
         {}, {} -- remove specified events or calendars
+	{}, {} -- exit the program
 
         Type \"help\" followed by command name for full documentation.
         ",
+	"help".bold(), "hel, he, h".dimmed(),
         "show".bold(), "sho, sh, s".dimmed(),
         "new".bold(), "ne, n".dimmed(),
-        "remove".bold(), "rem, re, r".dimmed());
+        "remove".bold(), "rem, re, r".dimmed(),
+	"exit".bold(), "ex, e".dimmed());
     },
     "show"|"sho"|"sh"|"s" => {
         println!(
