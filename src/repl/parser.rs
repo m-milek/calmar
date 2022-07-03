@@ -144,7 +144,6 @@ creates a JSON file with the given 'name' under $HOME/.calmar.
 If file named 'name' already exists, it asks the user for confirmation.
 */
 pub fn new_calendar(name: String) {
-
     let mut calmar_dir = match home::home_dir() {
         Some(dir) => dir,
         None => {
@@ -169,23 +168,23 @@ pub fn new_calendar(name: String) {
         },
     }
 
-	match Path::new(&calmar_dir.join(&name).with_extension("json")).exists(){
-		true => {
-			print!("A calendar by that name already exists. Overwrite it with an empty file?\nThis will cause complete loss of data. [y/N]: ");
-			match get_input().trim().to_lowercase().as_str() {
-			    "y"|"yes" => (),
-				"n"|"no" => {
-					println!("Aborting...");
-					return ()
-				},
-				_ => {
-					println!("Invalid option, aborting...");
-					return ()
-				}
-			}
-		},
-		false => ()
-	}
+    match Path::new(&calmar_dir.join(&name).with_extension("json")).exists() {
+        true => {
+            print!("A calendar by that name already exists. Overwrite it with an empty file?\nThis will cause complete loss of data. [y/N]: ");
+            match get_input().trim().to_lowercase().as_str() {
+                "y" | "yes" => (),
+                "n" | "no" => {
+                    println!("Aborting...");
+                    return ();
+                }
+                _ => {
+                    println!("Invalid option, aborting...");
+                    return ();
+                }
+            }
+        }
+        false => (),
+    }
 
     match File::create(calmar_dir.join(&name).with_extension("json")) {
         Ok(_) => (),
@@ -197,7 +196,8 @@ pub fn new_calendar(name: String) {
 
     println!(
         "Successfully created a new calendar named {} in {}",
-        name, calmar_dir.display()
+        name,
+        calmar_dir.display()
     );
 }
 
@@ -207,8 +207,8 @@ Then the function matches words in the input in order to call appropriate functi
 */
 fn yesno(text: &str) -> bool {
     match text.to_lowercase().as_str() {
-        "yes"|"y" => true,
-	_ => false
+        "yes" | "y" => true,
+        _ => false,
     }
 }
 fn new(args: &Vec<&str>) {
@@ -216,48 +216,45 @@ fn new(args: &Vec<&str>) {
     let mut entry_type: String;
     let mut name: String;
     let mut i = 0; // Determines the currently processed property
-    for arg in args.iter(){
+    for arg in args.iter() {
         match i {
-	0 => (),
-	1 => {
-        match arg.to_lowercase().as_str() {
-	    "" => {
-	        i-=1;
-		break;
-	    },
-            "event"|"calendar" => {
-	        entry_type = arg.to_string();
-            }
-            _ => {
-                println!("Incorrect type of new entry: {}", arg);
-                println!("Do you want to try again in interactive mode? [y/n]");
-		let mut input;
-		input = get_input();
-		if !yesno(&input) {
-                    return ()
-		}
-                i -=1;
-		break;
-            }
-        }},
-	2 => {
-            match arg.to_lowercase().as_str() {
-	    "" => {
-	        i-=1;
-		break;
-	    },
-            _ => name = arg.to_string()
-	    }
-	},
-	_ => println!("Received too many arguments!")
-	}
+            0 => (),
+            1 => match arg.trim().to_lowercase().as_str() {
+                "" => {
+                    i -= 1;
+                    break;
+                }
+                "event" | "calendar" => {
+                    entry_type = arg.to_string();
+                }
+                _ => {
+                    println!("Incorrect type of new entry: {}", arg);
+                    println!("Do you want to try again in interactive mode? [y/n]");
+                    let mut input;
+                    input = get_input();
+                    if !yesno(&input) {
+                        return ();
+                    }
+                    i -= 1;
+                    break;
+                }
+            },
+            2 => match arg.trim().to_lowercase().as_str() {
+                "" => {
+                    i -= 1;
+                    break;
+                }
+                _ => name = arg.trim().to_string(),
+            },
+            _ => println!("Received too many arguments!"),
+        }
         i += 1;
     }
     let mut input;
     while i < questions.len() {
         print!("{}", questions[i]);
-	input = get_input();
-	println!("Now we should process the input");
+        input = get_input();
+        println!("Now we should process the input");
         i += 1;
     }
     // To use: new_calendar(split_input[2].to_owned());
@@ -265,12 +262,12 @@ fn new(args: &Vec<&str>) {
 pub fn parse(input: String) {
     let mut split_input: Vec<&str> = input.split_whitespace().collect();
     split_input.push("");
-    match split_input[0].to_lowercase().as_str() {
-        "new"|"ne"|"n" => new(&split_input),
-        "remove"|"rem"|"re"|"r" => todo!(),
-        "show"|"sho"|"sh"|"s" => todo!(),
-        "exit"|"ex"|"e" => std::process::exit(0),
-        "help"|"hel"|"he"|"h" => help::print_help(split_input[1]),
+    match split_input[0].trim().to_lowercase().as_str() {
+        "new" | "ne" | "n" => new(&split_input),
+        "remove" | "rem" | "re" | "r" => todo!(),
+        "show" | "sho" | "sh" | "s" => todo!(),
+        "exit" | "ex" | "e" => std::process::exit(0),
+        "help" | "hel" | "he" | "h" => help::print_help(split_input[1]),
         _ => println!("Unknown command"),
     }
 }
