@@ -144,7 +144,6 @@ creates a JSON file with the given 'name' under $HOME/.calmar.
 If file named 'name' already exists, it asks the user for confirmation.
 */
 pub fn new_calendar(name: String) {
-    //TODO: check if the calendar already exists and ask user for a confirmation or refusal
 
     let mut calmar_dir = match home::home_dir() {
         Some(dir) => dir,
@@ -170,7 +169,25 @@ pub fn new_calendar(name: String) {
         },
     }
 
-    match File::create(calmar_dir.join(name).with_extension("json")) {
+	match Path::new(&calmar_dir.join(&name).with_extension("json")).exists(){
+		true => {
+			print!("A calendar by that name already exists. Overwrite it with an empty file?\nThis will cause complete loss of data. [y/N]: ");
+			match get_input().trim().to_lowercase().as_str() {
+			    "y"|"yes" => (),
+				"n"|"no" => {
+					println!("Aborting...");
+					return ()
+				},
+				_ => {
+					println!("Invalid option, aborting...");
+					return ()
+				}
+			}
+		},
+		false => ()
+	}
+
+    match File::create(calmar_dir.join(&name).with_extension("json")) {
         Ok(_) => (),
         Err(err) => {
             println!("Failed to create file\n{}", err);
@@ -179,8 +196,8 @@ pub fn new_calendar(name: String) {
     }
 
     println!(
-        "Successfully created a new calendar at {}",
-        calmar_dir.display()
+        "Successfully created a new calendar named {} in {}",
+        name, calmar_dir.display()
     );
 }
 
