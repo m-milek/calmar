@@ -1,6 +1,7 @@
 mod event;
 mod repl;
 mod validator;
+mod test;
 
 fn main() {
     repl::run();
