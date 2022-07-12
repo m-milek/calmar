@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::validator::validate_date;
+    use crate::validator::{validate_date, validate_time};
     #[test]
     fn standard_date() {
         assert_eq!(true, validate_date("21/12/2022"));
@@ -63,5 +63,28 @@ mod tests {
         assert_eq!(true, validate_date("29/02/2028"));
         assert_eq!(true, validate_date("29/02/2032"));
         assert_eq!(true, validate_date("29/02/2036"));
+    }
+    #[test]
+    fn standard_time() {
+        assert_eq!(true, validate_time("15:30"));
+        assert_eq!(true, validate_time("00:30"));
+        assert_eq!(true, validate_time("01:30"));
+        assert_eq!(true, validate_time("01:00"));
+    }
+    #[test]
+    fn invalid_hour() {
+        assert_eq!(true, validate_time("21:30"));
+        assert_eq!(false, validate_time("25:30"));
+        assert_eq!(false, validate_time("100:30"));
+        assert_eq!(false, validate_time("1g:30"));
+        assert_eq!(false, validate_time("24:30"));
+    }
+    #[test]
+    fn invalid_minutes() {
+        assert_eq!(true, validate_time("22:15"));
+        assert_eq!(false, validate_time("22:1f"));
+        assert_eq!(false, validate_time("10:70"));
+        assert_eq!(false, validate_time("12:000"));
+        assert_eq!(false, validate_time("14:64"));
     }
 }
