@@ -18,9 +18,9 @@ mod tests {
 		assert_eq!(false, validate_date("01/00/0000"));
 		assert_eq!(false, validate_date("01/02/0000"));
 		assert_eq!(false, validate_date("01/02/0001"));
-		assert_eq!(false, validate_date("01/02/2021"));
-		assert_eq!(false, validate_date("01/12/2021"));
-		assert_eq!(false, validate_date("11/12/2021"));
+		assert_eq!(true, validate_date("01/02/2021"));
+		assert_eq!(true, validate_date("01/12/2021"));
+		assert_eq!(true, validate_date("11/12/2021"));
 	}
 	#[test]
 	fn invalid_day(){
