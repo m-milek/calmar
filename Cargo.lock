@@ -35,6 +35,7 @@ dependencies = [
  "chrono",
  "colored",
  "home",
+ "lazy_static",
  "regex",
 ]
 
