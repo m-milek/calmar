@@ -1,7 +1,5 @@
 use regex::Regex;
 
-use crate::CONFIG;
-
 fn is_numeric(string: &str) -> bool {
     for char in string.chars() {
         if !char.is_numeric() {

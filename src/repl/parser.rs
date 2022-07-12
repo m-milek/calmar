@@ -11,11 +11,16 @@ use std::path::Path;
 Get all data necessary to construct a valid Event object and return an Event.
 Validate all input and ask for it until it's valid
 */
-pub fn get_new_event() -> Event {
+pub fn get_new_event(name: Option<String>) -> Event {
     println!("Getting new event data...");
 
-    print!("Name: ");
-    let name = get_input();
+    let name = match name {
+        Some(name) => name,
+        None => {
+            print!("Name: ");
+            get_input()
+        }
+    };
 
     print!("Start date: ");
     let mut start_date = get_input();
@@ -29,7 +34,7 @@ pub fn get_new_event() -> Event {
 
     print!("Start time: ");
     let mut start_time = get_input();
-    while !validate_date(&start_time) {
+    while !validate_time(&start_time) {
         println!("Entered time is not valid.");
         print!("Start time: ");
         start_time = get_input();
@@ -57,7 +62,7 @@ pub fn get_new_event() -> Event {
 
     print!("End time: ");
     let mut end_time = get_input();
-    while !validate_date(&end_time) {
+    while !validate_time(&end_time) {
         println!("Entered time is not valid.");
         print!("End time: ");
         end_time = get_input();
@@ -143,7 +148,7 @@ verifies the existence of a $HOME/.calmar directory,
 creates a JSON file with the given 'name' under $HOME/.calmar.
 If file named 'name' already exists, it asks the user for confirmation.
 */
-pub fn new_calendar(name: String) {
+pub fn cal(name: String) {
     let mut calmar_dir = match home::home_dir() {
         Some(dir) => dir,
         None => {
@@ -211,63 +216,84 @@ fn yesno(text: &str) -> bool {
         _ => false,
     }
 }
-fn new(args: &Vec<&str>) {
-    let questions = ["Type [event/calendar]: ", "Name: "];
-    let mut entry_type: String;
-    let mut name: String;
-    let mut i = 0; // Determines the currently processed property
-    for arg in args.iter() {
-        match i {
-            0 => (),
-            1 => match arg.trim().to_lowercase().as_str() {
-                "" => {
-                    i -= 1;
-                    break;
-                }
-                "event" | "calendar" => {
-                    entry_type = arg.to_string();
-                }
-                _ => {
-                    println!("Incorrect type of new entry: {}", arg);
-                    println!("Do you want to try again in interactive mode? [y/n]");
-                    let mut input;
-                    input = get_input();
-                    if !yesno(&input) {
-                        return ();
-                    }
-                    i -= 1;
-                    break;
-                }
-            },
-            2 => match arg.trim().to_lowercase().as_str() {
-                "" => {
-                    i -= 1;
-                    break;
-                }
-                _ => name = arg.trim().to_string(),
-            },
-            _ => println!("Received too many arguments!"),
+
+// fn new(args: &Vec<&str>) {
+//     let questions = ["Type [event/calendar]: ", "Name: "];
+//     let mut entry_type: String;
+//     let mut name: String;
+//     let mut i = 0; // Determines the currently processed property
+//     for arg in args.iter() {
+//         match i {
+//             0 => (),
+//             1 => match arg.trim().to_lowercase().as_str() {
+//                 "" => {
+//                     i -= 1;
+//                     break;
+//                 }
+//                 "event" | "calendar" => {
+//                     entry_type = arg.to_string();
+//                 }
+//                 _ => {
+//                     println!("Incorrect type of new entry: {}", arg);
+//                     println!("Do you want to try again in interactive mode? [y/n]");
+//                     let mut input;
+//                     input = get_input();
+//                     if !yesno(&input) {
+//                         return ();
+//                     }
+//                     i -= 1;
+//                     break;
+//                 }
+//             },
+//             2 => match arg.trim().to_lowercase().as_str() {
+//                 "" => {
+//                     i -= 1;
+//                     break;
+//                 }
+//                 _ => name = arg.trim().to_string(),
+//             },
+//             _ => println!("Received too many arguments!"),
+//         }
+//         i += 1;
+//     }
+//     let mut input;
+//     while i < questions.len() {
+//         print!("{}", questions[i]);
+//         input = get_input();
+//         println!("Now we should process the input");
+//         i += 1;
+//     }
+//     // To use: new_calendar(split_input[2].to_owned());
+// }
+
+pub fn add(split_input: &Vec<&str>) {
+    let new_event: Event = match split_input.len() {
+        1 => get_new_event(None),
+        2 => get_new_event(Some(split_input[1].to_owned())),
+        _ => {
+            println!(
+                "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                split_input.len() - 1
+            ); // do not count "add" as an argument
+            return ();
         }
-        i += 1;
-    }
-    let mut input;
-    while i < questions.len() {
-        print!("{}", questions[i]);
-        input = get_input();
-        println!("Now we should process the input");
-        i += 1;
-    }
-    // To use: new_calendar(split_input[2].to_owned());
+    };
+    println!("{:?}", new_event);
 }
+
+pub fn remove() {}
+pub fn edit() {}
+pub fn removecal() {}
+
 pub fn parse(input: String) {
     let mut split_input: Vec<&str> = input.split_whitespace().collect();
-    split_input.push("");
+    // split_input.push("");
     match split_input[0].trim().to_lowercase().as_str() {
-        "new" | "ne" | "n" => new(&split_input),
-        "remove" | "rem" | "re" | "r" => todo!(),
-        "show" | "sho" | "sh" | "s" => todo!(),
-        "exit" | "ex" | "e" => std::process::exit(0),
-        "help" | "hel" | "he" | "h" => help::print_help(split_input[1]),
+        "add" | "a" => add(&split_input),
+        "remove" | "r" => todo!(),
+        "show" | "s" => todo!(),
+        "exit" | "e" => std::process::exit(0),
+        "help" | "h" => help::print_help(split_input[1]),
         _ => println!("Unknown command"),
     }
 }
