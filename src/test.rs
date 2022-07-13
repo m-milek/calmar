@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::validator::{validate_date, validate_time};
+    use crate::validator::{validate_date, validate_time, validate_duration};
+
+    // DATE TESTS
     #[test]
     fn standard_date() {
         assert_eq!(true, validate_date("21/12/2022"));
@@ -64,6 +66,8 @@ mod tests {
         assert_eq!(true, validate_date("29/02/2032"));
         assert_eq!(true, validate_date("29/02/2036"));
     }
+
+    // TIME TESTS
     #[test]
     fn standard_time() {
         assert_eq!(true, validate_time("15:30"));
@@ -87,4 +91,41 @@ mod tests {
         assert_eq!(false, validate_time("12:000"));
         assert_eq!(false, validate_time("14:64"));
     }
+
+    // DURATION TESTS
+    #[test]
+    fn invalid_format() {
+        assert_eq!(true, validate_duration("123days"));
+        assert_eq!(true, validate_duration("123 days"));
+        assert_eq!(true, validate_duration("123d"));
+        assert_eq!(true, validate_duration("123 d"));
+        assert_eq!(true, validate_duration("12min"));
+        assert_eq!(true, validate_duration("12 min"));
+        assert_eq!(true, validate_duration("12m"));
+        assert_eq!(true, validate_duration("12 m"));
+        assert_eq!(true, validate_duration("12minutes"));
+        assert_eq!(true, validate_duration("12 minutes"));
+        assert_eq!(true, validate_duration("12h"));
+        assert_eq!(true, validate_duration("12 h"));
+        assert_eq!(true, validate_duration("12hours"));
+        assert_eq!(true, validate_duration("12 hours"));
+        assert_eq!(false, validate_duration("-123d"));
+        assert_eq!(false, validate_duration("-123 d"));
+        assert_eq!(false, validate_duration("-123 min"));
+        assert_eq!(false, validate_duration("-123min"));
+        assert_eq!(false, validate_duration("-123 h"));
+        assert_eq!(false, validate_duration("-123h"));
+    }
+    // #[test]
+    // fn returned_value_minutes() {
+    //     assert_eq!(true, validate_duration("22:15"));
+    // }
+    // #[test]
+    // fn returned_value_hours() {
+    //     assert_eq!(true, validate_duration("22:15"));
+    // }
+    // #[test]
+    // fn returned_value_days() {
+    //     assert_eq!(true, validate_duration("22:15"));
+    // }
 }

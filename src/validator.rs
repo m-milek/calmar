@@ -70,13 +70,19 @@ pub fn validate_date(date_string: &str) -> bool {
 /*
 Verifies a duration
 Valid formats:
-1h
-1 h
-1min
+10h
+10 h
+10 hours
+10hours
+10min
 10 min
+1minutes
+10 minutes
+10 days
+10days
 */
 pub fn validate_duration(duration_string: &str) -> bool {
-    let re = Regex::new("^[0-9]+(min| +min|h| +h)$").unwrap();
+    let re = Regex::new("^[0-9]+(minutes| +minutes|min| +min|m| +m|h| +h|hours| +hours|d| +d|days| +days)$").unwrap();
     re.is_match(duration_string.trim())
 }
 
