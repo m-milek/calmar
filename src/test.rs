@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::validator::{validate_date, validate_time, validate_duration};
+    use crate::validator::{validate_date, validate_time, validate_duration, validate_difficulty, validate_priority};
 
     // DATE TESTS
     #[test]
@@ -12,9 +12,6 @@ mod tests {
         assert_eq!(true, validate_date("01/01/2000"));
         assert_eq!(true, validate_date("04/11/2000"));
         assert_eq!(true, validate_date("24/03/2000"));
-    }
-    #[test]
-    fn zeros() {
         assert_eq!(false, validate_date("00/00/0000"));
         assert_eq!(false, validate_date("01/00/0000"));
         assert_eq!(false, validate_date("01/02/0000"));
@@ -94,7 +91,7 @@ mod tests {
 
     // DURATION TESTS
     #[test]
-    fn invalid_format() {
+    fn duration_format_validation() {
         assert_eq!(true, validate_duration("123days"));
         assert_eq!(true, validate_duration("123 days"));
         assert_eq!(true, validate_duration("123d"));
@@ -116,16 +113,31 @@ mod tests {
         assert_eq!(false, validate_duration("-123 h"));
         assert_eq!(false, validate_duration("-123h"));
     }
-    // #[test]
-    // fn returned_value_minutes() {
-    //     assert_eq!(true, validate_duration("22:15"));
-    // }
-    // #[test]
-    // fn returned_value_hours() {
-    //     assert_eq!(true, validate_duration("22:15"));
-    // }
-    // #[test]
-    // fn returned_value_days() {
-    //     assert_eq!(true, validate_duration("22:15"));
-    // }
+
+    // DIFFICULTY TESTS
+    #[test]
+    fn invalid_difficulty_format(){
+        assert_eq!(true, validate_difficulty("2"));
+        assert_eq!(true, validate_difficulty("8"));
+        assert_eq!(true, validate_difficulty("0"));
+        assert_eq!(false, validate_difficulty("11"));
+        assert_eq!(false, validate_difficulty("-1"));
+        assert_eq!(false, validate_difficulty("-10"));
+        assert_eq!(false, validate_difficulty("d10"));
+        assert_eq!(false, validate_difficulty("1g0"));
+        assert_eq!(false, validate_difficulty(""));
+    }
+    // PRIORITY TESTS
+    #[test]
+    fn invalid_priority_format(){
+        assert_eq!(true, validate_priority("2"));
+        assert_eq!(true, validate_priority("8"));
+        assert_eq!(true, validate_priority("0"));
+        assert_eq!(false, validate_priority("11"));
+        assert_eq!(false, validate_priority("-1"));
+        assert_eq!(false, validate_priority("-10"));
+        assert_eq!(false, validate_priority("d10"));
+        assert_eq!(false, validate_priority("1g0"));
+        assert_eq!(false, validate_priority(""));
+    }
 }
