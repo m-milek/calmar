@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::validator::{validate_date, validate_time, validate_duration, validate_difficulty, validate_priority};
+    use crate::validator::{
+        validate_date, validate_difficulty, validate_duration, validate_priority, validate_time,
+    };
 
     // DATE TESTS
     #[test]
@@ -116,7 +118,7 @@ mod tests {
 
     // DIFFICULTY TESTS
     #[test]
-    fn invalid_difficulty_format(){
+    fn invalid_difficulty_format() {
         assert_eq!(true, validate_difficulty("2"));
         assert_eq!(true, validate_difficulty("8"));
         assert_eq!(true, validate_difficulty("0"));
@@ -129,7 +131,7 @@ mod tests {
     }
     // PRIORITY TESTS
     #[test]
-    fn invalid_priority_format(){
+    fn invalid_priority_format() {
         assert_eq!(true, validate_priority("2"));
         assert_eq!(true, validate_priority("8"));
         assert_eq!(true, validate_priority("0"));

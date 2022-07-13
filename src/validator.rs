@@ -82,7 +82,10 @@ Valid formats:
 10days
 */
 pub fn validate_duration(duration_string: &str) -> bool {
-    let re = Regex::new("^[0-9]+(minutes| +minutes|min| +min|m| +m|h| +h|hours| +hours|d| +d|days| +days)$").unwrap();
+    let re = Regex::new(
+        "^[0-9]+(minutes| +minutes|min| +min|m| +m|h| +h|hours| +hours|d| +d|days| +days)$",
+    )
+    .unwrap();
     re.is_match(duration_string.trim())
 }
 

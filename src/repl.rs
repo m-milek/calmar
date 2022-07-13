@@ -1,3 +1,4 @@
+use colored::Colorize;
 use std::io::{self, Write};
 pub mod parser;
 
@@ -24,7 +25,7 @@ Continously get input and handle it until the process ends
 pub fn run() {
     let mut input;
     loop {
-        print!("[calmar] ");
+        print!("{}", "[calmar] ".bold());
         input = get_input();
         match input.as_str() {
             "" => (),
