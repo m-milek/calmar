@@ -8,8 +8,7 @@ use std::fs::File;
 use std::path::Path;
 
 pub fn parse_into_date(input: &String) -> Date<Local> {
-    println!("{:?}", input);
-
+    
     if input.trim().is_empty() {
         return Local::now().date();
     }
@@ -27,10 +26,9 @@ pub fn parse_into_date(input: &String) -> Date<Local> {
 }
 
 pub fn parse_into_time(input: &String) -> NaiveTime {
-    println!("{:?}", input);
 
     if input.trim().is_empty() {
-        return Local::now().time();
+        return Local::now().time().with_second(0).unwrap();
     }
 
     let split_string: Vec<&str> = input.split(':').collect();
@@ -47,7 +45,11 @@ As of now, this only accepts input such as '3d', '40min' or '3h'
 Eventually, support for a format like '1:20h' should be added.
 */
 pub fn parse_into_duration(input: &String) -> Duration {
-    println!("{:?}", input);
+
+    if input.trim().is_empty() {
+	return Duration::zero();
+    }
+    
     let input_lower = &input.to_lowercase();
     
     match (input_lower.contains("d"), input_lower.contains("h"), input_lower.contains("m")){
@@ -108,24 +110,32 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
     let duration = parse_into_duration(&input);
 
-    print!("End date: ");
-    input = get_input();
-    while !validate_date(&input) {
-        println!("Entered date is not valid.");
-        print!("End date: ");
-        input = get_input();
-    }
-    let end_date = parse_into_date(&input);
+    let end_date;
+    let end_time;
+    if duration.is_zero() {
+	print!("End date: ");
+	input = get_input();
+	while !validate_date(&input) {
+            println!("Entered date is not valid.");
+            print!("End date: ");
+            input = get_input();
+	}
+	end_date = parse_into_date(&input);
     
-
-    print!("End time: ");
-    input = get_input();
-    while !validate_time(&input) {
-        println!("Entered time is not valid.");
-        print!("End time: ");
-        input = get_input();
+	print!("End time: ");
+	input = get_input();
+	while !validate_time(&input) {
+            println!("Entered time is not valid.");
+            print!("End time: ");
+            input = get_input();
+	}
+	end_time = parse_into_time(&input);
     }
-    let end_time = parse_into_time(&input);
+    else {
+	let end_timedate = start_date.and_time(start_time).unwrap() + duration;
+	end_date = end_timedate.date();
+	end_time = end_timedate.time();
+    }
 
     print!("Difficulty: ");
     input = get_input();
@@ -144,11 +154,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
         input = get_input();
     }
     let priority = input.parse().unwrap();
-
-    println!(
-        "{}\n{}\n{}\n{}\n{}\n{}\n{}",
-        name, start_time, duration, end_date, end_time, priority, difficulty
-    );
 
     Event {
         name,
