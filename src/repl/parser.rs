@@ -2,15 +2,74 @@ mod help;
 use crate::event::Event;
 use crate::repl::get_input;
 use crate::validator::*;
-use chrono::{Duration, Local, TimeZone};
+use chrono::{Date, DateTime, Duration, Local, NaiveTime, TimeZone, Timelike};
 use std::fs;
 use std::fs::File;
 use std::path::Path;
 
+pub fn parse_into_date(input: &String) -> Date<Local> {
+    println!("{:?}", input);
+
+    if input.trim().is_empty() {
+        return Local::now().date();
+    }
+
+    let split_string: Vec<&str> = input.split('/').collect();
+
+    let date = Local.ymd(
+        split_string[2].parse().expect("A number was given as year"),
+        split_string[1]
+            .parse()
+            .expect("A number was given as month"),
+        split_string[0].parse().expect("A number was given as day"),
+    );
+    return date;
+}
+
+pub fn parse_into_time(input: &String) -> NaiveTime {
+    println!("{:?}", input);
+
+    if input.trim().is_empty() {
+        return Local::now().time();
+    }
+
+    let split_string: Vec<&str> = input.split(':').collect();
+    return NaiveTime::from_hms(
+        split_string[0].parse().expect("A number was given as hour"),
+        split_string[1]
+            .parse()
+            .expect("A number was given as minute"),
+        0,
+    );
+}
+/*
+As of now, this only accepts input such as '3d', '40min' or '3h'
+Eventually, support for a format like '1:20h' should be added.
+*/
+pub fn parse_into_duration(input: &String) -> Duration {
+    println!("{:?}", input);
+    let input_lower = &input.to_lowercase();
+    
+    match (input_lower.contains("d"), input_lower.contains("h"), input_lower.contains("m")){
+	(true, false, false) => {
+	    // Duration has to be 'days'
+	    Duration::days(input_lower.split('d').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
+	}
+	(false, true, false) => {
+	    // Duration has to be 'hours'
+	    Duration::hours(input_lower.split('h').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
+	}
+	(false, false, true) => {
+	    Duration::minutes(input_lower.split('m').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
+	},
+	(_,_,_) => panic!("Error parsing duration. This error should be unreachable")
+    }
+}
+
 /*
 Get all data necessary to construct a valid Event object and return an Event.
 Validate all input and ask for it until it's valid
-*/
+ */
 pub fn get_new_event(name: Option<String>) -> Event {
     println!("Getting new event data...");
 
@@ -23,122 +82,81 @@ pub fn get_new_event(name: Option<String>) -> Event {
     };
 
     print!("Start date: ");
-    let mut start_date = get_input();
-    while !validate_date(&start_date) {
-        println!("Entered date is not valid.");
+    let mut input = get_input();
+    while !validate_date(&input) {
+        println!("{} is not a valid date.", input);
         print!("Start date: ");
-        start_date = get_input();
+        input = get_input();
     }
-    let split_start_date: Vec<&str> = start_date.split('/').collect();
-    println!("{:?}", split_start_date);
+    let start_date = parse_into_date(&input);
 
     print!("Start time: ");
-    let mut start_time = get_input();
-    while !validate_time(&start_time) {
+    input = get_input();
+    while !validate_time(&input) {
         println!("Entered time is not valid.");
         print!("Start time: ");
-        start_time = get_input();
+        input = get_input();
     }
-    let split_start_time: Vec<&str> = start_time.split(':').collect();
-    println!("{:?}", split_start_time);
+    let start_time = parse_into_time(&input);
 
     print!("Duration: ");
-    let mut duration = get_input();
-    while !validate_duration(&duration) {
+    input = get_input();
+    while !validate_duration(&input) {
         println!("Entered duration is not valid.");
         print!("Duration: ");
-        duration = get_input();
+        input = get_input();
     }
+    let duration = parse_into_duration(&input);
 
     print!("End date: ");
-    let mut end_date = get_input();
-    while !validate_date(&end_date) {
+    input = get_input();
+    while !validate_date(&input) {
         println!("Entered date is not valid.");
         print!("End date: ");
-        end_date = get_input();
+        input = get_input();
     }
-    let split_end_date: Vec<&str> = end_date.split('/').collect();
-    println!("{:?}", split_end_date);
+    let end_date = parse_into_date(&input);
+    
 
     print!("End time: ");
-    let mut end_time = get_input();
-    while !validate_time(&end_time) {
+    input = get_input();
+    while !validate_time(&input) {
         println!("Entered time is not valid.");
         print!("End time: ");
-        end_time = get_input();
+        input = get_input();
     }
-    let split_end_time: Vec<&str> = end_time.split(':').collect();
-    println!("{:?}", split_end_time);
+    let end_time = parse_into_time(&input);
 
     print!("Difficulty: ");
-    let mut difficulty = get_input();
-    while !validate_difficulty(&difficulty) {
+    input = get_input();
+    while !validate_difficulty(&input) {
         println!("Entered difficulty is not valid.");
         print!("Difficulty: ");
-        difficulty = get_input();
+        input = get_input();
     }
+    let difficulty = input.parse().unwrap();
 
     print!("Priority: ");
-    let mut priority = get_input();
-    while !validate_priority(&priority) {
+    input = get_input();
+    while !validate_priority(&input) {
         println!("Entered priority is not valid.");
         print!("Priority: ");
-        priority = get_input();
+        input = get_input();
     }
+    let priority = input.parse().unwrap();
 
     println!(
-        "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}",
-        name, start_date, start_time, duration, end_date, end_time, priority, difficulty
+        "{}\n{}\n{}\n{}\n{}\n{}\n{}",
+        name, start_time, duration, end_date, end_time, priority, difficulty
     );
 
     Event {
-        name: name,
-        start: Local
-            .ymd(
-                split_start_date[2].trim().parse().expect("Wanted a number"),
-                split_start_date[1].trim().parse().expect("Wanted a number"),
-                split_start_date[0].trim().parse().expect("Wanted a number"),
-            )
-            .and_hms(
-                split_start_time[0].trim().parse().expect("Wanted a number"),
-                split_start_time[1].trim().parse().expect("Wanted a number"),
-                0,
-            ),
-        duration: Duration::hours(1),
-        end: Local
-            .ymd(
-                split_end_date[2]
-                    .trim()
-                    .parse()
-                    .expect("Wanted a number as year"),
-                split_end_date[1]
-                    .trim()
-                    .parse()
-                    .expect("Wanted a number as month"),
-                split_end_date[0]
-                    .trim()
-                    .parse()
-                    .expect("Wanted a number as day"),
-            )
-            .and_hms(
-                split_end_time[0]
-                    .trim()
-                    .parse()
-                    .expect("Wanted a number as hour"),
-                split_end_time[1]
-                    .trim()
-                    .parse()
-                    .expect("Wanted a number as minute"),
-                0,
-            ),
-        priority: priority
-            .trim()
-            .parse()
-            .expect("Wanted a number as priority"),
-        difficulty: difficulty
-            .trim()
-            .parse()
-            .expect("Wanted a number as difficulty"),
+        name,
+        start: start_date.and_time(start_time).unwrap(),
+        duration,
+        end: end_date.and_time(end_time).unwrap(),
+        priority,
+        difficulty,
     }
 }
 
@@ -294,7 +312,7 @@ pub fn parse(input: String) {
         "add" | "a" => add(&split_input),
         "cal" | "c" => cal(&split_input),
         "edit" | "e" => edit(&split_input),
-        "help" | "h" => help::print_help(split_input[1]),
+        "help" | "h" => help::print_help(split_input[0]),
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "show" | "s" => show(&split_input),

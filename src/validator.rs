@@ -22,6 +22,11 @@ Verifies time.
 Checks if time conforms to HH:MM
 */
 pub fn validate_time(time_string: &str) -> bool {
+
+    if time_string.trim().is_empty() {
+	return true
+    }
+    
     let re = Regex::new("^[0-9]{2}:[0-9]{2}$").unwrap();
     if !re.is_match(time_string.trim()) {
         println!("Input does not conform to specified time format");
@@ -42,6 +47,9 @@ Verifies date.
 Checks if the date conforms to DD/MM/YYYY (subject to change by config file)
 */
 pub fn validate_date(date_string: &str) -> bool {
+    if date_string.trim().is_empty() {
+	return true
+    }
     let re = Regex::new(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$").unwrap();
     if !re.is_match(date_string.trim()) {
         println!("Input does not conform to specified format");
