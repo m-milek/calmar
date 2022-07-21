@@ -8,7 +8,6 @@ use std::fs::File;
 use std::path::Path;
 
 pub fn parse_into_date(input: &String) -> Date<Local> {
-    
     if input.trim().is_empty() {
         return Local::now().date();
     }
@@ -26,7 +25,6 @@ pub fn parse_into_date(input: &String) -> Date<Local> {
 }
 
 pub fn parse_into_time(input: &String) -> NaiveTime {
-
     if input.trim().is_empty() {
         return Local::now().time().with_second(0).unwrap();
     }
@@ -45,26 +43,39 @@ As of now, this only accepts input such as '3d', '40min' or '3h'
 Eventually, support for a format like '1:20h' should be added.
 */
 pub fn parse_into_duration(input: &String) -> Duration {
-
     if input.trim().is_empty() {
-	return Duration::zero();
+        return Duration::zero();
     }
-    
+
     let input_lower = &input.to_lowercase();
-    
-    match (input_lower.contains("d"), input_lower.contains("h"), input_lower.contains("m")){
-	(true, false, false) => {
-	    // Duration has to be 'days'
-	    Duration::days(input_lower.split('d').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
-	}
-	(false, true, false) => {
-	    // Duration has to be 'hours'
-	    Duration::hours(input_lower.split('h').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
-	}
-	(false, false, true) => {
-	    Duration::minutes(input_lower.split('m').collect::<Vec<&str>>()[0].parse().expect("Valid duration was given"))
-	},
-	(_,_,_) => panic!("Error parsing duration. This error should be unreachable")
+
+    match (
+        input_lower.contains("d"),
+        input_lower.contains("h"),
+        input_lower.contains("m"),
+    ) {
+        (true, false, false) => {
+            // Duration has to be 'days'
+            Duration::days(
+                input_lower.split('d').collect::<Vec<&str>>()[0]
+                    .parse()
+                    .expect("Valid duration was given"),
+            )
+        }
+        (false, true, false) => {
+            // Duration has to be 'hours'
+            Duration::hours(
+                input_lower.split('h').collect::<Vec<&str>>()[0]
+                    .parse()
+                    .expect("Valid duration was given"),
+            )
+        }
+        (false, false, true) => Duration::minutes(
+            input_lower.split('m').collect::<Vec<&str>>()[0]
+                .parse()
+                .expect("Valid duration was given"),
+        ),
+        (_, _, _) => panic!("Error parsing duration. This error should be unreachable"),
     }
 }
 
@@ -113,28 +124,27 @@ pub fn get_new_event(name: Option<String>) -> Event {
     let end_date;
     let end_time;
     if duration.is_zero() {
-	print!("End date: ");
-	input = get_input();
-	while !validate_date(&input) {
+        print!("End date: ");
+        input = get_input();
+        while !validate_date(&input) {
             println!("Entered date is not valid.");
             print!("End date: ");
             input = get_input();
-	}
-	end_date = parse_into_date(&input);
-    
-	print!("End time: ");
-	input = get_input();
-	while !validate_time(&input) {
+        }
+        end_date = parse_into_date(&input);
+
+        print!("End time: ");
+        input = get_input();
+        while !validate_time(&input) {
             println!("Entered time is not valid.");
             print!("End time: ");
             input = get_input();
-	}
-	end_time = parse_into_time(&input);
-    }
-    else {
-	let end_timedate = start_date.and_time(start_time).unwrap() + duration;
-	end_date = end_timedate.date();
-	end_time = end_timedate.time();
+        }
+        end_time = parse_into_time(&input);
+    } else {
+        let end_timedate = start_date.and_time(start_time).unwrap() + duration;
+        end_date = end_timedate.date();
+        end_time = end_timedate.time();
     }
 
     print!("Difficulty: ");
