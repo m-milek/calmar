@@ -1,11 +1,12 @@
 mod help;
+mod getdata;
 use crate::event::Event;
 use crate::repl::get_input;
-use crate::validator::*;
-use chrono::{Date, DateTime, Duration, Local, NaiveTime, TimeZone, Timelike};
+use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use std::fs;
 use std::fs::File;
 use std::path::Path;
+use getdata::*;
 
 pub fn parse_into_date(input: &String) -> Date<Local> {
     if input.trim().is_empty() {
@@ -90,57 +91,26 @@ pub fn get_new_event(name: Option<String>) -> Event {
         Some(name) => name,
         None => {
             print!("Name: ");
-            get_input()
+            get_name()
         }
     };
 
     print!("Start date: ");
-    let mut input = get_input();
-    while !validate_date(&input) {
-        println!("{} is not a valid date.", input);
-        print!("Start date: ");
-        input = get_input();
-    }
-    let start_date = parse_into_date(&input);
+    let start_date = parse_into_date(&get_start_date());
 
     print!("Start time: ");
-    input = get_input();
-    while !validate_time(&input) {
-        println!("Entered time is not valid.");
-        print!("Start time: ");
-        input = get_input();
-    }
-    let start_time = parse_into_time(&input);
+    let start_time = parse_into_time(&get_start_time());
 
     print!("Duration: ");
-    input = get_input();
-    while !validate_duration(&input) {
-        println!("Entered duration is not valid.");
-        print!("Duration: ");
-        input = get_input();
-    }
-    let duration = parse_into_duration(&input);
+    let duration = parse_into_duration(&get_duration());
 
     let end_date;
     let end_time;
     if duration.is_zero() {
         print!("End date: ");
-        input = get_input();
-        while !validate_date(&input) {
-            println!("Entered date is not valid.");
-            print!("End date: ");
-            input = get_input();
-        }
-        end_date = parse_into_date(&input);
-
+        end_date = parse_into_date(&get_end_date(&start_date));
         print!("End time: ");
-        input = get_input();
-        while !validate_time(&input) {
-            println!("Entered time is not valid.");
-            print!("End time: ");
-            input = get_input();
-        }
-        end_time = parse_into_time(&input);
+        end_time = parse_into_time(&get_end_time(&start_date, &start_time, &end_date));
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
         end_date = end_timedate.date();
@@ -148,22 +118,10 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
 
     print!("Difficulty: ");
-    input = get_input();
-    while !validate_difficulty(&input) {
-        println!("Entered difficulty is not valid.");
-        print!("Difficulty: ");
-        input = get_input();
-    }
-    let difficulty = input.parse().unwrap();
+    let difficulty = get_difficulty().parse().unwrap();
 
     print!("Priority: ");
-    input = get_input();
-    while !validate_priority(&input) {
-        println!("Entered priority is not valid.");
-        print!("Priority: ");
-        input = get_input();
-    }
-    let priority = input.parse().unwrap();
+    let priority = get_priority().parse().unwrap();
 
     Event {
         name,
