@@ -11,7 +11,7 @@ Return a non-empty string
 pub fn get_name() -> String {
     let mut input = get_input();
     while  input.is_empty() {
-	println!("Event name cannot be and empty string.")
+	println!("Event name cannot be and empty string.");
 	print!("Name: ");
 	input = get_input();
     }
