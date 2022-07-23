@@ -1,7 +1,10 @@
 mod help;
+mod savedata;
 mod getdata;
-use crate::event::Event;
+use crate::CONFIG;
+use crate::event::{Event, EventJSON};
 use crate::repl::get_input;
+use savedata::save_event;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use std::fs;
 use std::fs::File;
@@ -228,6 +231,7 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
     println!("{:?}", new_event);
+    save_event(new_event, "/home/michal/.calmar/cal.json".to_string());
 }
 
 /*

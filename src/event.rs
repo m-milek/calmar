@@ -1,3 +1,4 @@
+use std::str::FromStr;
 use chrono::{DateTime, Duration, Local, TimeZone};
 
 #[derive(Debug)]
@@ -10,8 +11,17 @@ pub struct Event {
     pub difficulty: u8,
 }
 
+pub struct EventJSON {
+    pub name: String,
+    pub start: String,
+    pub duration: u64,
+    pub end: String,
+    pub priority: u8,
+    pub difficulty: u8
+}
+
 impl Event {
-    pub fn empty() -> Self {
+    pub fn default() -> Self {
         Event {
             name: "None".to_owned(),
             start: Local.ymd(1970, 1, 1).and_hms(0, 0, 0),
@@ -20,5 +30,29 @@ impl Event {
             priority: 0,
             difficulty: 0,
         }
+    }
+
+    pub fn to_event_json(&self) -> EventJSON {
+	EventJSON {
+	    name: self.name.clone(),
+	    start: self.start.to_string(),
+	    duration: self.duration.num_seconds() as u64,
+	    end: self.end.to_string(),
+	    priority: self.priority,
+	    difficulty: self.difficulty
+	}
+    }
+}
+
+impl EventJSON {
+    pub fn to_standard_event(&self) -> Event {
+	Event {
+	    name: self.name.clone(),
+	    start: DateTime::<Local>::from_str(&self.start).expect("Failed to parse start datetime from string"),
+	    duration: Duration::seconds(self.duration as i64),
+	    end: DateTime::<Local>::from_str(&self.start).expect("Failed to parse end datetime from string"),
+	    priority: self.priority,
+	    difficulty: self.difficulty
+	}
     }
 }
