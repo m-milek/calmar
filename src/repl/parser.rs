@@ -1,15 +1,15 @@
+mod getdata;
 mod help;
 mod savedata;
-mod getdata;
-use crate::CONFIG;
 use crate::event::{Event, EventJSON};
 use crate::repl::get_input;
-use savedata::save_event;
+use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
+use getdata::*;
+use savedata::save_event;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
-use getdata::*;
 
 pub fn parse_into_date(input: &String) -> Date<Local> {
     if input.trim().is_empty() {

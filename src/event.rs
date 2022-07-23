@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use chrono::{DateTime, Duration, Local, TimeZone};
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Event {
@@ -17,7 +17,7 @@ pub struct EventJSON {
     pub duration: u64,
     pub end: String,
     pub priority: u8,
-    pub difficulty: u8
+    pub difficulty: u8,
 }
 
 impl Event {
@@ -33,26 +33,28 @@ impl Event {
     }
 
     pub fn to_event_json(&self) -> EventJSON {
-	EventJSON {
-	    name: self.name.clone(),
-	    start: self.start.to_string(),
-	    duration: self.duration.num_seconds() as u64,
-	    end: self.end.to_string(),
-	    priority: self.priority,
-	    difficulty: self.difficulty
-	}
+        EventJSON {
+            name: self.name.clone(),
+            start: self.start.to_string(),
+            duration: self.duration.num_seconds() as u64,
+            end: self.end.to_string(),
+            priority: self.priority,
+            difficulty: self.difficulty,
+        }
     }
 }
 
 impl EventJSON {
     pub fn to_standard_event(&self) -> Event {
-	Event {
-	    name: self.name.clone(),
-	    start: DateTime::<Local>::from_str(&self.start).expect("Failed to parse start datetime from string"),
-	    duration: Duration::seconds(self.duration as i64),
-	    end: DateTime::<Local>::from_str(&self.start).expect("Failed to parse end datetime from string"),
-	    priority: self.priority,
-	    difficulty: self.difficulty
-	}
+        Event {
+            name: self.name.clone(),
+            start: DateTime::<Local>::from_str(&self.start)
+                .expect("Failed to parse start datetime from string"),
+            duration: Duration::seconds(self.duration as i64),
+            end: DateTime::<Local>::from_str(&self.start)
+                .expect("Failed to parse end datetime from string"),
+            priority: self.priority,
+            difficulty: self.difficulty,
+        }
     }
 }

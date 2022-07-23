@@ -1,17 +1,17 @@
-use chrono::{Local, Date, NaiveTime};
+use super::{parse_into_date, parse_into_time};
 use crate::repl::get_input;
 use crate::validator::*;
-use super::{parse_into_date, parse_into_time};
+use chrono::{Date, Local, NaiveTime};
 
 /*
 Return a non-empty string
 */
 pub fn get_name() -> String {
     let mut input = get_input();
-    while  input.is_empty() {
-	println!("Event name cannot be and empty string.");
-	print!("Name: ");
-	input = get_input();
+    while input.is_empty() {
+        println!("Event name cannot be and empty string.");
+        print!("Name: ");
+        input = get_input();
     }
     input
 }
@@ -45,7 +45,7 @@ pub fn get_start_time() -> String {
 /*
 Return a valid duration
 */
-pub fn get_duration() -> String{
+pub fn get_duration() -> String {
     let mut input = get_input();
     while !validate_duration(&input) {
         println!("Entered duration is not valid.");
@@ -73,9 +73,15 @@ pub fn get_end_date(start_date: &Date<Local>) -> String {
 Return a valid time equal or greater than start time
 TODO: Different error messages (same as in `get_end_date`)
 */
-pub fn get_end_time(start_date: &Date<Local>, start_time: &NaiveTime, end_date: &Date<Local>) -> String {
+pub fn get_end_time(
+    start_date: &Date<Local>,
+    start_time: &NaiveTime,
+    end_date: &Date<Local>,
+) -> String {
     let mut input = get_input();
-    while !validate_time(&input) || ( (start_date == end_date) && (&parse_into_time(&input) <= start_time))  {
+    while !validate_time(&input)
+        || ((start_date == end_date) && (&parse_into_time(&input) <= start_time))
+    {
         println!("Entered time is not valid.");
         print!("End time: ");
         input = get_input();
