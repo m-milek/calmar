@@ -1,5 +1,6 @@
 use chrono::{DateTime, Duration, Local, TimeZone};
 use std::str::FromStr;
+use serde_derive::{Serialize, Deserialize};
 
 #[derive(Debug)]
 pub struct Event {
@@ -11,6 +12,7 @@ pub struct Event {
     pub difficulty: u8,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EventJSON {
     pub name: String,
     pub start: String,

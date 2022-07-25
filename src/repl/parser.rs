@@ -154,7 +154,7 @@ pub fn create_new_calendar(name: Option<String>) {
     let mut calmar_dir = match home::home_dir() {
         Some(dir) => dir,
         None => {
-            println!("Failed to acquire home dir");
+            println!("Failed to acquire HOME");
             return ();
         }
     };
@@ -201,6 +201,8 @@ pub fn create_new_calendar(name: Option<String>) {
         }
     }
 
+    todo!("Add the calendar to index.json");
+
     println!(
         "Successfully created a new calendar named {} in {}",
         name,
@@ -231,6 +233,7 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
     println!("{:?}", new_event);
+    println!("{:?}", serde_json::ser::to_string(&new_event.to_event_json()));
     save_event(new_event, "/home/michal/.calmar/cal.json".to_string());
 }
 

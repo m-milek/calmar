@@ -3,3 +3,5 @@
 # Ignore backup files created by GNU Emacs
 *~
 *#
+# Ignore other files
+todo
