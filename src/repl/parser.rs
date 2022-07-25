@@ -2,53 +2,50 @@ mod getdata;
 mod help;
 mod savedata;
 use crate::calendar::get_calendar_index;
-use crate::event::{Event, EventJSON};
+use crate::event::Event;
 use crate::repl::get_input;
-use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use getdata::*;
-use home::home_dir;
 use savedata::save_event;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
 
-pub fn parse_into_date(input: &String) -> Date<Local> {
+pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
         return Local::now().date();
     }
 
     let split_string: Vec<&str> = input.split('/').collect();
 
-    let date = Local.ymd(
+    Local.ymd(
         split_string[2].parse().expect("A number was given as year"),
         split_string[1]
             .parse()
             .expect("A number was given as month"),
         split_string[0].parse().expect("A number was given as day"),
-    );
-    return date;
+    )
 }
 
-pub fn parse_into_time(input: &String) -> NaiveTime {
+pub fn parse_into_time(input: &str) -> NaiveTime {
     if input.trim().is_empty() {
         return Local::now().time().with_second(0).unwrap();
     }
 
     let split_string: Vec<&str> = input.split(':').collect();
-    return NaiveTime::from_hms(
+    NaiveTime::from_hms(
         split_string[0].parse().expect("A number was given as hour"),
         split_string[1]
             .parse()
             .expect("A number was given as minute"),
         0,
-    );
+    )
 }
 /*
 As of now, this only accepts input such as '3d', '40min' or '3h'
 Eventually, support for a format like '1:20h' should be added.
 */
-pub fn parse_into_duration(input: &String) -> Duration {
+pub fn parse_into_duration(input: &str) -> Duration {
     if input.trim().is_empty() {
         return Duration::zero();
     }
@@ -56,9 +53,9 @@ pub fn parse_into_duration(input: &String) -> Duration {
     let input_lower = &input.to_lowercase();
 
     match (
-        input_lower.contains("d"),
-        input_lower.contains("h"),
-        input_lower.contains("m"),
+        input_lower.contains('d'),
+        input_lower.contains('h'),
+        input_lower.contains('m'),
     ) {
         (true, false, false) => {
             // Duration has to be 'days'
@@ -136,7 +133,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
         priority,
         difficulty,
     };
-    
+
     save_event(event, get_calendar_index().current_calendar);
 
     Event::default()
@@ -161,7 +158,7 @@ pub fn create_new_calendar(name: Option<String>) {
         Some(dir) => dir,
         None => {
             println!("Failed to acquire HOME");
-            return ();
+            return;
         }
     };
     calmar_dir.push(".calmar");
@@ -176,7 +173,7 @@ pub fn create_new_calendar(name: Option<String>) {
                     calmar_dir.display(),
                     err
                 );
-                return ();
+                return;
             }
         },
     }
@@ -188,11 +185,11 @@ pub fn create_new_calendar(name: Option<String>) {
                 "y" | "yes" => (),
                 "n" | "no" => {
                     println!("Aborting...");
-                    return ();
+                    return;
                 }
                 _ => {
                     println!("Invalid option, aborting...");
-                    return ();
+                    return;
                 }
             }
         }
@@ -203,7 +200,7 @@ pub fn create_new_calendar(name: Option<String>) {
         Ok(_) => (),
         Err(err) => {
             println!("Failed to create file\n{}", err);
-            return ();
+            return;
         }
     }
 
@@ -233,7 +230,7 @@ pub fn add(split_input: &Vec<&str>) {
                 "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
                 split_input.len() - 1
             ); // do not count "add" as an argument
-            return ();
+            return;
         }
     };
 }
@@ -250,7 +247,6 @@ pub fn cal(split_input: &Vec<&str>) {
                 "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
                 split_input.len() - 1
             ); // do not count "add" as an argument
-            return ();
         }
     };
 }

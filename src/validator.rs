@@ -10,10 +10,13 @@ fn is_numeric(string: &str) -> bool {
     true
 }
 
-fn str_to_num(str: &str) -> Result<i32, core::num::ParseIntError> {
-    match str.trim().parse::<i32>() {
+fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
+    match string.trim().parse::<i32>() {
         Ok(num) => Ok(num),
-        Err(err) => Err(err),
+        Err(err) => {
+            println!("Failed to parse {} to i32.\n{}", string, err);
+            Err(err)
+        }
     }
 }
 
@@ -35,10 +38,8 @@ pub fn validate_time(time_string: &str) -> bool {
     let hours = str_to_num(split_input[0]).unwrap();
     let minutes = str_to_num(split_input[1]).unwrap();
     println!("hours: {}, minutes: {}", hours, minutes);
-    match (0 <= hours && hours <= 23, 0 <= minutes && minutes <= 59) {
-        (true, true) => return true,
-        _ => return false,
-    }
+
+    (0..=23).contains(&hours) && (0..=59).contains(&minutes)
 }
 
 /*
@@ -64,14 +65,10 @@ pub fn validate_date(date_string: &str) -> bool {
         return false;
     }
 
-    match Utc.ymd_opt(
-        year.into(),
-        month.try_into().unwrap(),
-        day.try_into().unwrap(),
-    ) {
-        LocalResult::Single(_) => return true,
-        _ => return false,
-    }
+    matches!(
+        Utc.ymd_opt(year, month.try_into().unwrap(), day.try_into().unwrap(),),
+        LocalResult::Single(_)
+    )
 }
 
 /*

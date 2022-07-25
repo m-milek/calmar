@@ -1,9 +1,9 @@
+mod calendar;
 mod config;
 mod event;
 mod repl;
 mod test;
 mod validator;
-mod calendar;
 use crate::config::{get_config, Config};
 use lazy_static::lazy_static;
 

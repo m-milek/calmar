@@ -1,6 +1,6 @@
 use chrono::{DateTime, Duration, Local, TimeZone};
+use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
-use serde_derive::{Serialize, Deserialize};
 
 #[derive(Debug)]
 pub struct Event {
