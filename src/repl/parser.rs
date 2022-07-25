@@ -1,11 +1,13 @@
 mod getdata;
 mod help;
 mod savedata;
+use crate::calendar::get_calendar_index;
 use crate::event::{Event, EventJSON};
 use crate::repl::get_input;
 use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use getdata::*;
+use home::home_dir;
 use savedata::save_event;
 use std::fs;
 use std::fs::File;
@@ -126,14 +128,18 @@ pub fn get_new_event(name: Option<String>) -> Event {
     print!("Priority: ");
     let priority = get_priority().parse().unwrap();
 
-    Event {
+    let event = Event {
         name,
         start: start_date.and_time(start_time).unwrap(),
         duration,
         end: end_date.and_time(end_time).unwrap(),
         priority,
         difficulty,
-    }
+    };
+    
+    save_event(event, get_calendar_index().current_calendar);
+
+    Event::default()
 }
 
 /*
@@ -201,8 +207,6 @@ pub fn create_new_calendar(name: Option<String>) {
         }
     }
 
-    todo!("Add the calendar to index.json");
-
     println!(
         "Successfully created a new calendar named {} in {}",
         name,
@@ -232,9 +236,6 @@ pub fn add(split_input: &Vec<&str>) {
             return ();
         }
     };
-    println!("{:?}", new_event);
-    println!("{:?}", serde_json::ser::to_string(&new_event.to_event_json()));
-    save_event(new_event, "/home/michal/.calmar/cal.json".to_string());
 }
 
 /*

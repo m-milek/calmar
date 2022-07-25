@@ -5,7 +5,6 @@ mod test;
 mod validator;
 mod calendar;
 use crate::config::{get_config, Config};
-use calendar::get_calendar_index;
 use lazy_static::lazy_static;
 
 lazy_static! {

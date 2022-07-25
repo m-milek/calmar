@@ -5,14 +5,19 @@ use crate::event::EventJSON;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Calendar {
     pub name: String,
-    pub path: String,
     pub events: Vec<EventJSON>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct CalendarReference {
+    pub name: String,
+    pub path: String
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CalendarIndex {
-    pub current_calendar: Calendar,
-    pub calendars: Vec<Calendar>
+    pub current_calendar: CalendarReference,
+    pub calendars: Vec<CalendarReference>
 }
 
 impl Calendar {
@@ -48,12 +53,12 @@ pub fn get_calendar_index() -> CalendarIndex {
 	}
     };
 
-    let deserialized: CalendarIndex = match serde_json::from_str(&content) {
+    let index: CalendarIndex = match serde_json::from_str(&content) {
 	Ok(result) => result,
 	Err(e) => {
 	    println!("Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}", index_file_path.display(), e);
 	    panic!();
 	}
     };
-    return deserialized;
+    return index;
 }
