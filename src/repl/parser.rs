@@ -1,15 +1,20 @@
 mod getdata;
 mod help;
 mod savedata;
-use crate::calendar::get_calendar_index;
+use crate::calendar::{get_calendar_index, CalendarReference};
 use crate::event::Event;
 use crate::repl::get_input;
+use crate::validator::{get_home_dir, validate_dir_path};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use getdata::*;
 use savedata::save_event;
 use std::fs;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::exit;
+use std::str::FromStr;
+
+use self::savedata::{save_calendar_index, save_new_calendar};
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -136,28 +141,8 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
 }
 
-/*
-Given 'name' of a new calendar, the function gets the home directory,
-verifies the existence of a $HOME/.calmar directory,
-creates a JSON file with the given 'name' under $HOME/.calmar.
-If file named 'name' already exists, it asks the user for confirmation.
-*/
-pub fn create_new_calendar(name: Option<String>) {
-    let name = match name {
-        Some(name) => name,
-        None => {
-            print!("Name: ");
-            get_input()
-        }
-    };
-
-    let mut calmar_dir = match home::home_dir() {
-        Some(dir) => dir,
-        None => {
-            println!("Failed to acquire HOME");
-            return;
-        }
-    };
+pub fn check_calmar_dir() {
+    let mut calmar_dir = get_home_dir();
     calmar_dir.push(".calmar");
 
     match Path::new(&calmar_dir).is_dir() {
@@ -174,46 +159,48 @@ pub fn create_new_calendar(name: Option<String>) {
             }
         },
     }
-
-    match Path::new(&calmar_dir.join(&name).with_extension("json")).exists() {
-        true => {
-            print!("A calendar by that name already exists. Overwrite it with an empty file?\nThis will cause complete loss of data. [y/N]: ");
-            match get_input().trim().to_lowercase().as_str() {
-                "y" | "yes" => (),
-                "n" | "no" => {
-                    println!("Aborting...");
-                    return;
-                }
-                _ => {
-                    println!("Invalid option, aborting...");
-                    return;
-                }
-            }
-        }
-        false => (),
-    }
-
-    match File::create(calmar_dir.join(&name).with_extension("json")) {
-        Ok(_) => (),
-        Err(err) => {
-            println!("Failed to create file\n{}", err);
-            return;
-        }
-    }
-
-    println!(
-        "Successfully created a new calendar named {} in {}",
-        name,
-        calmar_dir.display()
-    );
 }
 
-// fn yesno(text: &str) -> bool {
-//     match text.to_lowercase().as_str() {
-//         "yes" | "y" => true,
-//         _ => false,
-//     }
-// }
+/*
+Given 'name' of a new calendar, the function gets the home directory,
+verifies the existence of a $HOME/.calmar directory,
+creates a JSON file with the given 'name' under $HOME/.calmar.
+If file named 'name' already exists, it asks the user for confirmation.
+*/
+pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
+    let name = match name {
+        Some(name) => name,
+        None => {
+            print!("Name: ");
+            get_input()
+        }
+    };
+
+    print!("Path: ");
+    let mut path = get_input();
+    while !validate_dir_path(&path){
+	println!("Invalid input.");
+	print!("Path: ");
+	path = get_input();
+    }
+    let mut path_to_calendar = PathBuf::from(path).join(&name);
+    path_to_calendar.set_extension("json");
+    let path_to_calendar_string = match path_to_calendar.to_str() {
+	Some(string) => string,
+	None => {
+	    println!("Failed to convert {} to string.", path_to_calendar.display());
+	    std::process::exit(1);
+	}
+    };
+    CalendarReference { name, path: path_to_calendar_string.to_owned() }
+}
+
+pub fn yesno(text: &str) -> bool {
+     match text.to_lowercase().as_str() {
+         "yes" | "y" => true,
+         _ => false,
+     }
+}
 
 /*
 Call event creation with name given optionally
@@ -244,16 +231,25 @@ pub fn add(split_input: &Vec<&str>) {
 Call calendar creation with name given optionally
 */
 pub fn cal(split_input: &Vec<&str>) {
-    match split_input.len() {
-        1 => create_new_calendar(None),
-        2 => create_new_calendar(Some(split_input[1].to_owned())),
+    let new_reference = match split_input.len() {
+        1 => get_new_calendar_reference(None),
+        2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
             println!(
                 "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
                 split_input.len() - 1
             ); // do not count "add" as an argument
+	    return;
         }
     };
+    let mut calendar_index = get_calendar_index();
+    match calendar_index.add_entry(&new_reference) {
+	Ok(_) => println!("Added entry to calendar index."),
+	Err(_) => println!("Failed to get calendar reference")
+    }
+    save_calendar_index(calendar_index);
+    println!("Saved calendar index");
+    save_new_calendar(new_reference);
 }
 
 /*

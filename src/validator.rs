@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
@@ -46,6 +46,17 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
             Err(err)
         }
     }
+}
+
+pub fn validate_dir_path(path: &String) -> bool {
+    let path = match PathBuf::from_str(path.as_str()) {
+	Ok(path) => path,
+	Err(e) => {
+	    println!("Failed to parse {} as path.\n{}", path, e);
+	    return false
+	}
+    };
+    path.is_dir()
 }
 
 /*

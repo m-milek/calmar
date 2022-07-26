@@ -1,7 +1,5 @@
 use std::fs::read_to_string;
-
-use crate::{event::EventJSON, validator::get_home_dir};
-use home::home_dir;
+use crate::{event::EventJSON, validator::get_home_dir, repl::parser::yesno};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -10,7 +8,7 @@ pub struct Calendar {
     pub events: Vec<EventJSON>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CalendarReference {
     pub name: String,
     pub path: String,
@@ -23,14 +21,76 @@ pub struct CalendarIndex {
 }
 
 impl Calendar {
+    pub fn new(name: &String) -> Self {
+	Calendar { name: name.to_string(), events: Vec::<EventJSON>::new() }
+    }
     pub fn rename() {}
     pub fn delete() {}
     pub fn set_name() {}
     pub fn set_path() {}
 }
 
+pub enum CalendarReturnMessage {
+    Abort
+}
+
 impl CalendarIndex {
-    pub fn add_entry() {}
+    pub fn add_entry(&mut self, new_calendar: &CalendarReference) -> Result<(), CalendarReturnMessage> {
+	
+	let mut already_saved_entry_names = Vec::<String>::new();
+	for reference in &self.calendars {
+	    already_saved_entry_names.push(reference.name.clone());
+	}
+
+	if already_saved_entry_names.contains(&new_calendar.name) {
+	    if !yesno(format!("Calendar named {} already exists. Do you want to overwrite it?", new_calendar.name).as_str()) {
+		return Err(CalendarReturnMessage::Abort)
+	    }
+	    else {
+		// Remove all calendar files with the same name
+		for reference in &self.calendars {
+		    match std::fs::remove_file(&reference.path) {
+			Ok(_) => (),
+			Err(e) => {
+			    println!("Failed to delete file {}.\n{}", reference.path, e);
+			    std::process::exit(1);
+			}
+		    }
+		}
+		// Remove all references with the same name
+		self.calendars.retain(|calendar| calendar.name != new_calendar.name);
+	    }
+	}
+	
+	let mut already_saved_entry_paths = Vec::<String>::new();
+	for reference in &self.calendars {
+	    already_saved_entry_paths.push(reference.path.clone());
+	}
+
+	if already_saved_entry_paths.contains(&new_calendar.path) {
+	    if !yesno(format!("Calendar with path {} already exists. Do you want to overwrite it?", new_calendar.path).as_str()) {
+		return Err(CalendarReturnMessage::Abort)
+	    }
+	    else {
+		// Remove all calendar files with the same path
+		for reference in &self.calendars {
+		    match std::fs::remove_file(&reference.path) {
+			Ok(_) => (),
+			Err(e) => {
+			    println!("Failed to delete file {}.\n{}", reference.path, e);
+			    std::process::exit(1);
+			}
+		    }
+		}
+		// Remove all references with the same path
+		self.calendars.retain(|calendar| calendar.path != new_calendar.path);
+	    }
+	    
+	}
+	// Now the index is cleaned of any calendars named like the new one and the files are deleted.
+	self.calendars.push(new_calendar.clone());
+	Ok(())
+    }
     pub fn delete_entry() {}
     pub fn set_calendar() {}
 }
