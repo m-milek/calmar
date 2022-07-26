@@ -4,27 +4,26 @@ use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
 use regex::Regex;
 
-
 pub fn get_config_path() -> PathBuf {
     let mut home = get_home_dir();
     home.push(".config/calmar/config.json");
     let config_path = home;
     match std::fs::File::open(&config_path) {
-	Ok(_) => config_path,
-	Err(e) => {
-	    println!("Failed to open {}.\n{}", config_path.display(), e);
-	    panic!();
-	}
+        Ok(_) => config_path,
+        Err(e) => {
+            println!("Failed to open {}.\n{}", config_path.display(), e);
+            panic!();
+        }
     }
 }
 
 pub fn get_home_dir() -> PathBuf {
     let home = match home_dir() {
-	Some(dir) => dir,
-	None => {
-	    println!("Failed to get HOME directory.");
-	    panic!();
-	}
+        Some(dir) => dir,
+        None => {
+            println!("Failed to get HOME directory.");
+            panic!();
+        }
     };
     home
 }
@@ -50,11 +49,11 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
 
 pub fn validate_dir_path(path: &String) -> bool {
     let path = match PathBuf::from_str(path.as_str()) {
-	Ok(path) => path,
-	Err(e) => {
-	    println!("Failed to parse {} as path.\n{}", path, e);
-	    return false
-	}
+        Ok(path) => path,
+        Err(e) => {
+            println!("Failed to parse {} as path.\n{}", path, e);
+            return false;
+        }
     };
     path.is_dir()
 }

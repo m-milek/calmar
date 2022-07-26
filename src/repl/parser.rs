@@ -118,7 +118,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
         end_date = parse_into_date(&get_end_date(&start_date));
         print!("End time: ");
         end_time = parse_into_time(&get_end_time(&start_date, &start_time, &end_date));
-	duration = end_date.and_time(end_time).unwrap() - start_date.and_time(start_time).unwrap();
+        duration = end_date.and_time(end_time).unwrap() - start_date.and_time(start_time).unwrap();
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
         end_date = end_timedate.date();
@@ -178,28 +178,34 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
 
     print!("Path: ");
     let mut path = get_input();
-    while !validate_dir_path(&path){
-	println!("Invalid input.");
-	print!("Path: ");
-	path = get_input();
+    while !validate_dir_path(&path) {
+        println!("Invalid input.");
+        print!("Path: ");
+        path = get_input();
     }
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
     let path_to_calendar_string = match path_to_calendar.to_str() {
-	Some(string) => string,
-	None => {
-	    println!("Failed to convert {} to string.", path_to_calendar.display());
-	    std::process::exit(1);
-	}
+        Some(string) => string,
+        None => {
+            println!(
+                "Failed to convert {} to string.",
+                path_to_calendar.display()
+            );
+            std::process::exit(1);
+        }
     };
-    CalendarReference { name, path: path_to_calendar_string.to_owned() }
+    CalendarReference {
+        name,
+        path: path_to_calendar_string.to_owned(),
+    }
 }
 
 pub fn yesno(text: &str) -> bool {
-     match text.to_lowercase().as_str() {
-         "yes" | "y" => true,
-         _ => false,
-     }
+    match text.to_lowercase().as_str() {
+        "yes" | "y" => true,
+        _ => false,
+    }
 }
 
 /*
@@ -218,12 +224,12 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
     match save_event(new_event, get_calendar_index().current_calendar) {
-	true => {
-	    println!("Successfully saved new event.");
-	},
-	false => {
-	    println!("Failed to save new event.");
-	}
+        true => {
+            println!("Successfully saved new event.");
+        }
+        false => {
+            println!("Failed to save new event.");
+        }
     }
 }
 
@@ -239,13 +245,13 @@ pub fn cal(split_input: &Vec<&str>) {
                 "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
                 split_input.len() - 1
             ); // do not count "add" as an argument
-	    return;
+            return;
         }
     };
     let mut calendar_index = get_calendar_index();
     match calendar_index.add_entry(&new_reference) {
-	Ok(_) => println!("Added entry to calendar index."),
-	Err(_) => println!("Failed to get calendar reference")
+        Ok(_) => println!("Added entry to calendar index."),
+        Err(_) => println!("Failed to get calendar reference"),
     }
     save_calendar_index(calendar_index);
     println!("Saved calendar index");
