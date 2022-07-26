@@ -104,7 +104,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
     let start_time = parse_into_time(&get_start_time());
 
     print!("Duration: ");
-    let duration = parse_into_duration(&get_duration());
+    let mut duration = parse_into_duration(&get_duration());
 
     let end_date;
     let end_time;
@@ -113,6 +113,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
         end_date = parse_into_date(&get_end_date(&start_date));
         print!("End time: ");
         end_time = parse_into_time(&get_end_time(&start_date, &start_time, &end_date));
+	duration = end_date.and_time(end_time).unwrap() - start_date.and_time(start_time).unwrap();
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
         end_date = end_timedate.date();
@@ -125,18 +126,14 @@ pub fn get_new_event(name: Option<String>) -> Event {
     print!("Priority: ");
     let priority = get_priority().parse().unwrap();
 
-    let event = Event {
+    Event {
         name,
         start: start_date.and_time(start_time).unwrap(),
         duration,
         end: end_date.and_time(end_time).unwrap(),
         priority,
         difficulty,
-    };
-
-    save_event(event, get_calendar_index().current_calendar);
-
-    Event::default()
+    }
 }
 
 /*
@@ -233,6 +230,14 @@ pub fn add(split_input: &Vec<&str>) {
             return;
         }
     };
+    match save_event(new_event, get_calendar_index().current_calendar) {
+	true => {
+	    println!("Successfully saved new event.");
+	},
+	false => {
+	    println!("Failed to save new event.");
+	}
+    }
 }
 
 /*

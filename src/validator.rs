@@ -1,5 +1,33 @@
+use std::path::PathBuf;
+
 use chrono::{LocalResult, TimeZone, Utc};
+use home::home_dir;
 use regex::Regex;
+
+
+pub fn get_config_path() -> PathBuf {
+    let mut home = get_home_dir();
+    home.push(".config/calmar/config.json");
+    let config_path = home;
+    match std::fs::File::open(&config_path) {
+	Ok(_) => config_path,
+	Err(e) => {
+	    println!("Failed to open {}.\n{}", config_path.display(), e);
+	    panic!();
+	}
+    }
+}
+
+pub fn get_home_dir() -> PathBuf {
+    let home = match home_dir() {
+	Some(dir) => dir,
+	None => {
+	    println!("Failed to get HOME directory.");
+	    panic!();
+	}
+    };
+    home
+}
 
 fn is_numeric(string: &str) -> bool {
     for char in string.chars() {

@@ -1,4 +1,6 @@
-use crate::event::EventJSON;
+use std::fs::read_to_string;
+
+use crate::{event::EventJSON, validator::get_home_dir};
 use home::home_dir;
 use serde_derive::{Deserialize, Serialize};
 
@@ -34,18 +36,12 @@ impl CalendarIndex {
 }
 
 pub fn get_calendar_index() -> CalendarIndex {
-    let mut home = match home_dir() {
-        Some(dir) => dir,
-        None => {
-            println!("Failed to acquire HOME. Cannot locate calendar index file.");
-            panic!();
-        }
-    };
 
+    let mut home = get_home_dir();
     home.push(".config/calmar/index.json");
     let index_file_path = home;
 
-    let content = match std::fs::read_to_string(&index_file_path) {
+    let content = match read_to_string(&index_file_path) {
         Ok(result) => result,
         Err(e) => {
             println!("Failed to read {}.\n{}", index_file_path.display(), e);
@@ -53,7 +49,7 @@ pub fn get_calendar_index() -> CalendarIndex {
         }
     };
 
-    let index: CalendarIndex = match serde_json::from_str(&content) {
+    match serde_json::from_str(&content) {
         Ok(result) => result,
         Err(e) => {
             println!(
@@ -63,6 +59,23 @@ pub fn get_calendar_index() -> CalendarIndex {
             );
             panic!();
         }
+    }
+}
+
+pub fn get_current_calendar() -> Calendar {
+    let index = get_calendar_index();
+    let current_calendar_content = match read_to_string(&index.current_calendar.path) {
+	Ok(content) => content,
+	Err(e) => {
+	    println!("Failed to read {}.\n{}", index.current_calendar.path, e);
+	    std::process::exit(1);
+	}
     };
-    index
+    match serde_json::from_str(&current_calendar_content) {
+	Ok(result) => result,
+	Err(e) => {
+	    println!("Failed to parse {} to Calendar struct. Check for syntax errors,\n{}", index.current_calendar.path, e);
+	    std::process::exit(1);
+	}
+    }
 }
