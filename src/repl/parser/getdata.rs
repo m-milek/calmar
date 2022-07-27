@@ -114,3 +114,13 @@ pub fn get_priority() -> String {
     }
     input
 }
+
+pub fn get_dir_path() -> String {
+    let mut input = get_input();
+    while !validate_dir_path(&input) {
+        println!("Invalid input.");
+        print!("Path: ");
+        input = get_input();
+    }
+    input
+}

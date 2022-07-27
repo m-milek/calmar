@@ -2,6 +2,7 @@ mod getdata;
 mod help;
 mod savedata;
 use self::savedata::{save_calendar_index, save_new_calendar};
+use crate::CONFIG;
 use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference};
 use crate::event::Event;
 use crate::repl::get_input;
@@ -152,6 +153,13 @@ pub fn check_calmar_dir() {
     }
 }
 
+pub fn default_or_custom(input: String) -> String {
+    if input.trim().is_empty() {
+	return CONFIG.default_path.clone();
+    }
+    input
+}
+
 /*
 Given 'name' of a new calendar, the function gets the home directory,
 verifies the existence of a $HOME/.calmar directory,
@@ -167,13 +175,10 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         }
     };
 
+    
     print!("Path: ");
-    let mut path = get_input();
-    while !validate_dir_path(&path) {
-        println!("Invalid input.");
-        print!("Path: ");
-        path = get_input();
-    }
+    let path = default_or_custom(get_dir_path());
+    
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
     let path_to_calendar_string = match path_to_calendar.to_str() {

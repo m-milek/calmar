@@ -1,5 +1,4 @@
 use std::{path::PathBuf, str::FromStr};
-
 use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
 use regex::Regex;
@@ -12,7 +11,7 @@ pub fn get_config_path() -> PathBuf {
         Ok(_) => config_path,
         Err(e) => {
             println!("Failed to open {}.\n{}", config_path.display(), e);
-            panic!();
+            std::process::exit(1);
         }
     }
 }
@@ -22,7 +21,7 @@ pub fn get_home_dir() -> PathBuf {
         Some(dir) => dir,
         None => {
             println!("Failed to get HOME directory.");
-            panic!();
+            std::process::exit(1);
         }
     };
     home
@@ -48,6 +47,10 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
 }
 
 pub fn validate_dir_path(path: &String) -> bool {
+    if path.trim().is_empty() {
+	return true
+    }
+    
     let path = match PathBuf::from_str(path.as_str()) {
         Ok(path) => path,
         Err(e) => {
@@ -75,7 +78,6 @@ pub fn validate_time(time_string: &str) -> bool {
     let split_input: Vec<&str> = time_string.split(':').collect();
     let hours = str_to_num(split_input[0]).unwrap();
     let minutes = str_to_num(split_input[1]).unwrap();
-    println!("hours: {}, minutes: {}", hours, minutes);
 
     (0..=23).contains(&hours) && (0..=59).contains(&minutes)
 }
