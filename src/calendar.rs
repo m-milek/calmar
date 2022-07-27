@@ -12,11 +12,11 @@ pub struct Calendar {
 pub struct CalendarReference {
     pub name: String,
     pub path: String,
+    pub active: bool
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CalendarIndex {
-    pub current_calendar: CalendarReference,
     pub calendars: Vec<CalendarReference>,
 }
 
@@ -38,10 +38,7 @@ pub enum CalendarReturnMessage {
 }
 
 impl CalendarIndex {
-    pub fn add_entry(
-        &mut self,
-        new_calendar: &CalendarReference,
-    ) -> Result<(), CalendarReturnMessage> {
+    pub fn add_entry(&mut self, new_calendar: &CalendarReference,) -> Result<(), CalendarReturnMessage> {
         let mut already_saved_entry_names = Vec::<String>::new();
         for reference in &self.calendars {
             already_saved_entry_names.push(reference.name.clone());
@@ -50,7 +47,7 @@ impl CalendarIndex {
         if already_saved_entry_names.contains(&new_calendar.name) {
             if !yesno(
                 format!(
-                    "Calendar named {} already exists. Do you want to overwrite it?",
+                    "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
                     new_calendar.name
                 )
                 .as_str(),
@@ -59,13 +56,16 @@ impl CalendarIndex {
             } else {
                 // Remove all calendar files with the same name
                 for reference in &self.calendars {
-                    match std::fs::remove_file(&reference.path) {
-                        Ok(_) => (),
-                        Err(e) => {
-                            println!("Failed to delete file {}.\n{}", reference.path, e);
-                            std::process::exit(1);
-                        }
-                    }
+		    if reference.name == new_calendar.name {
+			match std::fs::remove_file(&reference.path) {
+                            Ok(_) => (),
+                            Err(e) => {
+				println!("Failed to delete file {}.\n{}", reference.path, e);
+				std::process::exit(1);
+                            }
+			}
+		    }
+                    
                 }
                 // Remove all references with the same name
                 self.calendars
@@ -120,7 +120,7 @@ pub fn get_calendar_index() -> CalendarIndex {
         Ok(result) => result,
         Err(e) => {
             println!("Failed to read {}.\n{}", index_file_path.display(), e);
-            panic!();
+            std::process::exit(1);
         }
     };
 
@@ -138,11 +138,19 @@ pub fn get_calendar_index() -> CalendarIndex {
 }
 
 pub fn get_current_calendar() -> Calendar {
-    let index = get_calendar_index();
-    let current_calendar_content = match read_to_string(&index.current_calendar.path) {
+    let mut index = get_calendar_index();
+    index.calendars.retain(|calendar_reference| calendar_reference.active == true);
+    let current_calendar = match index.calendars.len() {
+	1 => &index.calendars[0],
+	_ => {
+	    println!("{} calendars are set as active. There must be exactly one.", index.calendars.len());
+	    std::process::exit(1);
+	}
+    };
+    let current_calendar_content = match read_to_string(&current_calendar.path) {
         Ok(content) => content,
         Err(e) => {
-            println!("Failed to read {}.\n{}", index.current_calendar.path, e);
+            println!("Failed to read {}.\n{}", current_calendar.path, e);
             std::process::exit(1);
         }
     };
@@ -151,9 +159,21 @@ pub fn get_current_calendar() -> Calendar {
         Err(e) => {
             println!(
                 "Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
-                index.current_calendar.path, e
+                current_calendar.path, e
             );
             std::process::exit(1);
         }
+    }
+}
+
+pub fn get_active_calendar_reference() -> CalendarReference {
+    let mut index = get_calendar_index();
+    index.calendars.retain(|calendar_reference| calendar_reference.active);
+    match index.calendars.len() {
+	1 => index.calendars[0].clone(),
+	_ => {
+	    println!("{} calendars are set as active. There must be exactly one.", index.calendars.len());
+	    std::process::exit(1);
+	}
     }
 }

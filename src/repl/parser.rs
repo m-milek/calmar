@@ -1,11 +1,12 @@
 mod getdata;
 mod help;
 mod savedata;
-use crate::calendar::{get_calendar_index, CalendarReference};
+use crate::calendar::{get_calendar_index, CalendarReference, get_active_calendar_reference};
 use crate::event::Event;
 use crate::repl::get_input;
 use crate::validator::{get_home_dir, validate_dir_path};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
+use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
 use std::fs;
@@ -198,13 +199,15 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     CalendarReference {
         name,
         path: path_to_calendar_string.to_owned(),
+	active: false
     }
 }
 
-pub fn yesno(text: &str) -> bool {
-    match text.to_lowercase().as_str() {
-        "yes" | "y" => true,
-        _ => false,
+pub fn yesno(prompt: &str) -> bool {
+    print!("{}", prompt);
+    match get_input().trim().to_lowercase().as_str() {
+	"yes" | "y" => true,
+	_ => false
     }
 }
 
@@ -223,7 +226,7 @@ pub fn add(split_input: &Vec<&str>) {
             return;
         }
     };
-    match save_event(new_event, get_calendar_index().current_calendar) {
+    match save_event(new_event, get_active_calendar_reference()) {
         true => {
             println!("Successfully saved new event.");
         }
@@ -237,21 +240,29 @@ pub fn add(split_input: &Vec<&str>) {
 Call calendar creation with name given optionally
 */
 pub fn cal(split_input: &Vec<&str>) {
-    let new_reference = match split_input.len() {
+    let mut new_reference = match split_input.len() {
         1 => get_new_calendar_reference(None),
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
             println!(
-                "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
                 split_input.len() - 1
-            ); // do not count "add" as an argument
+            ); // do not count "cal" as an argument
             return;
         }
     };
+    
     let mut calendar_index = get_calendar_index();
+    if calendar_index.calendars.is_empty() {
+	new_reference.active = true;
+    }
+    
     match calendar_index.add_entry(&new_reference) {
         Ok(_) => println!("Added entry to calendar index."),
-        Err(_) => println!("Failed to get calendar reference"),
+        Err(_) => {
+	    println!("Failed to get calendar reference");
+	    return;
+	}
     }
     save_calendar_index(calendar_index);
     println!("Saved calendar index");
