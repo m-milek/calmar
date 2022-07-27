@@ -1,7 +1,6 @@
 use crate::calendar::{Calendar, CalendarIndex, CalendarReference};
 use crate::event::Event;
 use crate::validator::get_home_dir;
-use std::fmt::write;
 use std::fs::read_to_string;
 use std::io::Write;
 
@@ -57,9 +56,7 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
             return false;
         }
     };
-
-    //println!("Written to {}", calendar_ref.path);
-    return true;
+    true
 }
 
 pub fn save_calendar_index(calendar_index: CalendarIndex) {

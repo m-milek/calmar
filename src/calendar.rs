@@ -12,7 +12,7 @@ pub struct Calendar {
 pub struct CalendarReference {
     pub name: String,
     pub path: String,
-    pub active: bool
+    pub active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,7 +38,10 @@ pub enum CalendarReturnMessage {
 }
 
 impl CalendarIndex {
-    pub fn add_entry(&mut self, new_calendar: &CalendarReference,) -> Result<(), CalendarReturnMessage> {
+    pub fn add_entry(
+        &mut self,
+        new_calendar: &CalendarReference,
+    ) -> Result<(), CalendarReturnMessage> {
         let mut already_saved_entry_names = Vec::<String>::new();
         for reference in &self.calendars {
             already_saved_entry_names.push(reference.name.clone());
@@ -56,16 +59,15 @@ impl CalendarIndex {
             } else {
                 // Remove all calendar files with the same name
                 for reference in &self.calendars {
-		    if reference.name == new_calendar.name {
-			match std::fs::remove_file(&reference.path) {
+                    if reference.name == new_calendar.name {
+                        match std::fs::remove_file(&reference.path) {
                             Ok(_) => (),
                             Err(e) => {
-				println!("Failed to delete file {}.\n{}", reference.path, e);
-				std::process::exit(1);
+                                println!("Failed to delete file {}.\n{}", reference.path, e);
+                                std::process::exit(1);
                             }
-			}
-		    }
-                    
+                        }
+                    }
                 }
                 // Remove all references with the same name
                 self.calendars
@@ -139,13 +141,18 @@ pub fn get_calendar_index() -> CalendarIndex {
 
 pub fn get_current_calendar() -> Calendar {
     let mut index = get_calendar_index();
-    index.calendars.retain(|calendar_reference| calendar_reference.active == true);
+    index
+        .calendars
+        .retain(|calendar_reference| calendar_reference.active);
     let current_calendar = match index.calendars.len() {
-	1 => &index.calendars[0],
-	_ => {
-	    println!("{} calendars are set as active. There must be exactly one.", index.calendars.len());
-	    std::process::exit(1);
-	}
+        1 => &index.calendars[0],
+        _ => {
+            println!(
+                "{} calendars are set as active. There must be exactly one.",
+                index.calendars.len()
+            );
+            std::process::exit(1);
+        }
     };
     let current_calendar_content = match read_to_string(&current_calendar.path) {
         Ok(content) => content,
@@ -168,12 +175,17 @@ pub fn get_current_calendar() -> Calendar {
 
 pub fn get_active_calendar_reference() -> CalendarReference {
     let mut index = get_calendar_index();
-    index.calendars.retain(|calendar_reference| calendar_reference.active);
+    index
+        .calendars
+        .retain(|calendar_reference| calendar_reference.active);
     match index.calendars.len() {
-	1 => index.calendars[0].clone(),
-	_ => {
-	    println!("{} calendars are set as active. There must be exactly one.", index.calendars.len());
-	    std::process::exit(1);
-	}
+        1 => index.calendars[0].clone(),
+        _ => {
+            println!(
+                "{} calendars are set as active. There must be exactly one.",
+                index.calendars.len()
+            );
+            std::process::exit(1);
+        }
     }
 }

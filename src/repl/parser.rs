@@ -1,21 +1,16 @@
 mod getdata;
 mod help;
 mod savedata;
-use crate::calendar::{get_calendar_index, CalendarReference, get_active_calendar_reference};
+use self::savedata::{save_calendar_index, save_new_calendar};
+use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference};
 use crate::event::Event;
 use crate::repl::get_input;
 use crate::validator::{get_home_dir, validate_dir_path};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
-use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
 use std::fs;
-use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::exit;
-use std::str::FromStr;
-
-use self::savedata::{save_calendar_index, save_new_calendar};
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -93,8 +88,6 @@ Get all data necessary to construct a valid Event object and return an Event.
 Validate all input and ask for it until it's valid
  */
 pub fn get_new_event(name: Option<String>) -> Event {
-    println!("Getting new event data...");
-
     let name = match name {
         Some(name) => name,
         None => {
@@ -110,7 +103,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
     let start_time = parse_into_time(&get_start_time());
 
     print!("Duration: ");
-    let mut duration = parse_into_duration(&get_duration());
+    let duration = parse_into_duration(&get_duration());
 
     let end_date;
     let end_time;
@@ -119,7 +112,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
         end_date = parse_into_date(&get_end_date(&start_date));
         print!("End time: ");
         end_time = parse_into_time(&get_end_time(&start_date, &start_time, &end_date));
-        duration = end_date.and_time(end_time).unwrap() - start_date.and_time(start_time).unwrap();
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
         end_date = end_timedate.date();
@@ -135,7 +127,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
     Event {
         name,
         start: start_date.and_time(start_time).unwrap(),
-        duration,
         end: end_date.and_time(end_time).unwrap(),
         priority,
         difficulty,
@@ -156,7 +147,6 @@ pub fn check_calmar_dir() {
                     calmar_dir.display(),
                     err
                 );
-                return;
             }
         },
     }
@@ -199,16 +189,13 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     CalendarReference {
         name,
         path: path_to_calendar_string.to_owned(),
-	active: false
+        active: false,
     }
 }
 
 pub fn yesno(prompt: &str) -> bool {
     print!("{}", prompt);
-    match get_input().trim().to_lowercase().as_str() {
-	"yes" | "y" => true,
-	_ => false
-    }
+    matches!(get_input().trim().to_lowercase().as_str(), "yes" | "y")
 }
 
 /*
@@ -251,18 +238,18 @@ pub fn cal(split_input: &Vec<&str>) {
             return;
         }
     };
-    
+
     let mut calendar_index = get_calendar_index();
     if calendar_index.calendars.is_empty() {
-	new_reference.active = true;
+        new_reference.active = true;
     }
-    
+
     match calendar_index.add_entry(&new_reference) {
         Ok(_) => println!("Added entry to calendar index."),
         Err(_) => {
-	    println!("Failed to get calendar reference");
-	    return;
-	}
+            println!("Failed to get calendar reference");
+            return;
+        }
     }
     save_calendar_index(calendar_index);
     println!("Saved calendar index");
