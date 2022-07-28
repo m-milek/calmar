@@ -1,4 +1,5 @@
 use crate::{event::EventJSON, repl::parser::yesno, validator::get_home_dir};
+use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
@@ -63,7 +64,7 @@ impl CalendarIndex {
                         match std::fs::remove_file(&reference.path) {
                             Ok(_) => (),
                             Err(e) => {
-                                println!("Failed to delete file {}.\n{}", reference.path, e);
+                                println!("{}", format!("Failed to delete file {}.\n{}", reference.path, e).red().bold());
                                 std::process::exit(1);
                             }
                         }
@@ -95,7 +96,7 @@ impl CalendarIndex {
                     match std::fs::remove_file(&reference.path) {
                         Ok(_) => (),
                         Err(e) => {
-                            println!("Failed to delete file {}.\n{}", reference.path, e);
+                            println!("{}", format!("Failed to delete file {}.\n{}", reference.path, e).red().bold());
                             std::process::exit(1);
                         }
                     }
@@ -117,20 +118,20 @@ impl CalendarIndex {
 	
 	match tmp_reference_vec.len() {
 	    0 => {
-		println!("No calendar named {} found.", name);
+		println!("{}", format!("No calendar named {} found.", name).red().bold());
 		return Err(CalendarReturnMessage::Abort)
 	    }
 	    1 => {
 		match std::fs::remove_file(&tmp_reference_vec[0].path) {
 		    Ok(_) => (),
 		    Err(e) => {
-			println!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path, e);
+			println!("{}", format!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path, e).red().bold());
 			return Err(CalendarReturnMessage::Abort)
 		    }
 		}
 	    },
 	    _ => {
-		println!("Multiple calendars named {} found. Please fix ~/.config/index.json before proceeding. Calendars must have unique names.", name);
+		println!("{}", format!("Multiple calendars named {} found. Please fix ~/.config/index.json before proceeding. Calendars must have unique names.", name). red().bold());
 		return Err(CalendarReturnMessage::Abort)
 	    }
 	}
@@ -150,7 +151,7 @@ pub fn get_calendar_index() -> CalendarIndex {
     let content = match read_to_string(&index_file_path) {
         Ok(result) => result,
         Err(e) => {
-            println!("Failed to read {}.\n{}", index_file_path.display(), e);
+            println!("{}", format!("Failed to read {}.\n{}", index_file_path.display(), e).red().bold());
             std::process::exit(1);
         }
     };
@@ -159,9 +160,9 @@ pub fn get_calendar_index() -> CalendarIndex {
         Ok(result) => result,
         Err(e) => {
             println!(
-                "Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}",
+                "{}", format!("Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}",
                 index_file_path.display(),
-                e
+                e).red().bold()
             );
             panic!();
         }
@@ -177,8 +178,8 @@ pub fn get_current_calendar() -> Calendar {
         1 => &index.calendars[0],
         _ => {
             println!(
-                "{} calendars are set as active. There must be exactly one.",
-                index.calendars.len()
+                "{}", format!("{} calendars are set as active. There must be exactly one.",
+                index.calendars.len()).red().bold()
             );
             std::process::exit(1);
         }
@@ -186,7 +187,7 @@ pub fn get_current_calendar() -> Calendar {
     let current_calendar_content = match read_to_string(&current_calendar.path) {
         Ok(content) => content,
         Err(e) => {
-            println!("Failed to read {}.\n{}", current_calendar.path, e);
+            println!("{}", format!("Failed to read {}.\n{}", current_calendar.path, e).red().bold());
             std::process::exit(1);
         }
     };
@@ -194,8 +195,8 @@ pub fn get_current_calendar() -> Calendar {
         Ok(result) => result,
         Err(e) => {
             println!(
-                "Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
-                current_calendar.path, e
+                "{}", format!("Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
+                current_calendar.path, e).red().bold()
             );
             std::process::exit(1);
         }
@@ -210,9 +211,8 @@ pub fn get_active_calendar_reference() -> CalendarReference {
     match index.calendars.len() {
         1 => index.calendars[0].clone(),
         _ => {
-            println!(
-                "{} calendars are set as active. There must be exactly one.",
-                index.calendars.len()
+            println!("{}", format!("{} calendars are set as active. There must be exactly one.",
+                index.calendars.len()).red().bold()
             );
             std::process::exit(1);
         }

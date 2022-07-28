@@ -6,12 +6,12 @@ use crate::CONFIG;
 use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference};
 use crate::event::Event;
 use crate::repl::get_input;
-use crate::validator::{get_home_dir, validate_dir_path};
+use crate::validator::get_home_dir;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
-use std::fs;
+use std::fs::{self};
 use std::path::{Path, PathBuf};
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
@@ -145,9 +145,9 @@ pub fn check_calmar_dir() {
             Ok(_) => (),
             Err(err) => {
                 println!(
-                    "Failed to create directory {}\n{}",
+                    "{}", format!("Failed to create directory {}\n{}",
                     calmar_dir.display(),
-                    err
+                    err).red().bold()
                 );
             }
         },
@@ -186,8 +186,8 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         Some(string) => string,
         None => {
             println!(
-                "Failed to convert {} to string.",
-                path_to_calendar.display()
+                "{}", format!("Failed to convert {} to string.",
+                path_to_calendar.display()).red().bold()
             );
             std::process::exit(1);
         }
@@ -213,18 +213,18 @@ pub fn add(split_input: &Vec<&str>) {
         2 => get_new_event(Some(split_input[1].to_owned())),
         _ => {
             println!(
-                "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1
+                "{}", format!("add: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                split_input.len() - 1).yellow().bold()
             ); // do not count "add" as an argument
             return;
         }
     };
     match save_event(new_event, get_active_calendar_reference()) {
         true => {
-            println!("Successfully saved new event.");
+            println!("{}", "Successfully saved new event.".green().bold());
         }
         false => {
-            println!("Failed to save new event.");
+            println!("{}", "Failed to save new event.".red().bold());
         }
     }
 }
@@ -238,8 +238,8 @@ pub fn cal(split_input: &Vec<&str>) {
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
             println!(
-                "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1
+                "{}", format!("cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                split_input.len() - 1).yellow().bold()
             ); // do not count "cal" as an argument
             return;
         }
@@ -251,14 +251,14 @@ pub fn cal(split_input: &Vec<&str>) {
     }
 
     match calendar_index.add_entry(&new_reference) {
-        Ok(_) => println!("Added entry to calendar index."),
+        Ok(_) => println!("{}", "Added entry to calendar index.".green().bold()),
         Err(_) => {
-            println!("Failed to add new calendar reference to calendar index.");
+            println!("{}", "Failed to add new calendar reference to calendar index.".red().bold());
             return;
         }
     }
     save_calendar_index(calendar_index);
-    println!("Saved calendar index");
+    println!("{}", "Saved calendar index".green().bold());
     save_new_calendar(new_reference);
 }
 
@@ -288,7 +288,7 @@ pub fn removecal(split_input: &Vec<&str>) {
 	1 => get_valid_calendar_name(),
 	2 => split_input[1].to_string(),
 	_ => {
-	    println!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len());
+	    println!("{}", format!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len()).yellow().bold());
 	    return
 	}
     };
@@ -299,7 +299,7 @@ pub fn removecal(split_input: &Vec<&str>) {
     }
 
     save_calendar_index(index);
-    println!("Successfully removed calendar");
+    println!("{}", "Successfully removed calendar".green().bold());
 }
 
 /*
@@ -321,6 +321,6 @@ pub fn parse(input: String) {
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "show" | "s" => show(&split_input),
         "quit" | "q" => std::process::exit(0),
-        _ => println!("Unknown command: {}", split_input[0].trim()),
+        _ => println!("{}", format!("Unknown command: {}", split_input[0].trim()).yellow().bold()),
     }
 }

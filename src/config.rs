@@ -1,7 +1,7 @@
 pub struct Config {
     pub date_format: String,
     pub time_format: String,
-    pub default_path: String
+    pub default_path: String,
     //TODO: add fields
 }
 
