@@ -8,6 +8,7 @@ use crate::event::Event;
 use crate::repl::get_input;
 use crate::validator::{get_home_dir, validate_dir_path};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
+use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
 use std::fs;
@@ -283,24 +284,18 @@ Delete a given calendar
 pub fn removecal(split_input: &Vec<&str>) {
 
     let mut index = get_calendar_index();
-
-    match split_input.len() {
-	1 => {
-	    match index.delete_entry(get_valid_calendar_name()) {
-		Ok(_) => (),
-		Err(_) => return
-	    }
-	},
-	2 => {
-	    match index.delete_entry(split_input[1].to_string()) {
-		Ok(_) => (),
-		Err(_) => return
-	    }
-	}
+    let name = match split_input.len() {
+	1 => get_valid_calendar_name(),
+	2 => split_input[1].to_string(),
 	_ => {
 	    println!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len());
 	    return
 	}
+    };
+
+    match index.delete_entry(name) {
+	Ok(_) => (),
+	Err(_) => return
     }
 
     save_calendar_index(index);
