@@ -252,7 +252,7 @@ pub fn cal(split_input: &Vec<&str>) {
     match calendar_index.add_entry(&new_reference) {
         Ok(_) => println!("Added entry to calendar index."),
         Err(_) => {
-            println!("Failed to get calendar reference");
+            println!("Failed to add new calendar reference to calendar index.");
             return;
         }
     }
@@ -281,8 +281,30 @@ pub fn edit(split_input: &Vec<&str>) {
 Delete a given calendar
 */
 pub fn removecal(split_input: &Vec<&str>) {
-    println!("{:?}", split_input);
-    todo!();
+
+    let mut index = get_calendar_index();
+
+    match split_input.len() {
+	1 => {
+	    match index.delete_entry(get_valid_calendar_name()) {
+		Ok(_) => (),
+		Err(_) => return
+	    }
+	},
+	2 => {
+	    match index.delete_entry(split_input[1].to_string()) {
+		Ok(_) => (),
+		Err(_) => return
+	    }
+	}
+	_ => {
+	    println!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len());
+	    return
+	}
+    }
+
+    save_calendar_index(index);
+    println!("Successfully removed calendar");
 }
 
 /*

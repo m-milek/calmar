@@ -124,3 +124,12 @@ pub fn get_dir_path() -> String {
     }
     input
 }
+
+pub fn get_valid_calendar_name() -> String {
+    let mut input = get_input();
+    while input.is_empty() {
+	print!("Name: ");
+	input = get_input()
+    }
+    input
+}

@@ -109,7 +109,36 @@ impl CalendarIndex {
         self.calendars.push(new_calendar.clone());
         Ok(())
     }
-    pub fn delete_entry() {}
+
+    pub fn delete_entry(&mut self, name: String) -> Result<(), CalendarReturnMessage> {
+
+	let mut tmp_reference_vec = self.calendars.clone();
+	tmp_reference_vec.retain(|r| r.name == name);
+	
+	match tmp_reference_vec.len() {
+	    0 => {
+		println!("No calendar named {} found.", name);
+		return Err(CalendarReturnMessage::Abort)
+	    }
+	    1 => {
+		match std::fs::remove_file(&tmp_reference_vec[0].path) {
+		    Ok(_) => (),
+		    Err(e) => {
+			println!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path, e);
+			return Err(CalendarReturnMessage::Abort)
+		    }
+		}
+	    },
+	    _ => {
+		println!("Multiple calendars named {} found. Please fix ~/.config/index.json before proceeding. Calendars must have unique names.", name);
+		return Err(CalendarReturnMessage::Abort)
+	    }
+	}
+
+	self.calendars.retain(|r| r.name != name);
+	Ok(())
+	
+    }
     pub fn set_calendar() {}
 }
 
