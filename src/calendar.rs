@@ -4,12 +4,21 @@ use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
 #[derive(Debug, Serialize, Deserialize)]
+/// Holds its own name and a vector of `Event` structs.
+/// # Use
+/// An empty `Calendar` may be created with `Calendar::new("foo")`
 pub struct Calendar {
     pub name: String,
     pub events: Vec<EventJSON>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+/// Holds a "pointer" to a file containing a `Calendar` struct.
+/// # Fields
+/// `name`: name of the calendar in file under `path`
+/// `path`: path to the file containing a `Calendar` struct
+/// `active`: determines if the `Calendar` under `path` is currently selected.
+/// There can be only one active calendar.
 pub struct CalendarReference {
     pub name: String,
     pub path: String,
@@ -17,11 +26,13 @@ pub struct CalendarReference {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// Holds a vector of `CalendarReference` structs.
 pub struct CalendarIndex {
     pub calendars: Vec<CalendarReference>,
 }
 
 impl Calendar {
+    /// Create an empty `Calendar` with a given `name`.
     pub fn new(name: &String) -> Self {
         Calendar {
             name: name.to_string(),
@@ -39,10 +50,21 @@ pub enum CalendarReturnMessage {
 }
 
 impl CalendarIndex {
+    /// Adds a new `CalendarReference` to `self.calendars`.
+    ///
+    /// # Executed steps
+    /// * Check for `CalendarReference`s with calendars named like the new one.
+    /// Remove those entries and associated files if the user agrees.
+    ///
+    /// * Check for `CalendarReference`s with a path like the new one.
+    /// Remove those entries and associated files if the user agrees.
+    ///
+    /// * Push the new `CalendarReference` to the `self.calendars`.
     pub fn add_entry(
         &mut self,
         new_calendar: &CalendarReference,
     ) -> Result<(), CalendarReturnMessage> {
+	
         let mut already_saved_entry_names = Vec::<String>::new();
         for reference in &self.calendars {
             already_saved_entry_names.push(reference.name.clone());
@@ -111,6 +133,9 @@ impl CalendarIndex {
         Ok(())
     }
 
+    /// Deletes an entry from `self.calendars` by name.
+    /// Disallows unambigous situations where the number of `CalendarReference`s
+    /// named `name` is not equal to one - returns `CalendarReturnMessage::Abort`.
     pub fn delete_entry(&mut self, name: String) -> Result<(), CalendarReturnMessage> {
 
 	let mut tmp_reference_vec = self.calendars.clone();
@@ -140,9 +165,12 @@ impl CalendarIndex {
 	Ok(())
 	
     }
+    /// Sets calendar named `name` as active.
+    /// Disallows situations where ther is more than one active calendar.
     pub fn set_calendar() {}
 }
 
+/// Returns `CalendarIndex` struct set as active in `$HOME/.config/calmar/index.json`.
 pub fn get_calendar_index() -> CalendarIndex {
     let mut home = get_home_dir();
     home.push(".config/calmar/index.json");
@@ -169,6 +197,8 @@ pub fn get_calendar_index() -> CalendarIndex {
     }
 }
 
+/// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
+/// currently set as active in `$HOME/.config/calmar/index.json`.
 pub fn get_active_calendar() -> Calendar {
     let mut index = get_calendar_index();
     index
@@ -203,11 +233,13 @@ pub fn get_active_calendar() -> Calendar {
     }
 }
 
+/// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
 pub fn get_active_calendar_reference() -> CalendarReference {
     let mut index = get_calendar_index();
     index
         .calendars
         .retain(|calendar_reference| calendar_reference.active);
+    
     match index.calendars.len() {
         1 => index.calendars[0].clone(),
         _ => {
