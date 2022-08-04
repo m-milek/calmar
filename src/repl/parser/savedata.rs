@@ -13,7 +13,12 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
     let file_content = match read_to_string(&calendar_ref.path) {
         Ok(content) => content,
         Err(e) => {
-            println!("{}", format!("Failed to read {}.\n{}", calendar_ref.path, e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to read {}.\n{}", calendar_ref.path, e)
+                    .red()
+                    .bold()
+            );
             return false;
         }
     };
@@ -22,8 +27,13 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
         Ok(result) => result,
         Err(e) => {
             println!(
-                "{}", format!("Failed to parse {}. Check for syntax errors.\n{}",
-                calendar_ref.path, e).red().bold()
+                "{}",
+                format!(
+                    "Failed to parse {}. Check for syntax errors.\n{}",
+                    calendar_ref.path, e
+                )
+                .red()
+                .bold()
             );
             return false;
         }
@@ -46,7 +56,12 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
     {
         Ok(file) => file,
         Err(e) => {
-            println!("{}", format!("Failed to open {}.\n{}", calendar_ref.path, e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to open {}.\n{}", calendar_ref.path, e)
+                    .red()
+                    .bold()
+            );
             return false;
         }
     };
@@ -54,7 +69,12 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
     match write!(new_file, "{}", calendar_json) {
         Ok(_) => (),
         Err(e) => {
-            println!("{}", format!("Failed to write to {}.\n{}", calendar_ref.path, e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to write to {}.\n{}", calendar_ref.path, e)
+                    .red()
+                    .bold()
+            );
             return false;
         }
     };
@@ -71,9 +91,14 @@ pub fn save_calendar_index(calendar_index: CalendarIndex) {
         Ok(file) => file,
         Err(e) => {
             println!(
-                "{}", format!("Failed to open {}.\n{}",
-                home_dir.join(".config/calmar/index.json").display(),
-                e).red().bold()
+                "{}",
+                format!(
+                    "Failed to open {}.\n{}",
+                    home_dir.join(".config/calmar/index.json").display(),
+                    e
+                )
+                .red()
+                .bold()
             );
             std::process::exit(1);
         }
@@ -81,7 +106,12 @@ pub fn save_calendar_index(calendar_index: CalendarIndex) {
     let calendar_index_json: String = match serde_json::ser::to_string_pretty(&calendar_index) {
         Ok(result) => result,
         Err(e) => {
-            println!("{}", "Failed to serialize calendar index to string.\n{e}".red().bold());
+            println!(
+                "{}",
+                "Failed to serialize calendar index to string.\n{e}"
+                    .red()
+                    .bold()
+            );
             std::process::exit(1);
         }
     };
@@ -90,9 +120,14 @@ pub fn save_calendar_index(calendar_index: CalendarIndex) {
         Ok(_) => (),
         Err(e) => {
             println!(
-                "{}", format!("Failed to write to {}.\n{}",
-                home_dir.join(".config/calmar/index.json").display(),
-                e).red().bold()
+                "{}",
+                format!(
+                    "Failed to write to {}.\n{}",
+                    home_dir.join(".config/calmar/index.json").display(),
+                    e
+                )
+                .red()
+                .bold()
             );
         }
     }
@@ -102,7 +137,12 @@ pub fn save_new_calendar(calendar_reference: CalendarReference) {
     let mut calendar_file = match std::fs::File::create(&calendar_reference.path) {
         Ok(file) => file,
         Err(e) => {
-            println!("{}", format!("Failed to create {}.\n{}", calendar_reference.path, e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to create {}.\n{}", calendar_reference.path, e)
+                    .red()
+                    .bold()
+            );
             return;
         }
     };
@@ -111,7 +151,12 @@ pub fn save_new_calendar(calendar_reference: CalendarReference) {
         match serde_json::to_string_pretty(&Calendar::new(&calendar_reference.name)) {
             Ok(result) => result,
             Err(e) => {
-                println!("{}", format!("Failed to serialize calendar to string.\n{}", e).red().bold());
+                println!(
+                    "{}",
+                    format!("Failed to serialize calendar to string.\n{}", e)
+                        .red()
+                        .bold()
+                );
                 return;
             }
         };
@@ -119,8 +164,18 @@ pub fn save_new_calendar(calendar_reference: CalendarReference) {
     match write!(calendar_file, "{}", calendar_json) {
         Ok(_) => (),
         Err(e) => {
-            println!("{}", format!("Failed to write to {}.\n{}", calendar_reference.name, e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to write to {}.\n{}", calendar_reference.name, e)
+                    .red()
+                    .bold()
+            );
         }
     }
-    println!("{}", format!("Written to {}.", calendar_reference.path).green().bold());
+    println!(
+        "{}",
+        format!("Written to {}.", calendar_reference.path)
+            .green()
+            .bold()
+    );
 }

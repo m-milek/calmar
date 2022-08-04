@@ -1,8 +1,8 @@
-use std::{path::PathBuf, str::FromStr};
 use chrono::{LocalResult, TimeZone, Utc};
 use colored::Colorize;
 use home::home_dir;
 use regex::Regex;
+use std::{path::PathBuf, str::FromStr};
 
 pub fn get_config_path() -> PathBuf {
     let mut home = get_home_dir();
@@ -11,7 +11,12 @@ pub fn get_config_path() -> PathBuf {
     match std::fs::File::open(&config_path) {
         Ok(_) => config_path,
         Err(e) => {
-            println!("{}", format!("Failed to open {}.\n{}", config_path.display(), e).red().bold());
+            println!(
+                "{}",
+                format!("Failed to open {}.\n{}", config_path.display(), e)
+                    .red()
+                    .bold()
+            );
             std::process::exit(1);
         }
     }
@@ -41,7 +46,12 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
     match string.trim().parse::<i32>() {
         Ok(num) => Ok(num),
         Err(err) => {
-            println!("{}", format!("Failed to parse {string} to i32.\n{err}").red().bold());
+            println!(
+                "{}",
+                format!("Failed to parse {string} to i32.\n{err}")
+                    .red()
+                    .bold()
+            );
             Err(err)
         }
     }
@@ -49,9 +59,9 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
 
 pub fn validate_dir_path(path: &String) -> bool {
     if path.trim().is_empty() {
-	return true
+        return true;
     }
-    
+
     let path = match PathBuf::from_str(path.as_str()) {
         Ok(path) => path,
         Err(e) => {
@@ -73,7 +83,12 @@ pub fn validate_time(time_string: &str) -> bool {
 
     let re = Regex::new("^[0-9]{2}:[0-9]{2}$").unwrap();
     if !re.is_match(time_string.trim()) {
-        println!("{}", "Input does not conform to specified time format".yellow().bold());
+        println!(
+            "{}",
+            "Input does not conform to specified time format"
+                .yellow()
+                .bold()
+        );
         return false;
     }
     let split_input: Vec<&str> = time_string.split(':').collect();
@@ -93,7 +108,10 @@ pub fn validate_date(date_string: &str) -> bool {
     }
     let re = Regex::new(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$").unwrap();
     if !re.is_match(date_string.trim()) {
-        println!("{}", "Input does not conform to specified format".yellow().bold());
+        println!(
+            "{}",
+            "Input does not conform to specified format".yellow().bold()
+        );
         return false;
     }
 

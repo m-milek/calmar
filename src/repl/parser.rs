@@ -2,11 +2,13 @@ mod getdata;
 mod help;
 mod savedata;
 use self::savedata::{save_calendar_index, save_new_calendar};
-use crate::CONFIG;
-use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference, get_active_calendar};
-use crate::event::{Event, save_calendar};
+use crate::calendar::{
+    get_active_calendar, get_active_calendar_reference, get_calendar_index, CalendarReference,
+};
+use crate::event::{save_calendar, Event};
 use crate::repl::get_input;
 use crate::validator::get_home_dir;
+use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use getdata::*;
@@ -145,9 +147,14 @@ pub fn check_calmar_dir() {
             Ok(_) => (),
             Err(err) => {
                 println!(
-                    "{}", format!("Failed to create directory {}\n{}",
-                    calmar_dir.display(),
-                    err).red().bold()
+                    "{}",
+                    format!(
+                        "Failed to create directory {}\n{}",
+                        calmar_dir.display(),
+                        err
+                    )
+                    .red()
+                    .bold()
                 );
             }
         },
@@ -156,7 +163,7 @@ pub fn check_calmar_dir() {
 
 pub fn default_or_custom(input: String) -> String {
     if input.trim().is_empty() {
-	return CONFIG.default_path.clone();
+        return CONFIG.default_path.clone();
     }
     input
 }
@@ -176,18 +183,22 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         }
     };
 
-    
     print!("Path: ");
     let path = default_or_custom(get_dir_path());
-    
+
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
     let path_to_calendar_string = match path_to_calendar.to_str() {
         Some(string) => string,
         None => {
             println!(
-                "{}", format!("Failed to convert {} to string.",
-                path_to_calendar.display()).red().bold()
+                "{}",
+                format!(
+                    "Failed to convert {} to string.",
+                    path_to_calendar.display()
+                )
+                .red()
+                .bold()
             );
             std::process::exit(1);
         }
@@ -213,8 +224,13 @@ pub fn add(split_input: &Vec<&str>) {
         2 => get_new_event(Some(split_input[1].to_owned())),
         _ => {
             println!(
-                "{}", format!("add: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1).yellow().bold()
+                "{}",
+                format!(
+                    "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                    split_input.len() - 1
+                )
+                .yellow()
+                .bold()
             ); // do not count "add" as an argument
             return;
         }
@@ -238,8 +254,13 @@ pub fn cal(split_input: &Vec<&str>) {
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
             println!(
-                "{}", format!("cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1).yellow().bold()
+                "{}",
+                format!(
+                    "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                    split_input.len() - 1
+                )
+                .yellow()
+                .bold()
             ); // do not count "cal" as an argument
             return;
         }
@@ -253,7 +274,12 @@ pub fn cal(split_input: &Vec<&str>) {
     match calendar_index.add_entry(&new_reference) {
         Ok(_) => println!("{}", "Added entry to calendar index.".green().bold()),
         Err(_) => {
-            println!("{}", "Failed to add new calendar reference to calendar index.".red().bold());
+            println!(
+                "{}",
+                "Failed to add new calendar reference to calendar index."
+                    .red()
+                    .bold()
+            );
             return;
         }
     }
@@ -265,9 +291,9 @@ pub fn cal(split_input: &Vec<&str>) {
 pub fn get_valid_event_name() -> String {
     let mut input = get_input();
     while input.is_empty() {
-	println!("{}", "Event name cannot be an empty string".yellow().bold());
-	print!("Name: ");
-	input = get_input();
+        println!("{}", "Event name cannot be an empty string".yellow().bold());
+        print!("Name: ");
+        input = get_input();
     }
     input
 }
@@ -277,12 +303,15 @@ Delete an event from the currently set calendar
 */
 pub fn remove(split_input: &Vec<&str>) {
     let name = match split_input.len() {
-	1 => get_valid_event_name(),
-	2 => split_input[1].to_owned(),
-	_ => {
-	    println!("remove: Too many arguments provided. Expected: 1 or 2. Got: {}", split_input.len()-1);
-	    return ()
-	}
+        1 => get_valid_event_name(),
+        2 => split_input[1].to_owned(),
+        _ => {
+            println!(
+                "remove: Too many arguments provided. Expected: 1 or 2. Got: {}",
+                split_input.len() - 1
+            );
+            return ();
+        }
     };
     let mut active_calendar = get_active_calendar();
     active_calendar.events.retain(|event| event.name != name);
@@ -301,20 +330,27 @@ pub fn edit(split_input: &Vec<&str>) {
 Delete a given calendar
 */
 pub fn removecal(split_input: &Vec<&str>) {
-
     let mut index = get_calendar_index();
     let name = match split_input.len() {
-	1 => get_valid_calendar_name(),
-	2 => split_input[1].to_string(),
-	_ => {
-	    println!("{}", format!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len()).yellow().bold());
-	    return
-	}
+        1 => get_valid_calendar_name(),
+        2 => split_input[1].to_string(),
+        _ => {
+            println!(
+                "{}",
+                format!(
+                    "removecal: Too many arguments provided. Expected: 0 or 1. Got: {}",
+                    split_input.len()
+                )
+                .yellow()
+                .bold()
+            );
+            return;
+        }
     };
 
     match index.delete_entry(name) {
-	Ok(_) => (),
-	Err(_) => return
+        Ok(_) => (),
+        Err(_) => return,
     }
 
     save_calendar_index(index);
@@ -327,7 +363,7 @@ Display events in the currently set calendar
 pub fn show(split_input: &Vec<&str>) {
     let active_calendar = get_active_calendar();
     for event in active_calendar.events {
-	println!("{:#?}\n\n", event);
+        println!("{:#?}\n\n", event);
     }
 }
 
@@ -342,6 +378,11 @@ pub fn parse(input: String) {
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "show" | "s" => show(&split_input),
         "quit" | "q" => std::process::exit(0),
-        _ => println!("{}", format!("Unknown command: {}", split_input[0].trim()).yellow().bold()),
+        _ => println!(
+            "{}",
+            format!("Unknown command: {}", split_input[0].trim())
+                .yellow()
+                .bold()
+        ),
     }
 }
