@@ -3,7 +3,7 @@ mod help;
 mod savedata;
 use self::savedata::{save_calendar_index, save_new_calendar};
 use crate::CONFIG;
-use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference, get_current_calendar};
+use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference, get_active_calendar};
 use crate::event::{Event, save_calendar};
 use crate::repl::get_input;
 use crate::validator::get_home_dir;
@@ -284,7 +284,7 @@ pub fn remove(split_input: &Vec<&str>) {
 	    return ()
 	}
     };
-    let mut active_calendar = get_current_calendar();
+    let mut active_calendar = get_active_calendar();
     active_calendar.events.retain(|event| event.name != name);
     save_calendar(active_calendar, get_active_calendar_reference().path);
 }
@@ -325,8 +325,10 @@ pub fn removecal(split_input: &Vec<&str>) {
 Display events in the currently set calendar
 */
 pub fn show(split_input: &Vec<&str>) {
-    println!("{:?}", split_input);
-    todo!();
+    let active_calendar = get_active_calendar();
+    for event in active_calendar.events {
+	println!("{:#?}\n\n", event);
+    }
 }
 
 pub fn parse(input: String) {

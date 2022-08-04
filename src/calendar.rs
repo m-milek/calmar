@@ -169,7 +169,7 @@ pub fn get_calendar_index() -> CalendarIndex {
     }
 }
 
-pub fn get_current_calendar() -> Calendar {
+pub fn get_active_calendar() -> Calendar {
     let mut index = get_calendar_index();
     index
         .calendars
