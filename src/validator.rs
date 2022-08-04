@@ -1,4 +1,4 @@
-use std::{path::PathBuf, str::FromStr, borrow::Borrow};
+use std::{path::PathBuf, str::FromStr};
 use chrono::{LocalResult, TimeZone, Utc};
 use colored::Colorize;
 use home::home_dir;

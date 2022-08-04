@@ -3,8 +3,8 @@ mod help;
 mod savedata;
 use self::savedata::{save_calendar_index, save_new_calendar};
 use crate::CONFIG;
-use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference};
-use crate::event::Event;
+use crate::calendar::{get_active_calendar_reference, get_calendar_index, CalendarReference, get_current_calendar};
+use crate::event::{Event, save_calendar};
 use crate::repl::get_input;
 use crate::validator::get_home_dir;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
@@ -262,12 +262,31 @@ pub fn cal(split_input: &Vec<&str>) {
     save_new_calendar(new_reference);
 }
 
+pub fn get_valid_event_name() -> String {
+    let mut input = get_input();
+    while input.is_empty() {
+	println!("{}", "Event name cannot be an empty string".yellow().bold());
+	print!("Name: ");
+	input = get_input();
+    }
+    input
+}
+
 /*
 Delete an event from the currently set calendar
 */
 pub fn remove(split_input: &Vec<&str>) {
-    println!("{:?}", split_input);
-    todo!();
+    let name = match split_input.len() {
+	1 => get_valid_event_name(),
+	2 => split_input[1].to_owned(),
+	_ => {
+	    println!("remove: Too many arguments provided. Expected: 1 or 2. Got: {}", split_input.len()-1);
+	    return ()
+	}
+    };
+    let mut active_calendar = get_current_calendar();
+    active_calendar.events.retain(|event| event.name != name);
+    save_calendar(active_calendar, get_active_calendar_reference().path);
 }
 
 /*

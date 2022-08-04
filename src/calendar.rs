@@ -218,3 +218,4 @@ pub fn get_active_calendar_reference() -> CalendarReference {
         }
     }
 }
+

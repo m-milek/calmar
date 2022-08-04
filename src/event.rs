@@ -1,6 +1,9 @@
 use chrono::{DateTime, Local, TimeZone};
 use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
+use std::io::Write;
+
+use crate::calendar::Calendar;
 
 #[derive(Debug)]
 pub struct Event {
@@ -53,5 +56,35 @@ impl EventJSON {
             priority: self.priority,
             difficulty: self.difficulty,
         }
+    }
+}
+
+pub fn save_calendar(calendar: Calendar, path: String) {
+
+    let mut calendar_file = match std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&path) {
+	    Ok(file) => file,
+	    Err(e) => {
+		println!("Failed to open {path}.\n{e}");
+		std::process::exit(1);
+	    }
+	};
+
+    let calendar_json = match serde_json::to_string_pretty(&calendar) {
+	Ok(result) => result,
+	Err(e) => {
+	    println!("Failed to parse the calendar into string.\n{e}");
+	    std::process::exit(1);
+	}
+    };
+    
+    match write!(calendar_file, "{}", calendar_json) {
+	Ok(_) => (),
+	Err(e) => {
+	    println!("Failed to write to {path}.\n{e}");
+	    std::process::exit(1);
+	}
     }
 }

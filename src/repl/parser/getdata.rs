@@ -1,5 +1,5 @@
 use super::{parse_into_date, parse_into_time};
-use crate::repl::get_input;
+use crate::{repl::get_input, calendar::get_active_calendar_reference};
 use crate::validator::*;
 use chrono::{Date, Local, NaiveTime};
 use colored::Colorize;
@@ -136,3 +136,4 @@ pub fn get_valid_calendar_name() -> String {
     }
     input
 }
+
