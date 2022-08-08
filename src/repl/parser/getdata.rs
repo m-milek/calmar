@@ -1,7 +1,7 @@
 use super::{parse_into_date, parse_into_time};
 use crate::calendar::get_calendar_index;
+use crate::repl::get_input;
 use crate::validator::*;
-use crate::{calendar::get_active_calendar_reference, repl::get_input};
 use chrono::{Date, Local, NaiveTime};
 use colored::Colorize;
 

@@ -3,30 +3,30 @@ use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
-#[derive(Debug, Serialize, Deserialize)]
 /// Holds its own name and a vector of `Event` structs.
 /// # Use
 /// An empty `Calendar` may be created with `Calendar::new("foo")`
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Calendar {
     pub name: String,
     pub events: Vec<EventJSON>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
 /// `name`: name of the calendar in file under `path`
 /// `path`: path to the file containing a `Calendar` struct
 /// `active`: determines if the `Calendar` under `path` is currently selected.
 /// There can be only one active calendar.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CalendarReference {
     pub name: String,
     pub path: String,
     pub active: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
 /// Holds a vector of `CalendarReference` structs.
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CalendarIndex {
     pub calendars: Vec<CalendarReference>,
 }
@@ -40,7 +40,6 @@ impl Calendar {
         }
     }
     pub fn rename() {}
-    pub fn delete() {}
     pub fn set_name() {}
     pub fn set_path() {}
 }
@@ -181,9 +180,6 @@ impl CalendarIndex {
         self.calendars.retain(|r| r.name != name);
         Ok(())
     }
-    /// Sets calendar named `name` as active.
-    /// Disallows situations where ther is more than one active calendar.
-    pub fn set_calendar() {}
 }
 
 /// Returns `CalendarIndex` struct set as active in `$HOME/.config/calmar/index.json`.
@@ -302,14 +298,25 @@ pub fn check_if_calendar_exists(name: &String) -> bool {
     let mut calendars = get_calendar_index().calendars;
     calendars.retain(|calendar| &calendar.name == name);
     match calendars.len() {
-	0 => {
-	    println!("{}", format!("No calendars named {}.", name).yellow().bold());
-	    false
-	}
-	1 => true,
-	_ => {
-	    println!("{}", format!("More than one calendar named {}. Please correct this and retry.", name).yellow().bold());
-	    false
-	}
+        0 => {
+            println!(
+                "{}",
+                format!("No calendars named {}.", name).yellow().bold()
+            );
+            false
+        }
+        1 => true,
+        _ => {
+            println!(
+                "{}",
+                format!(
+                    "More than one calendar named {}. Please correct this and retry.",
+                    name
+                )
+                .yellow()
+                .bold()
+            );
+            false
+        }
     }
 }

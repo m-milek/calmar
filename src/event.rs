@@ -1,9 +1,8 @@
-use chrono::{DateTime, Local, TimeZone};
+use crate::calendar::Calendar;
+use chrono::{DateTime, Local};
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 use std::str::FromStr;
-
-use crate::calendar::Calendar;
 
 #[derive(Debug)]
 pub struct Event {
@@ -24,16 +23,6 @@ pub struct EventJSON {
 }
 
 impl Event {
-    pub fn default() -> Self {
-        Event {
-            name: "None".to_owned(),
-            start: Local.ymd(1970, 1, 1).and_hms(0, 0, 0),
-            end: Local.ymd(1970, 1, 1).and_hms(0, 0, 0),
-            priority: 0,
-            difficulty: 0,
-        }
-    }
-
     pub fn to_event_json(&self) -> EventJSON {
         EventJSON {
             name: self.name.clone(),
@@ -46,6 +35,7 @@ impl Event {
 }
 
 impl EventJSON {
+    #[allow(dead_code)]
     pub fn to_standard_event(&self) -> Event {
         Event {
             name: self.name.clone(),

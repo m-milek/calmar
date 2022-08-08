@@ -43,7 +43,7 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
 
     let calendar_json: String = match serde_json::ser::to_string_pretty(&calendar) {
         Ok(result) => result,
-        Err(e) => {
+        Err(_e) => {
             println!("{}", "Failed to parse Event to String.\n{e}".red().bold());
             return false;
         }
@@ -105,7 +105,7 @@ pub fn save_calendar_index(calendar_index: CalendarIndex) {
     };
     let calendar_index_json: String = match serde_json::ser::to_string_pretty(&calendar_index) {
         Ok(result) => result,
-        Err(e) => {
+        Err(_e) => {
             println!(
                 "{}",
                 "Failed to serialize calendar index to string.\n{e}"

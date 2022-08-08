@@ -57,14 +57,14 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
     }
 }
 
-pub fn validate_dir_path(path: &String) -> bool {
+pub fn validate_dir_path(path: &str) -> bool {
     if path.trim().is_empty() {
         return true;
     }
 
-    let path = match PathBuf::from_str(path.as_str()) {
+    let path = match PathBuf::from_str(path) {
         Ok(path) => path,
-        Err(e) => {
+        Err(_e) => {
             println!("{}", "Failed to parse {path} as path.\n{e}".red().bold());
             return false;
         }
