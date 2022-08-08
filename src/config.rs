@@ -28,7 +28,7 @@ pub fn get_config() -> Config {
 	- white
 	- bright_*
 	*/
-	prompt_color: "white".to_string(),
+	prompt_color: "bright_white".to_string(),
 	prompt_bold: true,
 	prompt_italic: false,
 	prompt_underline: false,

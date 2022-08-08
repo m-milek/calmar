@@ -1,4 +1,5 @@
 use super::{parse_into_date, parse_into_time};
+use crate::calendar::get_calendar_index;
 use crate::validator::*;
 use crate::{calendar::get_active_calendar_reference, repl::get_input};
 use chrono::{Date, Local, NaiveTime};
@@ -174,4 +175,10 @@ pub fn get_valid_calendar_name() -> String {
         input = get_input()
     }
     input
+}
+
+pub fn get_number_of_active_calendars() -> i32 {
+    let mut calendars = get_calendar_index().calendars;
+    calendars.retain(|calendar| calendar.active);
+    calendars.len() as i32
 }

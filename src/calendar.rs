@@ -297,3 +297,19 @@ pub fn get_active_calendar_reference() -> CalendarReference {
         }
     }
 }
+
+pub fn check_if_calendar_exists(name: &String) -> bool {
+    let mut calendars = get_calendar_index().calendars;
+    calendars.retain(|calendar| &calendar.name == name);
+    match calendars.len() {
+	0 => {
+	    println!("{}", format!("No calendars named {}.", name).yellow().bold());
+	    false
+	}
+	1 => true,
+	_ => {
+	    println!("{}", format!("More than one calendar named {}. Please correct this and retry.", name).yellow().bold());
+	    false
+	}
+    }
+}

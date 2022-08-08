@@ -3,7 +3,7 @@ mod help;
 mod savedata;
 use self::savedata::{save_calendar_index, save_new_calendar};
 use crate::calendar::{
-    get_active_calendar, get_active_calendar_reference, get_calendar_index, CalendarReference,
+    get_active_calendar, get_active_calendar_reference, get_calendar_index, CalendarReference, check_if_calendar_exists,
 };
 use crate::event::{save_calendar, Event};
 use crate::repl::get_input;
@@ -339,7 +339,7 @@ pub fn removecal(split_input: &Vec<&str>) {
                 "{}",
                 format!(
                     "removecal: Too many arguments provided. Expected: 0 or 1. Got: {}",
-                    split_input.len()
+                    split_input.len()-1
                 )
                 .yellow()
                 .bold()
@@ -360,11 +360,51 @@ pub fn removecal(split_input: &Vec<&str>) {
 /*
 Display events in the currently set calendar
 */
-pub fn show(split_input: &Vec<&str>) {
+pub fn list(split_input: &Vec<&str>) {
     let active_calendar = get_active_calendar();
     for event in active_calendar.events {
         println!("{:#?}\n\n", event);
     }
+}
+
+pub fn set(split_input: &Vec<&str>) {
+    let name = match split_input.len() {
+	1 => get_valid_event_name(),
+	2 => split_input[1].to_string(),
+	_ => {
+	    println!("{}", format!("set: Too many arguments provided. Expected: 1 or 2. Got: {}", split_input.len()).yellow().bold());
+	    return
+	}
+    };
+
+    if !check_if_calendar_exists(&name) {
+	return
+    }
+    
+    match get_number_of_active_calendars() {
+	0 => {
+	    println!("{}", "No calendars are set as active. Please correct this and retry.".yellow().bold());
+	    return
+	},
+	1 => (),
+	_ => {
+	    println!("{}","More than one calendar is set as active. Please correct this and retry.".yellow().bold());
+	    return
+	}
+    }
+
+    let mut index = get_calendar_index();
+    // Set the currently active calendar as not active
+    // Set the desired calendar as active
+    for calendar in &mut index.calendars {
+	if calendar.active {
+	    calendar.active = false;
+	}
+	if calendar.name == name {
+	    calendar.active = true;
+	}
+    }
+    save_calendar_index(index)
 }
 
 pub fn parse(input: String) {
@@ -376,7 +416,8 @@ pub fn parse(input: String) {
         "help" | "h" => help::print_help(split_input[0]),
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
-        "show" | "s" => show(&split_input),
+	"set" | "s" => set(&split_input),
+        "list" | "l" | "ls" => list(&split_input),
         "quit" | "q" => std::process::exit(0),
         _ => println!(
             "{}",
