@@ -1,7 +1,6 @@
+use crate::CONFIG;
 use colored::Colorize;
 use std::io::{self, Write};
-
-use crate::CONFIG;
 pub mod parser;
 
 /*
@@ -10,7 +9,8 @@ Perfom everything necessary to get clean input from stdin:
 - read line
 - pop the '\n' character
 - trim trailing whitespace
-*/
+ */
+/// Get clean stdin input without trailing spaces and newline
 fn get_input() -> String {
     let mut input = String::new();
     io::stdout().flush().expect("flush stdout");
@@ -21,6 +21,8 @@ fn get_input() -> String {
     input.as_str().trim().to_owned()
 }
 
+/// Print a prompt as defined in config.json,
+/// add a space at the end.
 fn print_prompt() {
     let prompt_text = &CONFIG.prompt_text;
     let mut prompt = prompt_text.white();
@@ -63,11 +65,10 @@ fn print_prompt() {
 
 /*
 Continously get input and handle it until the process ends
-*/
+ */
 pub fn run() {
     let mut input;
     loop {
-        //print!("{}", "[calmar] ".bold());
         print_prompt();
         input = get_input();
         match input.as_str() {
