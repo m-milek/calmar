@@ -8,14 +8,12 @@ use crate::calendar::{
 };
 use crate::event::{save_calendar, Event};
 use crate::repl::get_input;
-use crate::validator::get_home_dir;
 use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
-use std::fs::{self};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -88,10 +86,7 @@ pub fn parse_into_duration(input: &str) -> Duration {
     }
 }
 
-/*
-Get all data necessary to construct a valid Event object and return an Event.
-Validate all input and ask for it until it's valid
- */
+/// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
     let name = match name {
         Some(name) => name,
@@ -138,30 +133,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
 }
 
-pub fn check_calmar_dir() {
-    let mut calmar_dir = get_home_dir();
-    calmar_dir.push(".calmar");
-
-    match Path::new(&calmar_dir).is_dir() {
-        true => (),
-        false => match fs::create_dir(&calmar_dir) {
-            Ok(_) => (),
-            Err(err) => {
-                println!(
-                    "{}",
-                    format!(
-                        "Failed to create directory {}\n{}",
-                        calmar_dir.display(),
-                        err
-                    )
-                    .red()
-                    .bold()
-                );
-            }
-        },
-    }
-}
-
 pub fn default_or_custom(input: String) -> String {
     if input.trim().is_empty() {
         return CONFIG.default_path.clone();
@@ -174,8 +145,9 @@ Given 'name' of a new calendar, the function gets the home directory,
 verifies the existence of a $HOME/.calmar directory,
 creates a JSON file with the given 'name' under $HOME/.calmar.
 If file named 'name' already exists, it asks the user for confirmation.
-*/
-pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
+ */
+/// Create a calendar reference and return it.
+fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let name = match name {
         Some(name) => name,
         None => {
@@ -218,8 +190,9 @@ pub fn yesno(prompt: &str) -> bool {
 
 /*
 Call event creation with name given optionally
-*/
-pub fn add(split_input: &Vec<&str>) {
+ */
+/// Create a new event and save it to the active calednar.
+fn add(split_input: &Vec<&str>) {
     let new_event: Event = match split_input.len() {
         1 => get_new_event(None),
         2 => get_new_event(Some(split_input[1].to_owned())),
@@ -246,10 +219,8 @@ pub fn add(split_input: &Vec<&str>) {
     }
 }
 
-/*
-Call calendar creation with name given optionally
-*/
-pub fn cal(split_input: &Vec<&str>) {
+/// Create a new calendar and save it to the calendar index.
+fn cal(split_input: &Vec<&str>) {
     let mut new_reference = match split_input.len() {
         1 => get_new_calendar_reference(None),
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
@@ -289,7 +260,7 @@ pub fn cal(split_input: &Vec<&str>) {
     save_new_calendar(new_reference);
 }
 
-pub fn get_valid_event_name() -> String {
+fn get_valid_event_name() -> String {
     let mut input = get_input();
     while input.is_empty() {
         println!("{}", "Event name cannot be an empty string".yellow().bold());
@@ -299,10 +270,8 @@ pub fn get_valid_event_name() -> String {
     input
 }
 
-/*
-Delete an event from the currently set calendar
-*/
-pub fn remove(split_input: &Vec<&str>) {
+/// Delete an event from the active calendar
+fn remove(split_input: &Vec<&str>) {
     let name = match split_input.len() {
         1 => get_valid_event_name(),
         2 => split_input[1].to_owned(),
@@ -322,15 +291,13 @@ pub fn remove(split_input: &Vec<&str>) {
 /*
 Edit attributes of a given event and save it
 */
-pub fn edit(split_input: &Vec<&str>) {
+fn edit(split_input: &Vec<&str>) {
     println!("{:?}", split_input);
     todo!();
 }
 
-/*
-Delete a given calendar
-*/
-pub fn removecal(split_input: &Vec<&str>) {
+/// Delete a calendar
+fn removecal(split_input: &Vec<&str>) {
     let mut index = get_calendar_index();
     let name = match split_input.len() {
         1 => get_valid_calendar_name(),
@@ -358,18 +325,16 @@ pub fn removecal(split_input: &Vec<&str>) {
     println!("{}", "Successfully removed calendar".green().bold());
 }
 
-/*
-Display events in the currently set calendar
-*/
-pub fn list(split_input: &Vec<&str>) {
-    println!("{:?}", split_input);
+/// Display events in the active calendar
+fn list(split_input: &Vec<&str>) {
     let active_calendar = get_active_calendar();
     for event in active_calendar.events {
-        println!("{:#?}\n\n", event);
+        println!("{:#?}\n", event);
     }
 }
 
-pub fn set(split_input: &Vec<&str>) {
+/// Change the active calednar
+fn set(split_input: &Vec<&str>) {
     let name = match split_input.len() {
         1 => get_valid_event_name(),
         2 => split_input[1].to_string(),
@@ -427,11 +392,31 @@ pub fn set(split_input: &Vec<&str>) {
     save_calendar_index(index)
 }
 
+fn clear(split_input: &Vec<&str>) {    match split_input.len() {
+        1 => {
+            println!("\u{001b}c");
+        }
+        _ => {
+            println!(
+                "{}",
+                format!(
+                    "clear: Invalid number of arguments. Expected: 0. Got: {}",
+                    split_input.len() - 1
+                )
+                .yellow()
+                .bold()
+            );
+        }
+    }
+}
+
+/// Handle input and call appropriate functions.
 pub fn parse(input: String) {
     let split_input: Vec<&str> = input.split_whitespace().collect();
-    match split_input[0].trim().to_lowercase().as_str() {
+    match split_input[0].trim() {
         "add" | "a" => add(&split_input),
         "cal" | "c" => cal(&split_input),
+        "clear" => clear(&split_input),
         "edit" | "e" => edit(&split_input),
         "help" | "h" => help::print_help(split_input[0]),
         "remove" | "rm" | "r" => remove(&split_input),
