@@ -6,14 +6,16 @@ use crate::calendar::{
     check_if_calendar_exists, get_active_calendar, get_active_calendar_reference,
     get_calendar_index, CalendarReference,
 };
-use crate::event::{save_calendar, Event};
+use crate::event::{self, save_calendar, Event, EventJSON};
 use crate::repl::get_input;
+use crate::validator::is_numeric;
 use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
 use std::path::PathBuf;
+use struct_field_names_as_array::FieldNamesAsArray;
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -288,12 +290,128 @@ fn remove(split_input: &Vec<&str>) {
     save_calendar(active_calendar, get_active_calendar_reference().path);
 }
 
+fn get_event_index(events: &Vec<EventJSON>) -> usize {
+    let displayed_range = if events.len() == 1 {
+        1.to_string()
+    } else {
+        1.to_string() + "-" + &events.len().to_string()
+    };
+
+    let num: usize = {
+        print!("Which event do you want to edit? [{}]: ", displayed_range);
+        let mut num_str = get_input();
+        while !is_numeric(&num_str) {
+            println!(
+                "{}",
+                "Invalid input. Enter a non-negative number".yellow().bold()
+            );
+            print!("Which event do you want to edit?: ");
+            num_str = get_input();
+        }
+
+        let mut number = num_str.parse::<usize>().unwrap();
+        while !(1..=events.len()).contains(&number) {
+            println!(
+                "{}",
+                format!("Number not in range. Allowed values: {}", displayed_range)
+                    .yellow()
+                    .bold()
+            );
+            print!("Which event do you want to edit?: ");
+            num_str = get_input();
+            number = num_str.parse::<usize>().unwrap();
+        }
+        number
+    };
+    num
+}
+
+fn uppercase_first_letter(s: &str) -> String {
+    s[0..1].to_uppercase() + &s[1..]
+}
+
+fn edit_event(event_name: &str) {
+    let mut active_calendar = get_active_calendar();
+
+    // Choose an event to be edited
+    let events_named_like_arg: Vec<event::EventJSON> = active_calendar
+        .events
+        .clone()
+        .into_iter()
+        .filter(|event| event.name == event_name)
+        .collect();
+    if events_named_like_arg.is_empty() {
+        println!(
+            "{}",
+            format!("No event named {} found.", event_name)
+                .yellow()
+                .bold()
+        );
+        return;
+    }
+    let index_to_select = match events_named_like_arg.len() {
+        1 => 1,
+        _ => get_event_index(&events_named_like_arg) - 1,
+    };
+    let event_ref = &mut active_calendar.events[index_to_select];
+
+    // Choose a property to be edited
+    let fields = EventJSON::FIELD_NAMES_AS_ARRAY.to_vec();
+    let mut fields_list: Vec<String> = fields.into_iter().map(|s| uppercase_first_letter(s)).collect();
+    fields_list.insert(2, "Duration".to_string());
+    let displayed_range = 1.to_string() + "-" + &fields_list.len().to_string();
+    
+    let mut i: u8 = 1;
+    for field in &fields_list {
+	println!("{i}. {field}");
+	i+=1;
+    }
+    
+    let num: usize = {
+        print!("Select a property to be edited [{}]: ", displayed_range);
+        let mut num_str = get_input();
+        while !is_numeric(&num_str) {
+            println!(
+                "{}",
+                "Invalid input. Enter a non-negative number".yellow().bold()
+            );
+	    print!("Select property to be edited [{}]: ", displayed_range);
+            num_str = get_input();
+        }
+
+        let mut number = num_str.parse::<usize>().unwrap();
+        while !(1..=fields_list.len()).contains(&number) {
+            println!(
+                "{}",
+                format!("Number not in range. Allowed values: {}", displayed_range)
+                    .yellow()
+                    .bold()
+            );
+	    print!("Select property to be edited [{}]: ", displayed_range);
+            num_str = get_input();
+            number = num_str.parse::<usize>().unwrap();
+        }
+        number
+    };
+    
+    match num {
+	1 => todo!("Edit name"),
+	2 => todo!("Edit start time"),
+	3 => todo!("Edit duration"),
+	4 => todo!("Edit end time"),
+	5 => todo!("Edit priority"),
+	6 => todo!("Edit difficulty"),
+	_ => panic!("Impossible")
+    }
+}
+
 /*
 Edit attributes of a given event and save it
 */
 fn edit(split_input: &Vec<&str>) {
-    println!("{:?}", split_input);
-    todo!();
+    for event_name in split_input[1..].iter() {
+        edit_event(event_name);
+    }
 }
 
 /// Delete a calendar
@@ -329,7 +447,7 @@ fn removecal(split_input: &Vec<&str>) {
 fn list(split_input: &Vec<&str>) {
     let active_calendar = get_active_calendar();
     for event in active_calendar.events {
-        println!("{:#?}\n", event);
+        println!("{:#?}\n", event.to_standard_event());
     }
 }
 
@@ -392,7 +510,8 @@ fn set(split_input: &Vec<&str>) {
     save_calendar_index(index)
 }
 
-fn clear(split_input: &Vec<&str>) {    match split_input.len() {
+fn clear(split_input: &Vec<&str>) {
+    match split_input.len() {
         1 => {
             println!("\u{001b}c");
         }

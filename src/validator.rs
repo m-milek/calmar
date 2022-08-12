@@ -2,7 +2,7 @@ use chrono::{LocalResult, TimeZone, Utc};
 use colored::Colorize;
 use home::home_dir;
 use regex::Regex;
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, collections::hash_map::DefaultHasher};
 
 pub fn get_config_path() -> PathBuf {
     let mut home = get_home_dir();
@@ -33,7 +33,10 @@ pub fn get_home_dir() -> PathBuf {
     home
 }
 
-fn is_numeric(string: &str) -> bool {
+pub fn is_numeric(string: &str) -> bool {
+    if string.is_empty() {
+	return false
+    }
     for char in string.chars() {
         if !char.is_numeric() {
             return false;

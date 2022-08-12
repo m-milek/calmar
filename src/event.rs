@@ -1,8 +1,10 @@
 use crate::calendar::Calendar;
 use chrono::{DateTime, Local};
 use serde_derive::{Deserialize, Serialize};
+use struct_field_names_as_array::FieldNamesAsArray;
 use std::io::Write;
 use std::str::FromStr;
+
 
 #[derive(Debug)]
 pub struct Event {
@@ -13,7 +15,7 @@ pub struct Event {
     pub difficulty: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, FieldNamesAsArray)]
 pub struct EventJSON {
     pub name: String,
     pub start: String,

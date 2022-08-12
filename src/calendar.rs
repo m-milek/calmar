@@ -6,7 +6,7 @@ use std::fs::read_to_string;
 /// Holds its own name and a vector of `Event` structs.
 /// # Use
 /// An empty `Calendar` may be created with `Calendar::new("foo")`
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Calendar {
     pub name: String,
     pub events: Vec<EventJSON>,
