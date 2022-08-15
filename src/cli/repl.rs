@@ -1,8 +1,6 @@
 use crate::CONFIG;
 use colored::Colorize;
 use std::io::{self, Write};
-pub mod parser;
-
 /*
 Perfom everything necessary to get clean input from stdin:
 - flush stdout as recommended in the docs
@@ -11,7 +9,7 @@ Perfom everything necessary to get clean input from stdin:
 - trim trailing whitespace
  */
 /// Get clean stdin input without trailing spaces and newline
-fn get_input() -> String {
+pub fn get_input() -> String {
     let mut input = String::new();
     io::stdout().flush().expect("flush stdout");
     io::stdin()
@@ -73,7 +71,7 @@ pub fn run() {
         input = get_input();
         match input.as_str() {
             "" => (),
-            _ => parser::parse(input),
+            _ => crate::cli::parser::parse(input),
         }
     }
 }

@@ -1,8 +1,7 @@
 use colored::Colorize;
-
-use crate::calendar::{Calendar, CalendarIndex, CalendarReference};
-use crate::event::Event;
-use crate::validator::get_home_dir;
+use crate::cal::calendar::{Calendar, CalendarIndex, CalendarReference};
+use crate::cal::event::Event;
+use crate::cal::validator::get_home_dir;
 use std::fs::read_to_string;
 use std::io::Write;
 

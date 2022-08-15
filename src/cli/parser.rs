@@ -1,21 +1,15 @@
-mod getdata;
-mod help;
-mod savedata;
-use self::savedata::{save_calendar_index, save_new_calendar};
-use crate::calendar::{
-    check_if_calendar_exists, get_active_calendar, get_active_calendar_reference,
-    get_calendar_index, CalendarReference,
-};
-use crate::event::{self, save_calendar, Event, EventJSON};
-use crate::repl::get_input;
-use crate::validator::is_numeric;
-use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
-use getdata::*;
-use savedata::save_event;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use crate::cal::savedata::{save_calendar_index, save_new_calendar, save_event};
+use crate::cal::calendar::{check_if_calendar_exists, get_active_calendar, get_active_calendar_reference, get_calendar_index, CalendarReference};
+use crate::cal::event::{self, save_calendar, Event, EventJSON};
+use crate::cli::repl::get_input;
+use crate::cal::validator::is_numeric;
+use crate::cal::getdata::{get_duration, get_end_date, get_end_time, get_name, get_priority, get_start_date, get_start_time, get_difficulty, get_dir_path, get_number_of_active_calendars, get_valid_calendar_name};
+use crate::cal::help;
+use crate::CONFIG;
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {

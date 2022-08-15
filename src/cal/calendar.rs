@@ -1,7 +1,9 @@
-use crate::{event::EventJSON, repl::parser::yesno, validator::get_home_dir};
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
+use crate::cal::event::EventJSON;
+use crate::cli::parser::yesno;
+use crate::cal::validator::get_home_dir;
 
 /// Holds its own name and a vector of `Event` structs.
 /// # Use

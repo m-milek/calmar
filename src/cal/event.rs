@@ -1,10 +1,9 @@
-use crate::calendar::Calendar;
 use chrono::{DateTime, Local};
 use serde_derive::{Deserialize, Serialize};
 use struct_field_names_as_array::FieldNamesAsArray;
 use std::io::Write;
 use std::str::FromStr;
-
+use crate::cal::calendar::Calendar;
 
 #[derive(Debug)]
 pub struct Event {

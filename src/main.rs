@@ -1,11 +1,19 @@
-mod calendar;
-mod config;
-mod event;
-mod repl;
-mod test;
-mod validator;
-use crate::config::{get_config, Config};
+mod cal {
+    pub mod calendar;
+    pub mod event;
+    pub mod getconfig;
+    pub mod getdata;
+    pub mod help;
+    pub mod savedata;
+    pub mod validator;
+}
+mod cli {
+    pub mod parser;
+    pub mod repl;
+}
+use crate::cal::getconfig::{Config, get_config};
 use lazy_static::lazy_static;
+use crate::cli::repl;
 
 lazy_static! {
     pub static ref CONFIG: Config = get_config();
