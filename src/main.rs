@@ -11,9 +11,9 @@ mod cli {
     pub mod parser;
     pub mod repl;
 }
-use crate::cal::getconfig::{Config, get_config};
-use lazy_static::lazy_static;
+use crate::cal::getconfig::{get_config, Config};
 use crate::cli::repl;
+use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref CONFIG: Config = get_config();

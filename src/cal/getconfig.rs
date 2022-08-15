@@ -1,7 +1,7 @@
+use crate::cal::validator::get_home_dir;
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
-use crate::cal::validator::get_home_dir;
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {

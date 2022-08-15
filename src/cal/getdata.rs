@@ -1,9 +1,9 @@
-use chrono::{Date, Local, NaiveTime};
-use colored::Colorize;
+use crate::cal::calendar::get_calendar_index;
+use crate::cal::validator::*;
 use crate::cli::parser::{parse_into_date, parse_into_time};
 use crate::cli::repl::get_input;
-use crate::cal::validator::*;
-use crate::cal::calendar::get_calendar_index;
+use chrono::{Date, Local, NaiveTime};
+use colored::Colorize;
 
 /*
 Return a non-empty string

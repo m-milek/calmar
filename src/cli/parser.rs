@@ -1,15 +1,22 @@
+use crate::cal::calendar::{
+    check_if_calendar_exists, get_active_calendar, get_active_calendar_reference,
+    get_calendar_index, CalendarReference,
+};
+use crate::cal::event::{self, save_calendar, Event, EventJSON};
+use crate::cal::getdata::{
+    get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_name,
+    get_number_of_active_calendars, get_priority, get_start_date, get_start_time,
+    get_valid_calendar_name,
+};
+use crate::cal::help;
+use crate::cal::savedata::{save_calendar_index, save_event, save_new_calendar};
+use crate::cal::validator::is_numeric;
+use crate::cli::repl::get_input;
+use crate::CONFIG;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use crate::cal::savedata::{save_calendar_index, save_new_calendar, save_event};
-use crate::cal::calendar::{check_if_calendar_exists, get_active_calendar, get_active_calendar_reference, get_calendar_index, CalendarReference};
-use crate::cal::event::{self, save_calendar, Event, EventJSON};
-use crate::cli::repl::get_input;
-use crate::cal::validator::is_numeric;
-use crate::cal::getdata::{get_duration, get_end_date, get_end_time, get_name, get_priority, get_start_date, get_start_time, get_difficulty, get_dir_path, get_number_of_active_calendars, get_valid_calendar_name};
-use crate::cal::help;
-use crate::CONFIG;
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -325,27 +332,27 @@ fn uppercase_first_letter(s: &str) -> String {
 }
 
 fn select_in_range(prompt: &str, max: usize) -> usize {
-
     let displayed_range = match max {
-	1 => 1.to_string(),
-	_ => 1.to_string() + "-" + max.to_string().as_str()
+        1 => 1.to_string(),
+        _ => 1.to_string() + "-" + max.to_string().as_str(),
     };
 
     loop {
-	print!("{} [{}]: ", prompt, displayed_range);
-	match get_input().parse::<usize>() {
-	    Ok(num) => {
-		match (1..=max).contains(&num) {
-		    true => {
-			return num;
-		    },
-		    false => println!("{}", "Number not in range".yellow().bold())
-		}
-	    },
-	    Err(_) => {
-		println!("{}", "Invalid input. Enter a non-negative number".yellow().bold());
-	    }
-	}
+        print!("{} [{}]: ", prompt, displayed_range);
+        match get_input().parse::<usize>() {
+            Ok(num) => match (1..=max).contains(&num) {
+                true => {
+                    return num;
+                }
+                false => println!("{}", "Number not in range".yellow().bold()),
+            },
+            Err(_) => {
+                println!(
+                    "{}",
+                    "Invalid input. Enter a non-negative number".yellow().bold()
+                );
+            }
+        }
     }
 }
 
@@ -353,14 +360,14 @@ fn edit_event(event_name: &str) {
     let mut active_calendar = get_active_calendar();
 
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events.len());
-    let mut i=0;
-    for (num, event) in active_calendar.events.iter().enumerate(){
-	if event.name == event_name {
-	    index_map.insert(i, num);
-	    i+=1;
-	}
+    let mut i = 0;
+    for (num, event) in active_calendar.events.iter().enumerate() {
+        if event.name == event_name {
+            index_map.insert(i, num);
+            i += 1;
+        }
     }
-    
+
     // Choose an event to be edited
     let events_named_like_arg: Vec<event::EventJSON> = active_calendar
         .events
@@ -384,55 +391,57 @@ fn edit_event(event_name: &str) {
 
     // Choose a property to be edited
     let fields = EventJSON::FIELD_NAMES_AS_ARRAY.to_vec();
-    let mut fields_list: Vec<String> = fields.into_iter().map(|s| uppercase_first_letter(s)).collect();
+    let mut fields_list: Vec<String> = fields
+        .into_iter()
+        .map(|s| uppercase_first_letter(s))
+        .collect();
     fields_list.insert(2, "Duration".to_string());
-    
+
     let mut i: u8 = 1;
     for field in &fields_list {
-	println!("{i}. {field}");
-	i+=1;
+        println!("{i}. {field}");
+        i += 1;
     }
-    
+
     let edited_event = &mut active_calendar.events[index_map[&index_to_select]];
     let num: usize = select_in_range("Select what to edit", fields_list.len());
 
     match num {
-	// Edit name
-	1 => {
-	    print!("Name: ");
-	    edited_event.name = get_valid_event_name();
-	},
-	// Edit start timedate
-	2 => {
-	    println!("1. Start date\n2. Start time\n3. Start datetime");
-	    let num = select_in_range("Select what to edit", 3);
-	    match num {
-		1 => println!("Edit Start date"),
-		2 => println!("Edit Start time"),
-		3 => println!("Edit Start datetime"),
-		_ => panic!("Impossible")
-	    }
-	    
-	},
-	// Edit duration
-	3 => todo!("Edit duration"),
-	// Edit end datetime
-	4 => {
-	    println!("1. End date\n2. End time\n3. End datetime");
-	    let num: usize = select_in_range("Select what to edit", 3);
-	    println!("{num}");
-	},
-	// Edit priority 
-	5 => {
-	    print!("Priority: ");
-	    edited_event.priority = get_priority().parse().unwrap();
-	},
-	// Edit difficulty 
-	6 => {
-	    print!("Difficulty: ");
-	    edited_event.difficulty = get_difficulty().parse().unwrap();
-	},
-	_ => panic!("Impossible")
+        // Edit name
+        1 => {
+            print!("Name: ");
+            edited_event.name = get_valid_event_name();
+        }
+        // Edit start timedate
+        2 => {
+            println!("1. Start date\n2. Start time\n3. Start datetime");
+            let num = select_in_range("Select what to edit", 3);
+            match num {
+                1 => println!("Edit Start date"),
+                2 => println!("Edit Start time"),
+                3 => println!("Edit Start datetime"),
+                _ => panic!("Impossible"),
+            }
+        }
+        // Edit duration
+        3 => todo!("Edit duration"),
+        // Edit end datetime
+        4 => {
+            println!("1. End date\n2. End time\n3. End datetime");
+            let num: usize = select_in_range("Select what to edit", 3);
+            println!("{num}");
+        }
+        // Edit priority
+        5 => {
+            print!("Priority: ");
+            edited_event.priority = get_priority().parse().unwrap();
+        }
+        // Edit difficulty
+        6 => {
+            print!("Difficulty: ");
+            edited_event.difficulty = get_difficulty().parse().unwrap();
+        }
+        _ => panic!("Impossible"),
     }
     save_calendar(active_calendar, get_active_calendar_reference().path);
 }
