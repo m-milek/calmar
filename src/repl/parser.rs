@@ -14,8 +14,8 @@ use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 use colored::Colorize;
 use getdata::*;
 use savedata::save_event;
+use std::collections::HashMap;
 use std::path::PathBuf;
-use struct_field_names_as_array::FieldNamesAsArray;
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {
@@ -135,7 +135,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
 }
 
-pub fn default_or_custom(input: String) -> String {
+pub fn default_or_custom_save_path(input: String) -> String {
     if input.trim().is_empty() {
         return CONFIG.default_path.clone();
     }
@@ -159,7 +159,7 @@ fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     };
 
     print!("Path: ");
-    let path = default_or_custom(get_dir_path());
+    let path = default_or_custom_save_path(get_dir_path());
 
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
@@ -296,7 +296,7 @@ fn get_event_index(events: &Vec<EventJSON>) -> usize {
     } else {
         1.to_string() + "-" + &events.len().to_string()
     };
-
+    println!("{:#?}", events);
     let num: usize = {
         print!("Which event do you want to edit? [{}]: ", displayed_range);
         let mut num_str = get_input();
@@ -330,9 +330,43 @@ fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
 }
 
+fn select_in_range(prompt: &str, max: usize) -> usize {
+
+    let displayed_range = match max {
+	1 => 1.to_string(),
+	_ => 1.to_string() + "-" + max.to_string().as_str()
+    };
+
+    loop {
+	print!("{} [{}]: ", prompt, displayed_range);
+	match get_input().parse::<usize>() {
+	    Ok(num) => {
+		match (1..=max).contains(&num) {
+		    true => {
+			return num;
+		    },
+		    false => println!("{}", "Number not in range".yellow().bold())
+		}
+	    },
+	    Err(_) => {
+		println!("{}", "Invalid input. Enter a non-negative number".yellow().bold());
+	    }
+	}
+    }
+}
+
 fn edit_event(event_name: &str) {
     let mut active_calendar = get_active_calendar();
 
+    let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events.len());
+    let mut i=0;
+    for (num, event) in active_calendar.events.iter().enumerate(){
+	if event.name == event_name {
+	    index_map.insert(i, num);
+	    i+=1;
+	}
+    }
+    
     // Choose an event to be edited
     let events_named_like_arg: Vec<event::EventJSON> = active_calendar
         .events
@@ -350,16 +384,14 @@ fn edit_event(event_name: &str) {
         return;
     }
     let index_to_select = match events_named_like_arg.len() {
-        1 => 1,
+        1 => 0,
         _ => get_event_index(&events_named_like_arg) - 1,
     };
-    let event_ref = &mut active_calendar.events[index_to_select];
 
     // Choose a property to be edited
     let fields = EventJSON::FIELD_NAMES_AS_ARRAY.to_vec();
     let mut fields_list: Vec<String> = fields.into_iter().map(|s| uppercase_first_letter(s)).collect();
     fields_list.insert(2, "Duration".to_string());
-    let displayed_range = 1.to_string() + "-" + &fields_list.len().to_string();
     
     let mut i: u8 = 1;
     for field in &fields_list {
@@ -367,42 +399,48 @@ fn edit_event(event_name: &str) {
 	i+=1;
     }
     
-    let num: usize = {
-        print!("Select a property to be edited [{}]: ", displayed_range);
-        let mut num_str = get_input();
-        while !is_numeric(&num_str) {
-            println!(
-                "{}",
-                "Invalid input. Enter a non-negative number".yellow().bold()
-            );
-	    print!("Select property to be edited [{}]: ", displayed_range);
-            num_str = get_input();
-        }
+    let edited_event = &mut active_calendar.events[index_map[&index_to_select]];
+    let num: usize = select_in_range("Select what to edit", fields_list.len());
 
-        let mut number = num_str.parse::<usize>().unwrap();
-        while !(1..=fields_list.len()).contains(&number) {
-            println!(
-                "{}",
-                format!("Number not in range. Allowed values: {}", displayed_range)
-                    .yellow()
-                    .bold()
-            );
-	    print!("Select property to be edited [{}]: ", displayed_range);
-            num_str = get_input();
-            number = num_str.parse::<usize>().unwrap();
-        }
-        number
-    };
-    
     match num {
-	1 => todo!("Edit name"),
-	2 => todo!("Edit start time"),
+	// Edit name
+	1 => {
+	    print!("Name: ");
+	    edited_event.name = get_valid_event_name();
+	},
+	// Edit start timedate
+	2 => {
+	    println!("1. Start date\n2. Start time\n3. Start datetime");
+	    let num = select_in_range("Select what to edit", 3);
+	    match num {
+		1 => println!("Edit Start date"),
+		2 => println!("Edit Start time"),
+		3 => println!("Edit Start datetime"),
+		_ => panic!("Impossible")
+	    }
+	    
+	},
+	// Edit duration
 	3 => todo!("Edit duration"),
-	4 => todo!("Edit end time"),
-	5 => todo!("Edit priority"),
-	6 => todo!("Edit difficulty"),
+	// Edit end datetime
+	4 => {
+	    println!("1. End date\n2. End time\n3. End datetime");
+	    let num: usize = select_in_range("Select what to edit", 3);
+	    println!("{num}");
+	},
+	// Edit priority 
+	5 => {
+	    print!("Priority: ");
+	    edited_event.priority = get_priority().parse().unwrap();
+	},
+	// Edit difficulty 
+	6 => {
+	    print!("Difficulty: ");
+	    edited_event.difficulty = get_difficulty().parse().unwrap();
+	},
 	_ => panic!("Impossible")
     }
+    save_calendar(active_calendar, get_active_calendar_reference().path);
 }
 
 /*
