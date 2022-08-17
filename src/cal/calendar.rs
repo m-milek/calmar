@@ -22,13 +22,15 @@ pub struct Calendar {
 
 impl Calendar {
     /// Create an empty `Calendar` with a given `name`.
-    pub fn new(name: &String) -> Self {
+    pub fn new(name: &str) -> Self {
         Calendar {
             name: name.to_string(),
             events: Vec::<EventJSON>::new(),
         }
     }
-    pub fn rename() {}
+    pub fn rename(&mut self, name: String) {
+	self.name = name;
+    }
 }
 
 pub enum CalendarReturnMessage {

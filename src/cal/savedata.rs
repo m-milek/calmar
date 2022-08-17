@@ -149,7 +149,7 @@ pub fn save_new_calendar(calendar_reference: CalendarReference) {
     };
 
     let calendar_json: String =
-        match serde_json::to_string_pretty(&Calendar::new(&calendar_reference.name)) {
+        match serde_json::to_string_pretty(&Calendar::new(calendar_reference.name.as_str())) {
             Ok(result) => result,
             Err(e) => {
                 println!(
