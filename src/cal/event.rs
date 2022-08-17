@@ -1,11 +1,19 @@
 use chrono::{DateTime, Local};
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::str::FromStr;
 use struct_field_names_as_array::FieldNamesAsArray;
-use std::collections::HashMap;
 
-use crate::cal::{getdata::{parse_into_date, parse_into_time, parse_into_duration, get_duration, get_start_time, get_start_date, get_valid_event_name, get_end_date, get_end_time, get_difficulty, get_priority}, calendar::{get_active_calendar, save_calendar}, util::{select_in_range, uppercase_first_letter}, calendar_ref::get_active_calendar_reference};
+use crate::cal::{
+    calendar::{get_active_calendar, save_calendar},
+    calendar_ref::get_active_calendar_reference,
+    getdata::{
+        get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
+        get_start_time, get_valid_event_name,
+    },
+    util::{select_in_range, uppercase_first_letter},
+};
 
 #[derive(Debug)]
 pub struct Event {
@@ -44,14 +52,13 @@ impl EventJSON {
             name: self.name.clone(),
             start: DateTime::<Local>::from_str(&self.start)
                 .expect("Failed to parse start datetime from string"),
-            end: DateTime::<Local>::from_str(&self.start)
+            end: DateTime::<Local>::from_str(&self.end)
                 .expect("Failed to parse end datetime from string"),
             priority: self.priority,
             difficulty: self.difficulty,
         }
     }
 }
-
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -64,21 +71,21 @@ pub fn get_new_event(name: Option<String>) -> Event {
     };
 
     print!("Start date: ");
-    let start_date = parse_into_date(&get_start_date());
+    let start_date = get_start_date();
 
     print!("Start time: ");
-    let start_time = parse_into_time(&get_start_time());
+    let start_time = get_start_time();
 
     print!("Duration: ");
-    let duration = parse_into_duration(&get_duration());
+    let duration = get_duration();
 
     let end_date;
     let end_time;
     if duration.is_zero() {
         print!("End date: ");
-        end_date = parse_into_date(&get_end_date(&start_date));
+        end_date = get_end_date(&start_date);
         print!("End time: ");
-        end_time = parse_into_time(&get_end_time(&start_date, &start_time, &end_date));
+        end_time = get_end_time(&start_date, &start_time, &end_date);
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
         end_date = end_timedate.date();
@@ -86,10 +93,10 @@ pub fn get_new_event(name: Option<String>) -> Event {
     }
 
     print!("Difficulty: ");
-    let difficulty = get_difficulty().parse().unwrap();
+    let difficulty = get_difficulty();
 
     print!("Priority: ");
-    let priority = get_priority().parse().unwrap();
+    let priority = get_priority();
 
     Event {
         name,
@@ -99,7 +106,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
         difficulty,
     }
 }
-
 
 pub fn edit_event(event_name: &str) {
     let mut active_calendar = get_active_calendar();
@@ -138,17 +144,13 @@ pub fn edit_event(event_name: &str) {
 
     // Choose a property to be edited
     let fields = EventJSON::FIELD_NAMES_AS_ARRAY.to_vec();
-    let mut fields_list: Vec<String> = fields
-        .into_iter()
-        .map(uppercase_first_letter)
-        .collect();
+    let mut fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
     fields_list.insert(2, "Duration".to_string());
 
-    let mut i: u8 = 1;
-    for field in &fields_list {
-        println!("{i}. {field}");
-        i += 1;
-    }
+    fields_list
+        .iter()
+        .enumerate()
+        .for_each(|(i, field)| println!("{}. {field}", i + 1));
 
     let edited_event = &mut active_calendar.events[index_map[&index_to_select]];
     let num: usize = select_in_range("Select what to edit", fields_list.len());
@@ -164,14 +166,38 @@ pub fn edit_event(event_name: &str) {
             println!("1. Start date\n2. Start time\n3. Start datetime");
             let num = select_in_range("Select what to edit", 3);
             match num {
-                1 => println!("Edit Start date"),
+                // Edit only start date
+                1 => {
+                    let current_end =
+                        DateTime::<Local>::from_str(&edited_event.end).expect("Valid str");
+                    let current_start =
+                        DateTime::<Local>::from_str(&&edited_event.start).expect("Valid str");
+                    let current_start_time = current_start.time();
+                    print!("Start date: ");
+                    let mut new_start_date = get_start_date();
+                    while new_start_date.and_time(current_start_time).unwrap() > current_end {
+                        println!("Start timedate cannot be after end timedate");
+                        print!("Start date: ");
+                        new_start_date = get_start_date();
+                    }
+                    edited_event.start = new_start_date
+                        .and_time(current_start_time)
+                        .unwrap()
+                        .to_string();
+                }
                 2 => println!("Edit Start time"),
                 3 => println!("Edit Start datetime"),
                 _ => panic!("Impossible"),
             }
         }
         // Edit duration
-        3 => todo!("Edit duration"),
+        3 => {
+            print!("Duration: ");
+            let new_duration = get_duration();
+            let start = DateTime::<Local>::from_str(&edited_event.start);
+            let end = start.expect("Valid start timedate") + new_duration;
+            edited_event.end = end.to_string();
+        }
         // Edit end datetime
         4 => {
             println!("1. End date\n2. End time\n3. End datetime");
@@ -181,12 +207,12 @@ pub fn edit_event(event_name: &str) {
         // Edit priority
         5 => {
             print!("Priority: ");
-            edited_event.priority = get_priority().parse().unwrap();
+            edited_event.priority = get_priority()
         }
         // Edit difficulty
         6 => {
             print!("Difficulty: ");
-            edited_event.difficulty = get_difficulty().parse().unwrap();
+            edited_event.difficulty = get_difficulty()
         }
         _ => panic!("Impossible"),
     }

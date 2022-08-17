@@ -6,7 +6,7 @@ use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 /*
 Return a valid date
 */
-pub fn get_start_date() -> String {
+pub fn get_start_date() -> Date<Local> {
     let mut input = get_input();
     while !validate_date(&input) {
         println!(
@@ -16,13 +16,13 @@ pub fn get_start_date() -> String {
         print!("Start date: ");
         input = get_input();
     }
-    input
+    parse_into_date(input.as_str())
 }
 
 /*
 Return a valid time
 */
-pub fn get_start_time() -> String {
+pub fn get_start_time() -> NaiveTime {
     let mut input = get_input();
     while !validate_time(&input) {
         println!(
@@ -34,13 +34,13 @@ pub fn get_start_time() -> String {
         print!("Start time: ");
         input = get_input();
     }
-    input
+    parse_into_time(input.as_str())
 }
 
 /*
 Return a valid duration
 */
-pub fn get_duration() -> String {
+pub fn get_duration() -> Duration {
     let mut input = get_input();
     while !validate_duration(&input) {
         println!(
@@ -52,14 +52,14 @@ pub fn get_duration() -> String {
         print!("Duration: ");
         input = get_input();
     }
-    input
+    parse_into_duration(input.as_str())
 }
 
 /*
 Return a valid date equal or greater than start date
 TODO: Different errors depending on error type (match expression)
 */
-pub fn get_end_date(start_date: &Date<Local>) -> String {
+pub fn get_end_date(start_date: &Date<Local>) -> Date<Local> {
     let mut input = get_input();
     while !validate_date(&input) || &parse_into_date(&input) < start_date {
         println!(
@@ -72,7 +72,7 @@ pub fn get_end_date(start_date: &Date<Local>) -> String {
         print!("End date: ");
         input = get_input();
     }
-    input
+    parse_into_date(input.as_str())
 }
 
 /*
@@ -83,7 +83,7 @@ pub fn get_end_time(
     start_date: &Date<Local>,
     start_time: &NaiveTime,
     end_date: &Date<Local>,
-) -> String {
+) -> NaiveTime {
     let mut input = get_input();
     while !validate_time(&input)
         || ((start_date == end_date) && (&parse_into_time(&input) <= start_time))
@@ -97,13 +97,13 @@ pub fn get_end_time(
         print!("End time: ");
         input = get_input();
     }
-    input
+    parse_into_time(input.as_str())
 }
 
 /*
 Return a valid difficulty
 */
-pub fn get_difficulty() -> String {
+pub fn get_difficulty() -> u8  {
     let mut input = get_input();
     while !validate_difficulty(&input) {
         println!(
@@ -115,20 +115,20 @@ pub fn get_difficulty() -> String {
         print!("Difficulty: ");
         input = get_input();
     }
-    input
+    input.parse::<u8>().unwrap()
 }
 
 /*
 Return a valid priority
 */
-pub fn get_priority() -> String {
+pub fn get_priority() -> u8 {
     let mut input = get_input();
     while !validate_priority(&input) {
         println!("{}", "Entered priority is not valid.".yellow().bold());
         print!("Priority: ");
         input = get_input();
     }
-    input
+    input.parse::<u8>().unwrap()
 }
 
 pub fn get_dir_path() -> String {
