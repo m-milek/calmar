@@ -1,4 +1,6 @@
-use crate::cal::calendar::{Calendar, CalendarIndex, CalendarReference};
+use crate::cal::calendar::Calendar;
+use crate::cal::calendar_index::CalendarIndex;
+use crate::cal::calendar_ref::CalendarReference;
 use crate::cal::event::Event;
 use crate::cal::validator::get_home_dir;
 use colored::Colorize;

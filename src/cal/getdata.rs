@@ -1,26 +1,8 @@
-use crate::cal::calendar::get_calendar_index;
+use crate::cal::calendar_index::get_calendar_index;
 use crate::cal::validator::*;
-use crate::cli::parser::{parse_into_date, parse_into_time};
 use crate::cli::repl::get_input;
-use chrono::{Date, Local, NaiveTime};
 use colored::Colorize;
-
-/*
-Return a non-empty string
-*/
-pub fn get_name() -> String {
-    let mut input = get_input();
-    while input.is_empty() {
-        println!(
-            "{}",
-            "Event name cannot be and empty string.".yellow().bold()
-        );
-        print!("Name: ");
-        input = get_input();
-    }
-    input
-}
-
+use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 /*
 Return a valid date
 */
@@ -181,4 +163,87 @@ pub fn get_number_of_active_calendars() -> i32 {
     let mut calendars = get_calendar_index().calendars;
     calendars.retain(|calendar| calendar.active);
     calendars.len() as i32
+}
+
+pub fn get_valid_event_name() -> String {
+    let mut input = get_input();
+    while input.is_empty() {
+        println!("{}", "Event name cannot be an empty string".yellow().bold());
+        print!("Name: ");
+        input = get_input();
+    }
+    input
+}
+
+
+pub fn parse_into_date(input: &str) -> Date<Local> {
+    if input.trim().is_empty() {
+        return Local::now().date();
+    }
+
+    let split_string: Vec<&str> = input.split('/').collect();
+
+    Local.ymd(
+        split_string[2].parse().expect("A number was given as year"),
+        split_string[1]
+            .parse()
+            .expect("A number was given as month"),
+        split_string[0].parse().expect("A number was given as day"),
+    )
+}
+
+pub fn parse_into_time(input: &str) -> NaiveTime {
+    if input.trim().is_empty() {
+        return Local::now().time().with_second(0).unwrap();
+    }
+
+    let split_string: Vec<&str> = input.split(':').collect();
+    NaiveTime::from_hms(
+        split_string[0].parse().expect("A number was given as hour"),
+        split_string[1]
+            .parse()
+            .expect("A number was given as minute"),
+        0,
+    )
+}
+
+/*
+As of now, this only accepts input such as '3d', '40min' or '3h'
+Eventually, support for a format like '1:20h' should be added.
+*/
+pub fn parse_into_duration(input: &str) -> Duration {
+    if input.trim().is_empty() {
+        return Duration::zero();
+    }
+
+    let input_lower = &input.to_lowercase();
+
+    match (
+        input_lower.contains('d'),
+        input_lower.contains('h'),
+        input_lower.contains('m'),
+    ) {
+        (true, false, false) => {
+            // Duration has to be 'days'
+            Duration::days(
+                input_lower.split('d').collect::<Vec<&str>>()[0]
+                    .parse()
+                    .expect("Valid duration was given"),
+            )
+        }
+        (false, true, false) => {
+            // Duration has to be 'hours'
+            Duration::hours(
+                input_lower.split('h').collect::<Vec<&str>>()[0]
+                    .parse()
+                    .expect("Valid duration was given"),
+            )
+        }
+        (false, false, true) => Duration::minutes(
+            input_lower.split('m').collect::<Vec<&str>>()[0]
+                .parse()
+                .expect("Valid duration was given"),
+        ),
+        (_, _, _) => panic!("Error parsing duration. This error should be unreachable"),
+    }
 }

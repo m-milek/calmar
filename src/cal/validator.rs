@@ -2,7 +2,7 @@ use chrono::{LocalResult, TimeZone, Utc};
 use colored::Colorize;
 use home::home_dir;
 use regex::Regex;
-use std::{collections::hash_map::DefaultHasher, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 pub fn get_config_path() -> PathBuf {
     let mut home = get_home_dir();
