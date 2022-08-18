@@ -6,13 +6,13 @@ use std::str::FromStr;
 use struct_field_names_as_array::FieldNamesAsArray;
 
 use crate::cal::{
-    calendar::{get_active_calendar, save_calendar},
+    calendar::save_calendar,
     calendar_ref::get_active_calendar_reference,
     getdata::{
         get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
         get_start_time, get_valid_event_name,
     },
-    util::{select_in_range, uppercase_first_letter},
+    util::{select_in_range, uppercase_first_letter}, calendar_index::CalendarIndex,
 };
 
 #[derive(Debug)]
@@ -108,7 +108,8 @@ pub fn get_new_event(name: Option<String>) -> Event {
 }
 
 pub fn edit_event(event_name: &str) {
-    let mut active_calendar = get_active_calendar();
+    let index = CalendarIndex::get();
+    let mut active_calendar = index.get_active_calendar();
 
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events.len());
 

@@ -1,8 +1,8 @@
-use crate::cal::calendar_index::get_calendar_index;
 use crate::cal::validator::*;
 use crate::cli::repl::get_input;
 use colored::Colorize;
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
+
 /*
 Return a valid date
 */
@@ -159,11 +159,7 @@ pub fn get_valid_calendar_name() -> String {
     input
 }
 
-pub fn get_number_of_active_calendars() -> i32 {
-    let mut calendars = get_calendar_index().calendars;
-    calendars.retain(|calendar| calendar.active);
-    calendars.len() as i32
-}
+
 
 pub fn get_valid_event_name() -> String {
     let mut input = get_input();

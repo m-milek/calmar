@@ -1,13 +1,12 @@
+use crate::cal::calendar_index::CalendarIndex;
 use crate::cal::calendar_ref::get_new_calendar_reference;
 use crate::cal::event::EventJSON;
 use crate::cal::getdata::get_valid_calendar_name;
-use crate::cal::savedata::{save_new_calendar, save_calendar_index};
+use crate::cal::savedata::save_new_calendar;
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
-use std::fs::read_to_string;
 use std::io::Write;
 use crate::CONFIG;
-use super::calendar_index::get_calendar_index;
 use super::calendar_ref::get_active_calendar_reference;
 use super::getdata::get_valid_event_name;
 
@@ -35,84 +34,6 @@ impl Calendar {
 
 pub enum CalendarReturnMessage {
     Abort,
-}
-
-/// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
-/// currently set as active in `$HOME/.config/calmar/index.json`.
-pub fn get_active_calendar() -> Calendar {
-    let mut index = get_calendar_index();
-    index
-        .calendars
-        .retain(|calendar_reference| calendar_reference.active);
-    let current_calendar = match index.calendars.len() {
-        1 => &index.calendars[0],
-        _ => {
-            println!(
-                "{}",
-                format!(
-                    "{} calendars are set as active. There must be exactly one.",
-                    index.calendars.len()
-                )
-                .red()
-                .bold()
-            );
-            std::process::exit(1);
-        }
-    };
-    let current_calendar_content = match read_to_string(&current_calendar.path) {
-        Ok(content) => content,
-        Err(e) => {
-            println!(
-                "{}",
-                format!("Failed to read {}.\n{}", current_calendar.path, e)
-                    .red()
-                    .bold()
-            );
-            std::process::exit(1);
-        }
-    };
-    match serde_json::from_str(&current_calendar_content) {
-        Ok(result) => result,
-        Err(e) => {
-            println!(
-                "{}",
-                format!(
-                    "Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
-                    current_calendar.path, e
-                )
-                .red()
-                .bold()
-            );
-            std::process::exit(1);
-        }
-    }
-}
-
-pub fn check_if_calendar_exists(name: &String) -> bool {
-    let mut calendars = get_calendar_index().calendars;
-    calendars.retain(|calendar| &calendar.name == name);
-    match calendars.len() {
-        0 => {
-            println!(
-                "{}",
-                format!("No calendars named {}.", name).yellow().bold()
-            );
-            false
-        }
-        1 => true,
-        _ => {
-            println!(
-                "{}",
-                format!(
-                    "More than one calendar named {}. Please correct this and retry.",
-                    name
-                )
-                .yellow()
-                .bold()
-            );
-            false
-        }
-    }
 }
 
 
@@ -174,7 +95,7 @@ pub fn cal(split_input: &Vec<&str>) {
         }
     };
 
-    let mut calendar_index = get_calendar_index();
+    let mut calendar_index = CalendarIndex::get();
     if calendar_index.calendars.is_empty() {
         new_reference.active = true;
     }
@@ -191,7 +112,7 @@ pub fn cal(split_input: &Vec<&str>) {
             return;
         }
     }
-    save_calendar_index(calendar_index);
+    calendar_index.save();
     println!("{}", "Saved calendar index".green().bold());
     save_new_calendar(new_reference);
 }
@@ -199,7 +120,7 @@ pub fn cal(split_input: &Vec<&str>) {
 
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
-    let mut index = get_calendar_index();
+    let mut index = CalendarIndex::get();
     let name = match split_input.len() {
         1 => get_valid_calendar_name(),
         2 => split_input[1].to_string(),
@@ -222,7 +143,7 @@ pub fn removecal(split_input: &Vec<&str>) {
         Err(_) => return,
     }
 
-    save_calendar_index(index);
+    index.save();
     println!("{}", "Successfully removed calendar".green().bold());
 }
 
@@ -246,7 +167,8 @@ pub fn remove(split_input: &Vec<&str>) {
             return;
         }
     };
-    let mut active_calendar = get_active_calendar();
+    let index = CalendarIndex::get();
+    let mut active_calendar = index.get_active_calendar();
     active_calendar.events.retain(|event| event.name != name);
     save_calendar(active_calendar, get_active_calendar_reference().path);
 }

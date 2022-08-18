@@ -1,8 +1,6 @@
 use crate::cal::calendar::Calendar;
-use crate::cal::calendar_index::CalendarIndex;
 use crate::cal::calendar_ref::CalendarReference;
 use crate::cal::event::Event;
-use crate::cal::validator::get_home_dir;
 use colored::Colorize;
 use std::fs::read_to_string;
 use std::io::Write;
@@ -80,58 +78,6 @@ pub fn save_event(event: Event, calendar_ref: CalendarReference) -> bool {
         }
     };
     true
-}
-
-pub fn save_calendar_index(calendar_index: CalendarIndex) {
-    let home_dir = get_home_dir();
-    let mut index_file = match std::fs::OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(home_dir.join(".config/calmar/index.json"))
-    {
-        Ok(file) => file,
-        Err(e) => {
-            println!(
-                "{}",
-                format!(
-                    "Failed to open {}.\n{}",
-                    home_dir.join(".config/calmar/index.json").display(),
-                    e
-                )
-                .red()
-                .bold()
-            );
-            std::process::exit(1);
-        }
-    };
-    let calendar_index_json: String = match serde_json::ser::to_string_pretty(&calendar_index) {
-        Ok(result) => result,
-        Err(_e) => {
-            println!(
-                "{}",
-                "Failed to serialize calendar index to string.\n{e}"
-                    .red()
-                    .bold()
-            );
-            std::process::exit(1);
-        }
-    };
-
-    match write!(index_file, "{}", calendar_index_json) {
-        Ok(_) => (),
-        Err(e) => {
-            println!(
-                "{}",
-                format!(
-                    "Failed to write to {}.\n{}",
-                    home_dir.join(".config/calmar/index.json").display(),
-                    e
-                )
-                .red()
-                .bold()
-            );
-        }
-    }
 }
 
 pub fn save_new_calendar(calendar_reference: CalendarReference) {

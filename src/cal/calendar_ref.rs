@@ -2,7 +2,8 @@ use colored::Colorize;
 use serde_derive::{Serialize, Deserialize};
 use std::path::PathBuf;
 use crate::{cli::repl::get_input, cal::{getdata::get_dir_path, calendar::default_or_custom_save_path}};
-use super::calendar_index::get_calendar_index;
+
+use super::calendar_index::CalendarIndex;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
@@ -57,7 +58,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
 
 /// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
 pub fn get_active_calendar_reference() -> CalendarReference {
-    let mut index = get_calendar_index();
+    let mut index = CalendarIndex::get();
     index
         .calendars
         .retain(|calendar_reference| calendar_reference.active);

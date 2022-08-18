@@ -2,7 +2,11 @@ use std::fs::read_to_string;
 use colored::Colorize;
 use serde_derive::{Serialize, Deserialize};
 use crate::cli::parser::yesno;
-use super::{calendar::{CalendarReturnMessage, check_if_calendar_exists}, validator::get_home_dir, calendar_ref::CalendarReference, getdata::{get_valid_event_name, get_number_of_active_calendars}, savedata::save_calendar_index};
+use super::{calendar::{CalendarReturnMessage, Calendar},
+	    validator::get_home_dir,
+	    calendar_ref::CalendarReference,
+	    getdata::get_valid_event_name};
+use std::io::Write;
 
 /// Holds a vector of `CalendarReference` structs.
 #[derive(Debug, Serialize, Deserialize)]
@@ -12,6 +16,131 @@ pub struct CalendarIndex {
 
 
 impl CalendarIndex {
+
+    /// Returns `CalendarIndex` struct from `$HOME/.config/calmar/index.json`.
+    pub fn get() -> Self {
+	let mut home = get_home_dir();
+	home.push(".config/calmar/index.json");
+	let index_file_path = home;
+
+	let content = match read_to_string(&index_file_path) {
+            Ok(result) => result,
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!("Failed to read {}.\n{}", index_file_path.display(), e)
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+            }
+	};
+
+	match serde_json::from_str(&content) {
+            Ok(result) => result,
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!(
+			"Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}",
+			index_file_path.display(),
+			e
+                    )
+			.red()
+			.bold()
+		);
+		panic!();
+            }
+	}
+    }
+
+    pub fn contains_one_named(&self, name: &String) -> bool {
+	let num = self.calendars.iter().filter(|r| r.name == *name).count();
+	match num {
+            0 => {
+		println!(
+                    "{}",
+                    format!("No calendars named {}.", name).yellow().bold()
+		);
+		false
+            }
+            1 => true,
+            _ => {
+		println!(
+                    "{}",
+                    format!(
+			"More than one calendars named {}. Please correct this and retry.",
+			name
+                    )
+			.yellow()
+			.bold()
+		);
+		false
+            }
+	}
+    }
+
+    /// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
+    /// currently set as active in `$HOME/.config/calmar/index.json`.
+    pub fn get_active_calendar(&self) -> Calendar {
+	let num = self.calendars.iter().filter(|r| r.active).count();
+
+	let current_calendar = match num {
+            1 => &self.calendars[self.calendars.iter().position(|r| r.active).unwrap()],
+            _ => {
+		println!(
+                    "{}",
+                    format!(
+			"{} calendars are set as active. There must be exactly one.",
+			num
+                    )
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+            }
+	};
+	
+	let current_calendar_content = match read_to_string(&current_calendar.path) {
+            Ok(content) => content,
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!("Failed to read {}.\n{}", current_calendar.path, e)
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+            }
+	};
+	
+	match serde_json::from_str(&current_calendar_content) {
+            Ok(result) => result,
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!(
+			"Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
+			current_calendar.path, e
+                    )
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+            }
+	}
+    }
+
+    // TODO Error handling
+    pub fn get_active_calendar_reference(&self ) -> CalendarReference {
+	let r: Vec<&CalendarReference> = self.calendars.iter().filter(|r| r.active).collect();
+	r[0].to_owned()
+    }
+
+    pub fn get_number_of_active_calendars(&self) -> usize {
+	self.calendars.iter().filter(|c| c.active).count()
+    }
+    
     /// Adds a new `CalendarReference` to `self.calendars`.
     ///
     /// # Executed steps
@@ -143,48 +272,83 @@ impl CalendarIndex {
         self.calendars.retain(|r| r.name != name);
         Ok(())
     }
-}
 
-/// Returns `CalendarIndex` struct set as active in `$HOME/.config/calmar/index.json`.
-pub fn get_calendar_index() -> CalendarIndex {
-    let mut home = get_home_dir();
-    home.push(".config/calmar/index.json");
-    let index_file_path = home;
+    pub fn save(&self) {	
+	let home_dir = get_home_dir();
+	let mut index_file = match std::fs::OpenOptions::new()
+	    .write(true)
+	    .truncate(true)
+	    .open(home_dir.join(".config/calmar/index.json"))
+	{
+	    Ok(file) => file,
+	    Err(e) => {
+		println!(
+		    "{}",
+		    format!(
+			"Failed to open {}.\n{}",
+			home_dir.join(".config/calmar/index.json").display(),
+			e
+		    )
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+	    }
+	};
+	let calendar_index_json: String = match serde_json::ser::to_string_pretty(&self) {
+	    Ok(result) => result,
+	    Err(_e) => {
+		println!(
+		    "{}",
+		    "Failed to serialize calendar index to string.\n{e}"
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+	    }
+	};
 
-    let content = match read_to_string(&index_file_path) {
-        Ok(result) => result,
-        Err(e) => {
-            println!(
-                "{}",
-                format!("Failed to read {}.\n{}", index_file_path.display(), e)
-                    .red()
-                    .bold()
-            );
-            std::process::exit(1);
-        }
-    };
+	match write!(index_file, "{}", calendar_index_json) {
+	    Ok(_) => (),
+	    Err(e) => {
+		println!(
+		    "{}",
+		    format!(
+			"Failed to write to {}.\n{}",
+			home_dir.join(".config/calmar/index.json").display(),
+			e
+		    )
+			.red()
+			.bold()
+		);
+	    }
+	}
+    }
 
-    match serde_json::from_str(&content) {
-        Ok(result) => result,
-        Err(e) => {
-            println!(
-                "{}",
-                format!(
-                    "Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}",
-                    index_file_path.display(),
-                    e
-                )
-                .red()
-                .bold()
-            );
-            panic!();
-        }
+    pub fn set_active(&mut self, name: String) {
+	// Set the currently active calendar as not active
+	// Set the desired calendar as active
+
+	for mut calendar in &mut self.calendars {
+            if calendar.active {
+		calendar.active = false;
+            }
+            if calendar.name == name {
+		calendar.active = true;
+            }
+	}
+    }
+
+    pub fn list(&self) {
+	self.calendars.iter().for_each(|c| println!("{}", c.name))
     }
 }
 
 
+
 /// Change the active calednar
 pub fn set(split_input: &Vec<&str>) {
+    let mut index = CalendarIndex::get();
     let name = match split_input.len() {
         1 => get_valid_event_name(),
         2 => split_input[1].to_string(),
@@ -202,11 +366,11 @@ pub fn set(split_input: &Vec<&str>) {
         }
     };
 
-    if !check_if_calendar_exists(&name) {
+    if !index.contains_one_named(&name) {
         return;
     }
 
-    match get_number_of_active_calendars() {
+    match index.get_number_of_active_calendars() {
         0 => {
             println!(
                 "{}",
@@ -228,16 +392,7 @@ pub fn set(split_input: &Vec<&str>) {
         }
     }
 
-    let mut index = get_calendar_index();
-    // Set the currently active calendar as not active
-    // Set the desired calendar as active
-    for calendar in &mut index.calendars {
-        if calendar.active {
-            calendar.active = false;
-        }
-        if calendar.name == name {
-            calendar.active = true;
-        }
-    }
-    save_calendar_index(index)
+    index.set_active(name);
+    index.save()
 }
+

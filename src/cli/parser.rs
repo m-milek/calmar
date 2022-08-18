@@ -1,7 +1,7 @@
 use crate::cal::calendar::{
-    get_active_calendar, removecal, remove
+    removecal, remove
 };
-use crate::cal::calendar_index::set;
+use crate::cal::calendar_index::{set, CalendarIndex};
 use crate::cal::calendar_ref::get_active_calendar_reference;
 use crate::cal::event::{Event, get_new_event, edit_event};
 use crate::cal::{help, self};
@@ -56,8 +56,9 @@ fn edit(split_input: &[&str]) {
 
 /// Display events in the active calendar
 fn list(_split_input: &[&str]) {
-    let active_calendar = get_active_calendar();
-    for event in active_calendar.events {
+    let index = CalendarIndex::get();
+    let active_calendar = index.get_active_calendar();
+    for event in &active_calendar.events {
         println!("{:#?}\n", event.to_standard_event());
     }
 }
@@ -95,6 +96,7 @@ pub fn parse(input: String) {
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "set" | "s" => set(&split_input),
         "list" | "l" | "ls" => list(&split_input),
+	"listcal" | "lc" => CalendarIndex::get().list(),
         "quit" | "q" => std::process::exit(0),
         _ => println!(
             "{}",
