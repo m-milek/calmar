@@ -8,6 +8,9 @@ pub struct Config {
     pub date_format: String,
     pub time_format: String,
     pub default_path: String,
+    pub print_success_messages: bool,
+    pub print_warning_messages: bool,
+    pub print_error_messages: bool,
     pub prompt_text: String,
     pub prompt_color: String,
     pub prompt_bold: bool,
@@ -21,6 +24,9 @@ impl Config {
             date_format: "DD/MM/YYYY".to_string(),
             time_format: "HH:MM".to_string(),
             default_path: "/home/michal/.calmar".to_string(),
+	    print_success_messages: true,
+	    print_warning_messages: true,
+	    print_error_messages: true,
             prompt_text: "[calmar]".to_string(),
             /*
             Available colors:
