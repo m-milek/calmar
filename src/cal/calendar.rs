@@ -1,8 +1,10 @@
-use crate::cal::calendar_index::CalendarIndex;
+#![allow(dead_code)]
+
+use crate::cli::messages::{warning, success};
+use crate::{cal::calendar_index::CalendarIndex, cli::messages::error};
 use crate::cal::calendar_ref::get_new_calendar_reference;
 use crate::cal::event::EventJSON;
 use crate::cal::getdata::get_valid_calendar_name;
-use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 use crate::CONFIG;
@@ -38,7 +40,7 @@ impl Calendar {
 	{
             Ok(file) => file,
             Err(e) => {
-		println!("Failed to open {path}.\n{e}");
+		error(format!("Failed to open {}.\n{}", path, e));
 		std::process::exit(1);
             }
 	};
@@ -46,7 +48,7 @@ impl Calendar {
 	let calendar_json = match serde_json::to_string_pretty(&self) {
             Ok(result) => result,
             Err(e) => {
-		println!("Failed to parse the calendar into string.\n{e}");
+		error(format!("Failed to parse the calendar into string.\n{}", e));
 		std::process::exit(1);
             }
 	};
@@ -54,7 +56,7 @@ impl Calendar {
 	match write!(calendar_file, "{}", calendar_json) {
             Ok(_) => (),
             Err(e) => {
-		println!("Failed to write to {path}.\n{e}");
+		error(format!("Failed to write to {}.\n{}", path, e));
 		std::process::exit(1);
             }
 	}
@@ -82,15 +84,7 @@ pub fn cal(split_input: &Vec<&str>) {
         1 => get_new_calendar_reference(None),
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
-            println!(
-                "{}",
-                format!(
-                    "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                    split_input.len() - 1
-                )
-                .yellow()
-                .bold()
-            ); // do not count "cal" as an argument
+            warning(format!("cal: Too many arguments provided. Expected: 0 or 1, Got: {}", split_input.len() - 1)); // do not count "cal" as an argument
             return;
         }
     };
@@ -101,19 +95,14 @@ pub fn cal(split_input: &Vec<&str>) {
     }
 
     match calendar_index.add_entry(&new_reference) {
-        Ok(_) => println!("{}", "Added entry to calendar index.".green().bold()),
+        Ok(_) => success("Added entry to calendar index.".to_string()),
         Err(_) => {
-            println!(
-                "{}",
-                "Failed to add new calendar reference to calendar index."
-                    .red()
-                    .bold()
-            );
+            error("Failed to add new calendar reference to calendar index.".to_string());
             return;
         }
     }
     calendar_index.save();
-    println!("{}", "Saved calendar index".green().bold());
+    success("Saved calendar index".to_string());
     new_reference.create_file()
 }
 
@@ -125,15 +114,7 @@ pub fn removecal(split_input: &Vec<&str>) {
         1 => get_valid_calendar_name(),
         2 => split_input[1].to_string(),
         _ => {
-            println!(
-                "{}",
-                format!(
-                    "removecal: Too many arguments provided. Expected: 0 or 1. Got: {}",
-                    split_input.len() - 1
-                )
-                .yellow()
-                .bold()
-            );
+            warning(format!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len() - 1));
             return;
         }
     };
@@ -144,7 +125,7 @@ pub fn removecal(split_input: &Vec<&str>) {
     }
 
     index.save();
-    println!("{}", "Successfully removed calendar".green().bold());
+    success("Successfully removed calendar".to_string());
 }
 
 pub fn default_or_custom_save_path(input: String) -> String {
@@ -160,10 +141,7 @@ pub fn remove(split_input: &Vec<&str>) {
         1 => get_valid_event_name(),
         2 => split_input[1].to_owned(),
         _ => {
-            println!(
-                "remove: Too many arguments provided. Expected: 1 or 2. Got: {}",
-                split_input.len() - 1
-            );
+            warning(format!("remove: Too many arguments provided. Expected: 1 or 2. Got: {}", split_input.len() - 1));
             return;
         }
     };

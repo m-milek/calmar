@@ -1,6 +1,7 @@
 use crate::CONFIG;
 use colored::Colorize;
 use std::io::{self, Write};
+
 /*
 Perfom everything necessary to get clean input from stdin:
 - flush stdout as recommended in the docs

@@ -1,6 +1,5 @@
-use crate::cal::validator::*;
 use crate::cli::repl::get_input;
-use colored::Colorize;
+use crate::{cal::validator::*, cli::messages::warning};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 
 /*
@@ -9,10 +8,7 @@ Return a valid date
 pub fn get_start_date() -> Date<Local> {
     let mut input = get_input();
     while !validate_date(&input) {
-        println!(
-            "{}",
-            format!("{input} is not a valid date.").yellow().bold()
-        );
+        warning(format!("{input} is not a valid date."));
         print!("Start date: ");
         input = get_input();
     }
@@ -25,12 +21,7 @@ Return a valid time
 pub fn get_start_time() -> NaiveTime {
     let mut input = get_input();
     while !validate_time(&input) {
-        println!(
-            "{}",
-            format!("{input} is not a valid time input.")
-                .yellow()
-                .bold()
-        );
+        warning(format!("{input} is not a valid time input."));
         print!("Start time: ");
         input = get_input();
     }
@@ -43,12 +34,7 @@ Return a valid duration
 pub fn get_duration() -> Duration {
     let mut input = get_input();
     while !validate_duration(&input) {
-        println!(
-            "{}",
-            format!("{input} is not a valid duration input")
-                .yellow()
-                .bold()
-        );
+        warning(format!("{input} is not a valid duration input"));
         print!("Duration: ");
         input = get_input();
     }
@@ -62,12 +48,7 @@ TODO: Different errors depending on error type (match expression)
 pub fn get_end_date(start_date: &Date<Local>) -> Date<Local> {
     let mut input = get_input();
     while !validate_date(&input) || &parse_into_date(&input) < start_date {
-        println!(
-            "{}",
-            format!("{input} is not a valid date input.")
-                .yellow()
-                .bold()
-        );
+        warning(format!("{input} is not a valid date input."));
         // we have to handle errors differently if the second condition is false
         print!("End date: ");
         input = get_input();
@@ -88,13 +69,7 @@ pub fn get_end_time(
     while !validate_time(&input)
         || ((start_date == end_date) && (&parse_into_time(&input) <= start_time))
     {
-        println!(
-            "{}",
-            format!("{input} is not a valid time input.")
-                .yellow()
-                .bold()
-        );
-	println!("start date: {:#?}\nstart time: {:#?}\nend date: {:#?}", start_date, start_time, end_date);
+        warning(format!("{input} is not a valid time input."));
         print!("End time: ");
         input = get_input();
     }
@@ -104,15 +79,10 @@ pub fn get_end_time(
 /*
 Return a valid difficulty
 */
-pub fn get_difficulty() -> u8  {
+pub fn get_difficulty() -> u8 {
     let mut input = get_input();
     while !validate_difficulty(&input) {
-        println!(
-            "{}",
-            format!("{input} is not a valid difficulty input.")
-                .yellow()
-                .bold()
-        );
+        warning(format!("{input} is not a valid difficulty input."));
         print!("Difficulty: ");
         input = get_input();
     }
@@ -125,7 +95,7 @@ Return a valid priority
 pub fn get_priority() -> u8 {
     let mut input = get_input();
     while !validate_priority(&input) {
-        println!("{}", "Entered priority is not valid.".yellow().bold());
+        warning("Entered priority is not valid.".to_string());
         print!("Priority: ");
         input = get_input();
     }
@@ -135,12 +105,7 @@ pub fn get_priority() -> u8 {
 pub fn get_dir_path() -> String {
     let mut input = get_input();
     while !validate_dir_path(&input) {
-        println!(
-            "{}",
-            format!("{input} is not a valid directory path")
-                .yellow()
-                .bold()
-        );
+        warning(format!("{input} is not a valid directory path"));
         print!("Path: ");
         input = get_input();
     }
@@ -150,28 +115,22 @@ pub fn get_dir_path() -> String {
 pub fn get_valid_calendar_name() -> String {
     let mut input = get_input();
     while input.is_empty() {
-        println!(
-            "{}",
-            "Calendar name cannot be an empty string.".yellow().bold()
-        );
+        warning("Calendar name cannot be an empty string.".to_string());
         print!("Name: ");
         input = get_input()
     }
     input
 }
 
-
-
 pub fn get_valid_event_name() -> String {
     let mut input = get_input();
     while input.is_empty() {
-        println!("{}", "Event name cannot be an empty string".yellow().bold());
+        warning("Event name cannot be an empty string".to_string());
         print!("Name: ");
         input = get_input();
     }
     input
 }
-
 
 pub fn parse_into_date(input: &str) -> Date<Local> {
     if input.trim().is_empty() {

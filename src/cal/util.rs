@@ -1,7 +1,4 @@
-use colored::Colorize;
-
-use crate::cli::repl::get_input;
-
+use crate::cli::{messages::warning, repl::get_input};
 
 pub fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
@@ -20,13 +17,10 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
                 true => {
                     return num;
                 }
-                false => println!("{}", "Number not in range".yellow().bold()),
+                false => warning("Number not in range".to_string()),
             },
             Err(_) => {
-                println!(
-                    "{}",
-                    "Invalid input. Enter a non-negative number".yellow().bold()
-                );
+                warning("Invalid input. Enter a non-negative number".to_string());
             }
         }
     }

@@ -1,16 +1,21 @@
-use chrono::{DateTime, Local, Duration};
-use colored::Colorize;
+#![allow(dead_code)]
+
+use chrono::{DateTime, Local};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::str::FromStr;
 use struct_field_names_as_array::FieldNamesAsArray;
 
-use crate::cal::{
-    getdata::{
-        get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
-        get_start_time, get_valid_event_name,
+use crate::{
+    cal::{
+        calendar_index::CalendarIndex,
+        getdata::{
+            get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
+            get_start_time, get_valid_event_name,
+        },
+        util::{select_in_range, uppercase_first_letter},
     },
-    util::{select_in_range, uppercase_first_letter}, calendar_index::CalendarIndex,
+    cli::messages::warning,
 };
 
 #[derive(Debug)]
@@ -57,14 +62,12 @@ impl EventJSON {
         }
     }
     pub fn parsed_start(&self) -> Result<DateTime<Local>, chrono::ParseError> {
-	DateTime::<Local>::from_str(&self.start)
+        DateTime::<Local>::from_str(&self.start)
     }
     pub fn parsed_end(&self) -> Result<DateTime<Local>, chrono::ParseError> {
-	DateTime::<Local>::from_str(&self.end)
+        DateTime::<Local>::from_str(&self.end)
     }
-    pub fn duration(&self) {
-	
-    }
+    pub fn duration(&self) {}
 }
 
 /// Create a new event and return it.
@@ -136,12 +139,7 @@ pub fn edit_event(event_name: &str) {
         .filter(|event| event.name == event_name)
         .collect();
     if events_named_like_arg.is_empty() {
-        println!(
-            "{}",
-            format!("No event named {} found.", event_name)
-                .yellow()
-                .bold()
-        );
+        warning(format!("No event named {} found.", event_name));
         return;
     }
     println!("{:#?}", events_named_like_arg);
@@ -175,8 +173,8 @@ pub fn edit_event(event_name: &str) {
             let num = select_in_range("Select what to edit", 3);
             let current_end = edited_event.parsed_end().unwrap();
             let current_start = edited_event.parsed_start().unwrap();
-	    
-	    if num == 1 || num == 3 {
+
+            if num == 1 || num == 3 {
                 print!("Start date: ");
                 let mut new_start_date = get_start_date();
                 while new_start_date.and_time(current_start.time()).unwrap() > current_end {
@@ -187,24 +185,29 @@ pub fn edit_event(event_name: &str) {
                 edited_event.start = new_start_date
                     .and_time(current_start.time())
                     .unwrap()
-                    .to_string();	
-	    }
-	    if num == 2 || num == 3 {
-		print!("Start time: ");
-		let mut new_start_time = get_start_time();
-		while current_start.date().and_time(new_start_time).unwrap() > current_end {
+                    .to_string();
+            }
+            if num == 2 || num == 3 {
+                print!("Start time: ");
+                let mut new_start_time = get_start_time();
+                while current_start.date().and_time(new_start_time).unwrap() > current_end {
                     println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
                     new_start_time = get_start_time();
                 }
-		edited_event.start = current_start.date().and_time(new_start_time).unwrap().to_string();
-	    }
+                edited_event.start = current_start
+                    .date()
+                    .and_time(new_start_time)
+                    .unwrap()
+                    .to_string();
+            }
         }
         // Edit duration
         3 => {
             print!("Duration: ");
             let new_duration = get_duration();
-            let start = DateTime::<Local>::from_str(&edited_event.start).expect("Valid start timedate");
+            let start =
+                DateTime::<Local>::from_str(&edited_event.start).expect("Valid start timedate");
             let end = start + new_duration;
             edited_event.end = end.to_string();
         }
@@ -214,8 +217,8 @@ pub fn edit_event(event_name: &str) {
             let num: usize = select_in_range("Select what to edit", 3);
             let mut current_end = edited_event.parsed_end().unwrap();
             let current_start = edited_event.parsed_start().unwrap();
-	    
-	    if num == 1 || num == 3 {
+
+            if num == 1 || num == 3 {
                 print!("End date: ");
                 let mut new_end_date = get_end_date(&current_start.date());
                 while new_end_date.and_time(current_end.time()).unwrap() < current_start {
@@ -227,18 +230,30 @@ pub fn edit_event(event_name: &str) {
                     .and_time(current_end.time())
                     .unwrap()
                     .to_string();
-	    }
-	    if num == 2 || num == 3 {
-		current_end = edited_event.parsed_end().unwrap();
-		print!("End time: ");
-		let mut new_end_time = get_end_time(&current_start.date(), &current_start.time(), &current_end.date());
-		while current_end.date().and_time(new_end_time).unwrap() < current_start {
+            }
+            if num == 2 || num == 3 {
+                current_end = edited_event.parsed_end().unwrap();
+                print!("End time: ");
+                let mut new_end_time = get_end_time(
+                    &current_start.date(),
+                    &current_start.time(),
+                    &current_end.date(),
+                );
+                while current_end.date().and_time(new_end_time).unwrap() < current_start {
                     println!("End timedate cannot be before start timedate");
                     print!("End date: ");
-                    new_end_time = get_end_time(&current_start.date(), &current_start.time(), &edited_event.parsed_end().unwrap().date());
+                    new_end_time = get_end_time(
+                        &current_start.date(),
+                        &current_start.time(),
+                        &edited_event.parsed_end().unwrap().date(),
+                    );
                 }
-		edited_event.end = current_end.date().and_time(new_end_time).unwrap().to_string();
-	    }
+                edited_event.end = current_end
+                    .date()
+                    .and_time(new_end_time)
+                    .unwrap()
+                    .to_string();
+            }
         }
         // Edit priority
         5 => {

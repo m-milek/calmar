@@ -1,12 +1,14 @@
-use colored::Colorize;
-use serde_derive::{Serialize, Deserialize};
-use std::path::PathBuf;
-use crate::{
-    cli::repl::get_input,
-	    cal::{getdata::get_dir_path,
-		  calendar::default_or_custom_save_path}};
+#![allow(dead_code)]
+
 use crate::cal::calendar::Calendar;
+use crate::cli::messages::success;
+use crate::{
+    cal::{calendar::default_or_custom_save_path, getdata::get_dir_path},
+    cli::{messages::error, repl::get_input},
+};
+use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
+use std::path::PathBuf;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
@@ -23,70 +25,45 @@ pub struct CalendarReference {
 
 impl CalendarReference {
     pub fn new(name: String, path: String, active: bool) -> Self {
-	CalendarReference {
-            name,
-            path,
-            active,
-	}
+        CalendarReference { name, path, active }
     }
     pub fn set_name(&mut self, name: String) {
-	self.name = name
+        self.name = name
     }
     pub fn set_path(&mut self, path: String) {
-	self.path = path
+        self.path = path
     }
     pub fn set_active(&mut self) {
-	self.active = true
+        self.active = true
     }
     pub fn set_inactive(&mut self) {
-	self.active = false
+        self.active = false
     }
     pub fn create_file(&self) {
-	
-	let mut calendar_file = match std::fs::File::create(&self.path) {
+        let mut calendar_file = match std::fs::File::create(&self.path) {
             Ok(file) => file,
             Err(e) => {
-		println!(
-                    "{}",
-                    format!("Failed to create {}.\n{}", self.path, e)
-			.red()
-			.bold()
-		);
-		return;
+                error(format!("Failed to create {}.\n{}", self.path, e));
+                return;
             }
-	};
+        };
 
-	let calendar_json: String =
+        let calendar_json: String =
             match serde_json::to_string_pretty(&Calendar::new(self.name.as_str())) {
-		Ok(result) => result,
-		Err(e) => {
-                    println!(
-			"{}",
-			format!("Failed to serialize calendar to string.\n{}", e)
-                            .red()
-                            .bold()
-                    );
+                Ok(result) => result,
+                Err(e) => {
+                    error(format!("Failed to serialize calendar to string.\n{}", e));
                     return;
-		}
+                }
             };
 
-	match write!(calendar_file, "{}", calendar_json) {
+        match write!(calendar_file, "{}", calendar_json) {
             Ok(_) => (),
             Err(e) => {
-		println!(
-                    "{}",
-                    format!("Failed to write to {}.\n{}", self.name, e)
-			.red()
-			.bold()
-		);
+                error(format!("Failed to write to {}.\n{}", self.name, e));
             }
-	}
-	println!(
-            "{}",
-            format!("Written to {}.", self.path)
-		.green()
-		.bold()
-	);
+        }
+        success(format!("Written to {}.", self.path));
     }
 }
 
@@ -107,18 +84,12 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let path_to_calendar_string = match path_to_calendar.to_str() {
         Some(string) => string,
         None => {
-            println!(
-                "{}",
-                format!(
-                    "Failed to convert {} to string.",
-                    path_to_calendar.display()
-                )
-                .red()
-                .bold()
-            );
+            error(format!(
+                "Failed to convert {} to string.",
+                path_to_calendar.display()
+            ));
             std::process::exit(1);
         }
     };
     CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
 }
-

@@ -5,7 +5,7 @@ use crate::cal::calendar_index::{set, CalendarIndex};
 use crate::cal::event::{Event, get_new_event, edit_event};
 use crate::cal::{help, self};
 use crate::cli::repl::get_input;
-use colored::Colorize;
+use super::messages::warning;
 
 pub fn yesno(prompt: &str) -> bool {
     print!("{}", prompt);
@@ -21,15 +21,8 @@ fn add(split_input: &Vec<&str>) {
         1 => get_new_event(None),
         2 => get_new_event(Some(split_input[1].to_owned())),
         _ => {
-            println!(
-                "{}",
-                format!(
-                    "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                    split_input.len() - 1
-                )
-                .yellow()
-                .bold()
-            ); // do not count "add" as an argument
+            warning(format!("add: Too many arguments provided. Expected: 0 or 1, Got: {}", split_input.len() - 1));
+	    // do not count "add" as an argument
             return;
         }
     };
@@ -65,15 +58,7 @@ fn clear(split_input: &Vec<&str>) {
             println!("\u{001b}c");
         }
         _ => {
-            println!(
-                "{}",
-                format!(
-                    "clear: Invalid number of arguments. Expected: 0. Got: {}",
-                    split_input.len() - 1
-                )
-                .yellow()
-                .bold()
-            );
+            warning(format!("clear: Invalid number of arguments. Expected: 0. Got: {}", split_input.len() - 1));
         }
     }
 }
@@ -93,11 +78,6 @@ pub fn parse(input: String) {
         "list" | "l" | "ls" => list(&split_input),
 	"listcal" | "lc" => CalendarIndex::get().list(),
         "quit" | "q" => std::process::exit(0),
-        _ => println!(
-            "{}",
-            format!("Unknown command: {}", split_input[0].trim())
-                .yellow()
-                .bold()
-        ),
+        _ => warning(format!("Unknown command: {}", split_input[0].trim())),
     }
 }
