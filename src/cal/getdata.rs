@@ -94,6 +94,7 @@ pub fn get_end_time(
                 .yellow()
                 .bold()
         );
+	println!("start date: {:#?}\nstart time: {:#?}\nend date: {:#?}", start_date, start_time, end_date);
         print!("End time: ");
         input = get_input();
     }

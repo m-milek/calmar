@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, Duration};
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -55,6 +55,15 @@ impl EventJSON {
             priority: self.priority,
             difficulty: self.difficulty,
         }
+    }
+    pub fn parsed_start(&self) -> Result<DateTime<Local>, chrono::ParseError> {
+	DateTime::<Local>::from_str(&self.start)
+    }
+    pub fn parsed_end(&self) -> Result<DateTime<Local>, chrono::ParseError> {
+	DateTime::<Local>::from_str(&self.end)
+    }
+    pub fn duration(&self) {
+	
     }
 }
 
@@ -164,44 +173,72 @@ pub fn edit_event(event_name: &str) {
         2 => {
             println!("1. Start date\n2. Start time\n3. Start datetime");
             let num = select_in_range("Select what to edit", 3);
-            match num {
-                // Edit only start date
-                1 => {
-                    let current_end =
-                        DateTime::<Local>::from_str(&edited_event.end).expect("Valid str");
-                    let current_start =
-                        DateTime::<Local>::from_str(&&edited_event.start).expect("Valid str");
-                    let current_start_time = current_start.time();
+            let current_end = edited_event.parsed_end().unwrap();
+            let current_start = edited_event.parsed_start().unwrap();
+	    
+	    if num == 1 || num == 3 {
+                print!("Start date: ");
+                let mut new_start_date = get_start_date();
+                while new_start_date.and_time(current_start.time()).unwrap() > current_end {
+                    println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
-                    let mut new_start_date = get_start_date();
-                    while new_start_date.and_time(current_start_time).unwrap() > current_end {
-                        println!("Start timedate cannot be after end timedate");
-                        print!("Start date: ");
-                        new_start_date = get_start_date();
-                    }
-                    edited_event.start = new_start_date
-                        .and_time(current_start_time)
-                        .unwrap()
-                        .to_string();
+                    new_start_date = get_start_date();
                 }
-                2 => println!("Edit Start time"),
-                3 => println!("Edit Start datetime"),
-                _ => panic!("Impossible"),
-            }
+                edited_event.start = new_start_date
+                    .and_time(current_start.time())
+                    .unwrap()
+                    .to_string();	
+	    }
+	    if num == 2 || num == 3 {
+		print!("Start time: ");
+		let mut new_start_time = get_start_time();
+		while current_start.date().and_time(new_start_time).unwrap() > current_end {
+                    println!("Start timedate cannot be after end timedate");
+                    print!("Start date: ");
+                    new_start_time = get_start_time();
+                }
+		edited_event.start = current_start.date().and_time(new_start_time).unwrap().to_string();
+	    }
         }
         // Edit duration
         3 => {
             print!("Duration: ");
             let new_duration = get_duration();
-            let start = DateTime::<Local>::from_str(&edited_event.start);
-            let end = start.expect("Valid start timedate") + new_duration;
+            let start = DateTime::<Local>::from_str(&edited_event.start).expect("Valid start timedate");
+            let end = start + new_duration;
             edited_event.end = end.to_string();
         }
         // Edit end datetime
         4 => {
             println!("1. End date\n2. End time\n3. End datetime");
             let num: usize = select_in_range("Select what to edit", 3);
-            println!("{num}");
+            let mut current_end = edited_event.parsed_end().unwrap();
+            let current_start = edited_event.parsed_start().unwrap();
+	    
+	    if num == 1 || num == 3 {
+                print!("End date: ");
+                let mut new_end_date = get_end_date(&current_start.date());
+                while new_end_date.and_time(current_end.time()).unwrap() < current_start {
+                    println!("End timedate cannot be before start timedate");
+                    print!("End date: ");
+                    new_end_date = get_end_date(&current_start.date());
+                }
+                edited_event.end = new_end_date
+                    .and_time(current_end.time())
+                    .unwrap()
+                    .to_string();
+	    }
+	    if num == 2 || num == 3 {
+		current_end = edited_event.parsed_end().unwrap();
+		print!("End time: ");
+		let mut new_end_time = get_end_time(&current_start.date(), &current_start.time(), &current_end.date());
+		while current_end.date().and_time(new_end_time).unwrap() < current_start {
+                    println!("End timedate cannot be before start timedate");
+                    print!("End date: ");
+                    new_end_time = get_end_time(&current_start.date(), &current_start.time(), &edited_event.parsed_end().unwrap().date());
+                }
+		edited_event.end = current_end.date().and_time(new_end_time).unwrap().to_string();
+	    }
         }
         // Edit priority
         5 => {
