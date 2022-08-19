@@ -2,10 +2,8 @@ use crate::cal::calendar::{
     removecal, remove
 };
 use crate::cal::calendar_index::{set, CalendarIndex};
-use crate::cal::calendar_ref::get_active_calendar_reference;
 use crate::cal::event::{Event, get_new_event, edit_event};
 use crate::cal::{help, self};
-use crate::cal::savedata::save_event;
 use crate::cli::repl::get_input;
 use colored::Colorize;
 
@@ -35,14 +33,11 @@ fn add(split_input: &Vec<&str>) {
             return;
         }
     };
-    match save_event(new_event, get_active_calendar_reference()) {
-        true => {
-            println!("{}", "Successfully saved new event.".green().bold());
-        }
-        false => {
-            println!("{}", "Failed to save new event.".red().bold());
-        }
-    }
+    let index = CalendarIndex::get();
+    let mut active_calendar = index.active_calendar();
+    let path = index.active_calendar_reference().path;
+    active_calendar.add_event(new_event.to_event_json());
+    active_calendar.save(path);
 }
 
 /*
@@ -57,7 +52,7 @@ fn edit(split_input: &[&str]) {
 /// Display events in the active calendar
 fn list(_split_input: &[&str]) {
     let index = CalendarIndex::get();
-    let active_calendar = index.get_active_calendar();
+    let active_calendar = index.active_calendar();
     for event in &active_calendar.events {
         println!("{:#?}\n", event.to_standard_event());
     }

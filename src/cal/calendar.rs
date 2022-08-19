@@ -2,12 +2,10 @@ use crate::cal::calendar_index::CalendarIndex;
 use crate::cal::calendar_ref::get_new_calendar_reference;
 use crate::cal::event::EventJSON;
 use crate::cal::getdata::get_valid_calendar_name;
-use crate::cal::savedata::save_new_calendar;
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 use crate::CONFIG;
-use super::calendar_ref::get_active_calendar_reference;
 use super::getdata::get_valid_event_name;
 
 /// Holds its own name and a vector of `Event` structs.
@@ -27,46 +25,48 @@ impl Calendar {
             events: Vec::<EventJSON>::new(),
         }
     }
-    pub fn rename(&mut self, name: String) {
+    
+    pub fn set_name(&mut self, name: String) {
 	self.name = name;
+    }
+
+    pub fn save(&self, path: String) {
+	let mut calendar_file = match std::fs::OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(&path)
+	{
+            Ok(file) => file,
+            Err(e) => {
+		println!("Failed to open {path}.\n{e}");
+		std::process::exit(1);
+            }
+	};
+
+	let calendar_json = match serde_json::to_string_pretty(&self) {
+            Ok(result) => result,
+            Err(e) => {
+		println!("Failed to parse the calendar into string.\n{e}");
+		std::process::exit(1);
+            }
+	};
+
+	match write!(calendar_file, "{}", calendar_json) {
+            Ok(_) => (),
+            Err(e) => {
+		println!("Failed to write to {path}.\n{e}");
+		std::process::exit(1);
+            }
+	}
+    }
+    pub fn add_event(&mut self, event: EventJSON) {
+	self.events.push(event);
     }
 }
 
 pub enum CalendarReturnMessage {
     Abort,
 }
-
-
-pub fn save_calendar(calendar: Calendar, path: String) {
-    let mut calendar_file = match std::fs::OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(&path)
-    {
-        Ok(file) => file,
-        Err(e) => {
-            println!("Failed to open {path}.\n{e}");
-            std::process::exit(1);
-        }
-    };
-
-    let calendar_json = match serde_json::to_string_pretty(&calendar) {
-        Ok(result) => result,
-        Err(e) => {
-            println!("Failed to parse the calendar into string.\n{e}");
-            std::process::exit(1);
-        }
-    };
-
-    match write!(calendar_file, "{}", calendar_json) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("Failed to write to {path}.\n{e}");
-            std::process::exit(1);
-        }
-    }
-}
-
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -114,7 +114,7 @@ pub fn cal(split_input: &Vec<&str>) {
     }
     calendar_index.save();
     println!("{}", "Saved calendar index".green().bold());
-    save_new_calendar(new_reference);
+    new_reference.create_file()
 }
 
 
@@ -168,7 +168,7 @@ pub fn remove(split_input: &Vec<&str>) {
         }
     };
     let index = CalendarIndex::get();
-    let mut active_calendar = index.get_active_calendar();
+    let mut active_calendar = index.active_calendar();
     active_calendar.events.retain(|event| event.name != name);
-    save_calendar(active_calendar, get_active_calendar_reference().path);
+    active_calendar.save(index.active_calendar_reference().path);
 }

@@ -1,9 +1,12 @@
 use colored::Colorize;
 use serde_derive::{Serialize, Deserialize};
 use std::path::PathBuf;
-use crate::{cli::repl::get_input, cal::{getdata::get_dir_path, calendar::default_or_custom_save_path}};
-
-use super::calendar_index::CalendarIndex;
+use crate::{
+    cli::repl::get_input,
+	    cal::{getdata::get_dir_path,
+		  calendar::default_or_custom_save_path}};
+use crate::cal::calendar::Calendar;
+use std::io::Write;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
@@ -18,6 +21,75 @@ pub struct CalendarReference {
     pub active: bool,
 }
 
+impl CalendarReference {
+    pub fn new(name: String, path: String, active: bool) -> Self {
+	CalendarReference {
+            name,
+            path,
+            active,
+	}
+    }
+    pub fn set_name(&mut self, name: String) {
+	self.name = name
+    }
+    pub fn set_path(&mut self, path: String) {
+	self.path = path
+    }
+    pub fn set_active(&mut self) {
+	self.active = true
+    }
+    pub fn set_inactive(&mut self) {
+	self.active = false
+    }
+    pub fn create_file(&self) {
+	
+	let mut calendar_file = match std::fs::File::create(&self.path) {
+            Ok(file) => file,
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!("Failed to create {}.\n{}", self.path, e)
+			.red()
+			.bold()
+		);
+		return;
+            }
+	};
+
+	let calendar_json: String =
+            match serde_json::to_string_pretty(&Calendar::new(self.name.as_str())) {
+		Ok(result) => result,
+		Err(e) => {
+                    println!(
+			"{}",
+			format!("Failed to serialize calendar to string.\n{}", e)
+                            .red()
+                            .bold()
+                    );
+                    return;
+		}
+            };
+
+	match write!(calendar_file, "{}", calendar_json) {
+            Ok(_) => (),
+            Err(e) => {
+		println!(
+                    "{}",
+                    format!("Failed to write to {}.\n{}", self.name, e)
+			.red()
+			.bold()
+		);
+            }
+	}
+	println!(
+            "{}",
+            format!("Written to {}.", self.path)
+		.green()
+		.bold()
+	);
+    }
+}
+
 /// Create a calendar reference and return it.
 pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let name = match name {
@@ -30,7 +102,6 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
 
     print!("Path: ");
     let path = default_or_custom_save_path(get_dir_path());
-
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
     let path_to_calendar_string = match path_to_calendar.to_str() {
@@ -48,34 +119,6 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
             std::process::exit(1);
         }
     };
-    CalendarReference {
-        name,
-        path: path_to_calendar_string.to_owned(),
-        active: false,
-    }
+    CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
 }
 
-
-/// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
-pub fn get_active_calendar_reference() -> CalendarReference {
-    let mut index = CalendarIndex::get();
-    index
-        .calendars
-        .retain(|calendar_reference| calendar_reference.active);
-
-    match index.calendars.len() {
-        1 => index.calendars[0].clone(),
-        _ => {
-            println!(
-                "{}",
-                format!(
-                    "{} calendars are set as active. There must be exactly one.",
-                    index.calendars.len()
-                )
-                .red()
-                .bold()
-            );
-            std::process::exit(1);
-        }
-    }
-}

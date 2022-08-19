@@ -82,7 +82,7 @@ impl CalendarIndex {
 
     /// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
     /// currently set as active in `$HOME/.config/calmar/index.json`.
-    pub fn get_active_calendar(&self) -> Calendar {
+    pub fn active_calendar(&self) -> Calendar {
 	let num = self.calendars.iter().filter(|r| r.active).count();
 
 	let current_calendar = match num {
@@ -131,13 +131,31 @@ impl CalendarIndex {
 	}
     }
 
-    // TODO Error handling
-    pub fn get_active_calendar_reference(&self ) -> CalendarReference {
-	let r: Vec<&CalendarReference> = self.calendars.iter().filter(|r| r.active).collect();
-	r[0].to_owned()
+    /// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
+    pub fn active_calendar_reference(&self) -> CalendarReference {
+	let mut refs = self.calendars.clone();
+	let num = refs.iter().filter(|r| r.active).count();
+	match num {
+            1 => {
+		refs.retain(|r| r.active);
+		refs[0].clone()
+	    },
+            _ => {
+		println!(
+                    "{}",
+                    format!(
+			"{} calendars are set as active. There must be exactly one.",
+			num
+                    )
+			.red()
+			.bold()
+		);
+		std::process::exit(1);
+            }
+	}
     }
 
-    pub fn get_number_of_active_calendars(&self) -> usize {
+    pub fn number_of_active_calendars(&self) -> usize {
 	self.calendars.iter().filter(|c| c.active).count()
     }
     
@@ -329,12 +347,12 @@ impl CalendarIndex {
 	// Set the currently active calendar as not active
 	// Set the desired calendar as active
 
-	for mut calendar in &mut self.calendars {
-            if calendar.active {
-		calendar.active = false;
+	for r in &mut self.calendars {
+            if r.active {
+		r.set_inactive()
             }
-            if calendar.name == name {
-		calendar.active = true;
+            if r.name == name {
+		r.set_active()
             }
 	}
     }
@@ -370,7 +388,7 @@ pub fn set(split_input: &Vec<&str>) {
         return;
     }
 
-    match index.get_number_of_active_calendars() {
+    match index.number_of_active_calendars() {
         0 => {
             println!(
                 "{}",

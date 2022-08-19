@@ -6,8 +6,6 @@ use std::str::FromStr;
 use struct_field_names_as_array::FieldNamesAsArray;
 
 use crate::cal::{
-    calendar::save_calendar,
-    calendar_ref::get_active_calendar_reference,
     getdata::{
         get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
         get_start_time, get_valid_event_name,
@@ -109,7 +107,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
 
 pub fn edit_event(event_name: &str) {
     let index = CalendarIndex::get();
-    let mut active_calendar = index.get_active_calendar();
+    let mut active_calendar = index.active_calendar();
 
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events.len());
 
@@ -217,5 +215,5 @@ pub fn edit_event(event_name: &str) {
         }
         _ => panic!("Impossible"),
     }
-    save_calendar(active_calendar, get_active_calendar_reference().path);
+    active_calendar.save(index.active_calendar_reference().path);
 }
