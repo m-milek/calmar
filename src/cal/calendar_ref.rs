@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
 use crate::cal::calendar::Calendar;
+use crate::cli::commands::default_or_custom_save_path;
 use crate::cli::messages::success;
 use crate::{
-    cal::{calendar::default_or_custom_save_path, getdata::get_dir_path},
+    cal::getdata::get_dir_path,
     cli::{messages::error, repl::get_input},
 };
 use serde_derive::{Deserialize, Serialize};
