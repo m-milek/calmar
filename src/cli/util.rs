@@ -25,3 +25,8 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
         }
     }
 }
+
+pub fn yesno(prompt: &str) -> bool {
+    print!("{}", prompt);
+    matches!(get_input().trim().to_lowercase().as_str(), "yes" | "y")
+}

@@ -1,14 +1,9 @@
 #![allow(dead_code)]
-
-use crate::cli::messages::{warning, success};
-use crate::{cal::calendar_index::CalendarIndex, cli::messages::error};
-use crate::cal::calendar_ref::get_new_calendar_reference;
+use crate::cli::messages::error;
 use crate::cal::event::EventJSON;
-use crate::cal::getdata::get_valid_calendar_name;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
-use crate::CONFIG;
-use super::getdata::get_valid_event_name;
+
 
 /// Holds its own name and a vector of `Event` structs.
 /// # Use

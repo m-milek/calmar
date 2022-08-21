@@ -3,18 +3,19 @@ mod cal {
     pub mod calendar_index;
     pub mod calendar_ref;
     pub mod event;
-    pub mod getdata;
-    pub mod help;
-    pub mod validator;
-    pub mod util;
 }
 mod cli {
     pub mod config;
     pub mod commands;
     pub mod display;
+    pub mod functions;
+    pub mod getdata;
+    pub mod help;
     pub mod messages;
     pub mod parser;
     pub mod repl;
+    pub mod util;
+    pub mod validator;
 }
 use crate::cli::config::{get_config, Config};
 use crate::cli::repl;

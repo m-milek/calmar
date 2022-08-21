@@ -1,8 +1,16 @@
-use crate::{cal::{calendar_ref::get_new_calendar_reference, calendar_index::CalendarIndex, getdata::{get_valid_calendar_name, get_valid_event_name}, event::{get_new_event, Event, edit_event}}, CONFIG};
+use crate::{
+    cal::{
+        calendar_index::CalendarIndex,
+        event::Event,
+    },
+    cli::functions::{edit_event, get_new_event},
+    CONFIG,
+};
 
-use super::messages::{warning, success, error};
-
-
+use super::{
+    getdata::{get_valid_calendar_name, get_valid_event_name},
+    messages::{error, success, warning}, functions::get_new_calendar_reference,
+};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -16,7 +24,10 @@ pub fn cal(split_input: &Vec<&str>) {
         1 => get_new_calendar_reference(None),
         2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
         _ => {
-            warning(format!("cal: Too many arguments provided. Expected: 0 or 1, Got: {}", split_input.len() - 1)); // do not count "cal" as an argument
+            warning(format!(
+                "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                split_input.len() - 1
+            )); // do not count "cal" as an argument
             return;
         }
     };
@@ -38,7 +49,6 @@ pub fn cal(split_input: &Vec<&str>) {
     new_reference.create_file()
 }
 
-
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
     let mut index = CalendarIndex::get();
@@ -46,7 +56,10 @@ pub fn removecal(split_input: &Vec<&str>) {
         1 => get_valid_calendar_name(),
         2 => split_input[1].to_string(),
         _ => {
-            warning(format!("removecal: Too many arguments provided. Expected: 0 or 1. Got: {}", split_input.len() - 1));
+            warning(format!(
+                "removecal: Too many arguments provided. Expected: 0 or 1. Got: {}",
+                split_input.len() - 1
+            ));
             return;
         }
     };
@@ -73,7 +86,10 @@ pub fn remove(split_input: &Vec<&str>) {
         1 => get_valid_event_name(),
         2 => split_input[1].to_owned(),
         _ => {
-            warning(format!("remove: Too many arguments provided. Expected: 1 or 2. Got: {}", split_input.len() - 1));
+            warning(format!(
+                "remove: Too many arguments provided. Expected: 1 or 2. Got: {}",
+                split_input.len() - 1
+            ));
             return;
         }
     };
@@ -82,7 +98,6 @@ pub fn remove(split_input: &Vec<&str>) {
     active_calendar.events.retain(|event| event.name != name);
     active_calendar.save(index.active_calendar_reference().path);
 }
-
 
 /// Change the active calednar
 pub fn set(split_input: &Vec<&str>) {
@@ -108,7 +123,10 @@ pub fn set(split_input: &Vec<&str>) {
             warning("No calendars are set as active. Please correct this and retry.".to_string());
             return;
         }
-        1 => (),
+        1 => {
+	    index.set_active(name);
+	    index.save();
+	},
         _ => {
             warning(
                 "More than one calendar is set as active. Please correct this and retry."
@@ -117,11 +135,7 @@ pub fn set(split_input: &Vec<&str>) {
             return;
         }
     }
-
-    index.set_active(name);
-    index.save()
 }
-
 
 /*
 Call event creation with name given optionally
@@ -132,8 +146,11 @@ pub fn add(split_input: &Vec<&str>) {
         1 => get_new_event(None),
         2 => get_new_event(Some(split_input[1].to_owned())),
         _ => {
-            warning(format!("add: Too many arguments provided. Expected: 0 or 1, Got: {}", split_input.len() - 1));
-	    // do not count "add" as an argument
+            warning(format!(
+                "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
+                split_input.len() - 1
+            ));
+            // do not count "add" as an argument
             return;
         }
     };
@@ -148,28 +165,30 @@ pub fn add(split_input: &Vec<&str>) {
 Edit attributes of a given event and save it
 */
 pub fn edit(split_input: &[&str]) {
-    for event_name in split_input[1..].iter() {
-        edit_event(event_name);
-    }
+    split_input[1..].iter().for_each(|e| edit_event(e))
 }
 
 /// Display events in the active calendar
 pub fn list(_split_input: &[&str]) {
     let index = CalendarIndex::get();
     let active_calendar = index.active_calendar();
-    for event in &active_calendar.events {
-        println!("{:#?}\n", event.to_standard_event());
-    }
+    active_calendar
+        .events
+        .iter()
+        .for_each(|e| println!("{:#?}", e.to_standard_event()));
 }
 
-
+/// Clear the screen
 pub fn clear(split_input: &Vec<&str>) {
     match split_input.len() {
         1 => {
             println!("\u{001b}c");
         }
         _ => {
-            warning(format!("clear: Invalid number of arguments. Expected: 0. Got: {}", split_input.len() - 1));
+            warning(format!(
+                "clear: Invalid number of arguments. Expected: 0. Got: {}",
+                split_input.len() - 1
+            ));
         }
     }
 }

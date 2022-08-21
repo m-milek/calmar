@@ -1,13 +1,7 @@
 use crate::cal::calendar_index::CalendarIndex;
-use crate::cal::help;
-use crate::cli::repl::get_input;
+use crate::cli::help;
 use super::commands::{cal, clear, edit, add, remove, removecal, set, list};
 use super::messages::warning;
-
-pub fn yesno(prompt: &str) -> bool {
-    print!("{}", prompt);
-    matches!(get_input().trim().to_lowercase().as_str(), "yes" | "y")
-}
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {

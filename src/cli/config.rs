@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{cal::validator::get_home_dir, cli::messages::error};
+use crate::{cli::validator::get_home_dir, cli::messages::error};
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 

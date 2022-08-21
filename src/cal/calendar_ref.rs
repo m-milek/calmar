@@ -1,15 +1,10 @@
 #![allow(dead_code)]
 
 use crate::cal::calendar::Calendar;
-use crate::cli::commands::default_or_custom_save_path;
 use crate::cli::messages::success;
-use crate::{
-    cal::getdata::get_dir_path,
-    cli::{messages::error, repl::get_input},
-};
+use crate::cli::messages::error;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
-use std::path::PathBuf;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
@@ -68,29 +63,3 @@ impl CalendarReference {
     }
 }
 
-/// Create a calendar reference and return it.
-pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
-    let name = match name {
-        Some(name) => name,
-        None => {
-            print!("Name: ");
-            get_input()
-        }
-    };
-
-    print!("Path: ");
-    let path = default_or_custom_save_path(get_dir_path());
-    let mut path_to_calendar = PathBuf::from(path).join(&name);
-    path_to_calendar.set_extension("json");
-    let path_to_calendar_string = match path_to_calendar.to_str() {
-        Some(string) => string,
-        None => {
-            error(format!(
-                "Failed to convert {} to string.",
-                path_to_calendar.display()
-            ));
-            std::process::exit(1);
-        }
-    };
-    CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
-}
