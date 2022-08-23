@@ -274,19 +274,17 @@ pub fn list(split_input: &[&str]) {
         }
     };
 
-    match split_input.len() {
-        1 => {
-            active_calendar
-                .events
-                .iter()
-                .for_each(|e| println!("{:#?}", e.to_standard_event()));
-        }
-        _ => active_calendar
-            .events
-            .iter()
-            .filter(|e| split_input[1..].contains(&e.name.as_str()))
-            .for_each(|ev| println!("{:#?}", ev)),
-    }
+    active_calendar
+        .events
+        .iter()
+        .filter(|e| {
+            if split_input.len().ne(&1) {
+                split_input[1..].contains(&e.name.as_str())
+            } else {
+                true
+            }
+        })
+        .for_each(|e| println!("{:#?}", e.to_standard_event()))
 }
 
 /// Clear the screen
@@ -304,6 +302,23 @@ pub fn clear(split_input: &Vec<&str>) {
     }
 }
 
-pub fn listcal(_split_input: &Vec<&str>) {
-    todo!()
+// List calendars and their properties
+pub fn listcal(split_input: &Vec<&str>) {
+    let index = match CalendarIndex::get() {
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
+    };
+
+    index.calendars
+        .iter()
+        .filter(|r| {
+	    if split_input.len().ne(&1) {
+		split_input[1..].contains(&r.name.as_str())
+	    }
+	    else {true}
+	})
+        .for_each(|r| println!("{:#?}", r))
 }
