@@ -2,6 +2,7 @@ mod cal {
     pub mod calendar;
     pub mod calendar_index;
     pub mod calendar_ref;
+    pub mod calmar_error;
     pub mod event;
 }
 mod cli {

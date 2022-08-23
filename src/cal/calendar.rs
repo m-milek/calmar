@@ -1,9 +1,12 @@
 #![allow(dead_code)]
-use crate::cli::messages::error;
 use crate::cal::event::EventJSON;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
+use super::calmar_error::CalmarError;
 
+pub enum CalendarReturnMessage {
+    Abort,
+}
 
 /// Holds its own name and a vector of `Event` structs.
 /// # Use
@@ -22,46 +25,34 @@ impl Calendar {
             events: Vec::<EventJSON>::new(),
         }
     }
-    
+
     pub fn set_name(&mut self, name: String) {
-	self.name = name;
+        self.name = name
     }
 
-    pub fn save(&self, path: String) {
-	let mut calendar_file = match std::fs::OpenOptions::new()
+    pub fn save(&self, path: &String) -> Result<(), CalmarError> {
+        let mut calendar_file = match std::fs::OpenOptions::new()
             .write(true)
             .truncate(true)
             .open(&path)
-	{
+        {
             Ok(file) => file,
-            Err(e) => {
-		error(format!("Failed to open {}.\n{}", path, e));
-		std::process::exit(1);
-            }
-	};
+            Err(e) => return Err(CalmarError::OpenFile { e }),
+        };
 
-	let calendar_json = match serde_json::to_string_pretty(&self) {
+        let calendar_json = match serde_json::to_string_pretty(&self) {
             Ok(result) => result,
-            Err(e) => {
-		error(format!("Failed to parse the calendar into string.\n{}", e));
-		std::process::exit(1);
-            }
-	};
+            Err(e) => return Err(CalmarError::ParseJSON { e }),
+        };
 
-	match write!(calendar_file, "{}", calendar_json) {
-            Ok(_) => (),
-            Err(e) => {
-		error(format!("Failed to write to {}.\n{}", path, e));
-		std::process::exit(1);
-            }
-	}
+        if let Err(e) = write!(calendar_file, "{}", calendar_json) {
+	    return Err(CalmarError::WriteFile { e })
+        }
+	Ok(())
     }
+
     pub fn add_event(&mut self, event: EventJSON) {
-	self.events.push(event);
+        self.events.push(event)
     }
-}
-
-pub enum CalendarReturnMessage {
-    Abort,
 }
 

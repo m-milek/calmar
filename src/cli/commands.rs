@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     getdata::{get_valid_calendar_name, get_valid_event_name},
-    messages::{error, success, warning}, functions::get_new_calendar_reference,
+    messages::{error, success, warning, print_err_msg}, functions::get_new_calendar_reference,
 };
 
 /*
@@ -96,7 +96,12 @@ pub fn remove(split_input: &Vec<&str>) {
     let index = CalendarIndex::get();
     let mut active_calendar = index.active_calendar();
     active_calendar.events.retain(|event| event.name != name);
-    active_calendar.save(index.active_calendar_reference().path);
+    
+    let path = index.active_calendar_reference().path;
+    
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, &path)
+    }
 }
 
 /// Change the active calednar
@@ -121,7 +126,6 @@ pub fn set(split_input: &Vec<&str>) {
     match index.number_of_active_calendars() {
         0 => {
             warning("No calendars are set as active. Please correct this and retry.".to_string());
-            return;
         }
         1 => {
 	    index.set_active(name);
@@ -132,7 +136,6 @@ pub fn set(split_input: &Vec<&str>) {
                 "More than one calendar is set as active. Please correct this and retry."
                     .to_string(),
             );
-            return;
         }
     }
 }
@@ -158,7 +161,10 @@ pub fn add(split_input: &Vec<&str>) {
     let mut active_calendar = index.active_calendar();
     let path = index.active_calendar_reference().path;
     active_calendar.add_event(new_event.to_event_json());
-    active_calendar.save(path);
+    
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, &path)
+    }
 }
 
 /*

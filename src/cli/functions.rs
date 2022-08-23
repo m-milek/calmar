@@ -1,4 +1,4 @@
-use crate::{cal::{event::EventJSON, calendar_ref::CalendarReference}, cli::{repl::get_input, getdata::get_dir_path, messages::error}};
+use crate::{cal::{event::EventJSON, calendar_ref::CalendarReference}, cli::{repl::get_input, getdata::get_dir_path, messages::{error, print_err_msg}}};
 use chrono::{DateTime, Local};
 use std::str::FromStr;
 use std::collections::HashMap;
@@ -211,7 +211,11 @@ pub fn edit_event(event_name: &str) {
         }
         _ => panic!("Impossible"),
     }
-    active_calendar.save(index.active_calendar_reference().path);
+    
+    let path = index.active_calendar_reference().path;
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, &path)
+    }
 }
 
 /// Create a calendar reference and return it.
