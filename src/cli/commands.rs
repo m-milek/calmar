@@ -1,15 +1,13 @@
 use crate::{
-    cal::{
-        calendar_index::CalendarIndex,
-        event::Event
-    },
+    cal::{calendar_index::CalendarIndex, event::Event},
     cli::functions::{edit_event, get_new_event},
     CONFIG,
 };
 
 use super::{
+    functions::get_new_calendar_reference,
     getdata::{get_valid_calendar_name, get_valid_event_name},
-    messages::{error, success, warning, print_err_msg}, functions::get_new_calendar_reference,
+    messages::{error, print_err_msg, success, warning},
 };
 
 /*
@@ -33,13 +31,13 @@ pub fn cal(split_input: &Vec<&str>) {
     };
 
     let mut index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return;
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
-    
+
     if index.calendars.is_empty() {
         new_reference.active = true;
     }
@@ -48,28 +46,28 @@ pub fn cal(split_input: &Vec<&str>) {
         Ok(_) => success("Added entry to calendar index.".to_string()),
         Err(_) => {
             error("Failed to add new calendar reference to calendar index.".to_string());
-            return
+            return;
         }
     }
     if let Err(e) = index.save() {
-	print_err_msg(e, &CONFIG.index_path);
-	return
+        print_err_msg(e, &CONFIG.index_path);
+        return;
     };
     success("Saved calendar index".to_string());
     if let Err(e) = new_reference.create_file() {
-	print_err_msg(e, &new_reference.path);
-	return
+        print_err_msg(e, &new_reference.path);
+        return;
     }
 }
 
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
     let mut index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
     let name = match split_input.len() {
         1 => get_valid_calendar_name(),
@@ -89,8 +87,8 @@ pub fn removecal(split_input: &Vec<&str>) {
     }
 
     if let Err(e) = index.save() {
-	print_err_msg(e, &CONFIG.index_path);
-	return
+        print_err_msg(e, &CONFIG.index_path);
+        return;
     };
     success("Successfully removed calendar".to_string());
 }
@@ -115,48 +113,47 @@ pub fn remove(split_input: &Vec<&str>) {
             return;
         }
     };
-    
+
     let index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
 
-    
     let path = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return
-	}
-    }.path;
-    
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path;
+
     let mut active_calendar = match index.active_calendar() {
-	Ok(c) => c,
-	Err(e) => {
-	    print_err_msg(e, &path);
-	    return
-	}
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
     };
-    
+
     active_calendar.events.retain(|event| event.name != name);
-    
-    
+
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, &path)
+        print_err_msg(e, &path)
     }
 }
 
 /// Change the active calednar
 pub fn set(split_input: &Vec<&str>) {
     let mut index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
     let name = match split_input.len() {
         1 => get_valid_event_name(),
@@ -179,12 +176,12 @@ pub fn set(split_input: &Vec<&str>) {
             warning("No calendars are set as active. Please correct this and retry.".to_string());
         }
         1 => {
-	    index.set_active(name);
-	    if let Err(e) = index.save() {
-		print_err_msg(e, &CONFIG.index_path);
-		return
-	    };
-	},
+            index.set_active(name);
+            if let Err(e) = index.save() {
+                print_err_msg(e, &CONFIG.index_path);
+                return;
+            };
+        }
         _ => {
             warning(
                 "More than one calendar is set as active. Please correct this and retry."
@@ -212,33 +209,34 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
     let index = match CalendarIndex::get() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return;
-	}
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
 
     let path = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return;
-	}
-    }.path;
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path;
 
     let mut active_calendar = match index.active_calendar() {
-	Ok(cal) => cal,
-	Err(e) => {
-	    print_err_msg(e, &path);
-	    return;
-	}
+        Ok(cal) => cal,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
     };
-    
+
     active_calendar.add_event(new_event.to_event_json());
-    
+
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, &path)
+        print_err_msg(e, &path)
     }
 }
 
@@ -250,34 +248,45 @@ pub fn edit(split_input: &[&str]) {
 }
 
 /// Display events in the active calendar
-pub fn list(_split_input: &[&str]) {
+pub fn list(split_input: &[&str]) {
     let index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
 
     let path = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return
-	}
-    }.path;
-    
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path;
+
     let active_calendar = match index.active_calendar() {
-	Ok(c) => c,
-	Err(e) => {
-	    print_err_msg(e, &path);
-	    return
-	}
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
     };
-    active_calendar
-        .events
-        .iter()
-        .for_each(|e| println!("{:#?}", e.to_standard_event()));
+
+    match split_input.len() {
+        1 => {
+            active_calendar
+                .events
+                .iter()
+                .for_each(|e| println!("{:#?}", e.to_standard_event()));
+        }
+        _ => active_calendar
+            .events
+            .iter()
+            .filter(|e| split_input[1..].contains(&e.name.as_str()))
+            .for_each(|ev| println!("{:#?}", ev)),
+    }
 }
 
 /// Clear the screen
