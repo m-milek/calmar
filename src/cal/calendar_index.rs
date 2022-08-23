@@ -16,7 +16,7 @@ use std::io::Write;
 /// Holds a vector of `CalendarReference` structs.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CalendarIndex {
-    pub calendars: Vec<CalendarReference>,
+    calendars: Vec<CalendarReference>,
 }
 
 impl CalendarIndex {
@@ -37,8 +37,18 @@ impl CalendarIndex {
 	}
     }
 
+    // Getters
+    pub fn calendars(&self) -> &Vec<CalendarReference> {
+	&self.calendars
+    }
+    #[allow(dead_code)]
+    pub fn calendars_mut(&mut self) -> &mut Vec<CalendarReference> {
+	&mut self.calendars
+    }
+    
+    // Other
     pub fn contains_one_named(&self, name: &String) -> bool {
-        let num = self.calendars.iter().filter(|r| r.name == *name).count();
+        let num = self.calendars.iter().filter(|r| r.name() == name).count();
         match num {
             0 => {
                 warning(format!("No calendars named {}.", name));
@@ -58,16 +68,16 @@ impl CalendarIndex {
     /// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
     /// currently set as active in `$HOME/.config/calmar/index.json`.
     pub fn active_calendar(&self) -> Result<Calendar, CalmarError> {
-        let num = self.calendars.iter().filter(|r| r.active).count();
+        let num = self.calendars.iter().filter(|r| r.active()).count();
 
         let current_calendar = match num {
-            1 => &self.calendars[self.calendars.iter().position(|r| r.active).unwrap()],
+            1 => &self.calendars[self.calendars.iter().position(|r| r.active()).unwrap()],
             _ => {
 		return Err(CalmarError::ActiveCalendarCount { e: num })
 	    }
         };
 
-        let current_calendar_content = match read_to_string(&current_calendar.path) {
+        let current_calendar_content = match read_to_string(&current_calendar.path()) {
             Ok(content) => content,
             Err(e) => {
 		return Err(CalmarError::ReadFile { e })
@@ -85,10 +95,10 @@ impl CalendarIndex {
     /// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
     pub fn active_calendar_reference(&self) -> Result<CalendarReference, CalmarError> {
         let mut refs = self.calendars.clone();
-        let num = refs.iter().filter(|r| r.active).count();
+        let num = refs.iter().filter(|r| r.active()).count();
         match num {
             1 => {
-                refs.retain(|r| r.active);
+                refs.retain(|r| r.active());
                 Ok(refs[0].clone())
             }
             _ => {
@@ -98,7 +108,7 @@ impl CalendarIndex {
     }
 
     pub fn number_of_active_calendars(&self) -> usize {
-        self.calendars.iter().filter(|c| c.active).count()
+        self.calendars.iter().filter(|c| c.active()).count()
     }
 
     /// Adds a new `CalendarReference` to `self.calendars`.
@@ -117,14 +127,14 @@ impl CalendarIndex {
     ) -> Result<(), CalendarReturnMessage> {
         let mut already_saved_entry_names = Vec::<String>::new();
         for reference in &self.calendars {
-            already_saved_entry_names.push(reference.name.clone());
+            already_saved_entry_names.push(reference.name().clone());
         }
 
-        if already_saved_entry_names.contains(&new_calendar.name) {
+        if already_saved_entry_names.contains(&new_calendar.name()) {
             if !yesno(
                 format!(
                     "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
-                    new_calendar.name
+                    new_calendar.name()
                 )
                 .as_str(),
             ) {
@@ -132,11 +142,11 @@ impl CalendarIndex {
             } else {
                 // Remove all calendar files with the same name
                 for reference in &self.calendars {
-                    if reference.name == new_calendar.name {
-                        match std::fs::remove_file(&reference.path) {
+                    if reference.name() == new_calendar.name() {
+                        match std::fs::remove_file(&reference.path()) {
                             Ok(_) => (),
                             Err(e) => {
-                                error(format!("Failed to delete file {}.\n{}", reference.path, e));
+                                error(format!("Failed to delete file {}.\n{}", reference.path(), e));
                                 std::process::exit(1);
                             }
                         }
@@ -144,20 +154,20 @@ impl CalendarIndex {
                 }
                 // Remove all references with the same name
                 self.calendars
-                    .retain(|calendar| calendar.name != new_calendar.name);
+                    .retain(|calendar| calendar.name() != new_calendar.name());
             }
         }
 
         let mut already_saved_entry_paths = Vec::<String>::new();
         for reference in &self.calendars {
-            already_saved_entry_paths.push(reference.path.clone());
+            already_saved_entry_paths.push(reference.path().clone());
         }
 
-        if already_saved_entry_paths.contains(&new_calendar.path) {
+        if already_saved_entry_paths.contains(&new_calendar.path()) {
             if !yesno(
                 format!(
                     "Calendar with path {} already exists. Do you want to overwrite it?",
-                    new_calendar.path
+                    new_calendar.path()
                 )
                 .as_str(),
             ) {
@@ -165,17 +175,17 @@ impl CalendarIndex {
             } else {
                 // Remove all calendar files with the same path
                 for reference in &self.calendars {
-                    match std::fs::remove_file(&reference.path) {
+                    match std::fs::remove_file(&reference.path()) {
                         Ok(_) => (),
                         Err(e) => {
-                            error(format!("Failed to delete file {}.\n{}", reference.path, e));
+                            error(format!("Failed to delete file {}.\n{}", reference.path(), e));
                             std::process::exit(1);
                         }
                     }
                 }
                 // Remove all references with the same path
                 self.calendars
-                    .retain(|calendar| calendar.path != new_calendar.path);
+                    .retain(|calendar| calendar.path() != new_calendar.path());
             }
         }
         // Now the index is cleaned of any calendars named like the new one and the files are deleted.
@@ -188,19 +198,19 @@ impl CalendarIndex {
     /// named `name` is not equal to one - returns `CalendarReturnMessage::Abort`.
     pub fn delete_entry(&mut self, name: String) -> Result<(), CalendarReturnMessage> {
         let mut tmp_reference_vec = self.calendars.clone();
-        tmp_reference_vec.retain(|r| r.name == name);
+        tmp_reference_vec.retain(|r| r.name() == &name);
 
         match tmp_reference_vec.len() {
             0 => {
                 warning(format!("No calendar named {} found.", name));
                 return Err(CalendarReturnMessage::Abort);
             }
-            1 => match std::fs::remove_file(&tmp_reference_vec[0].path) {
+            1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
                 Ok(_) => (),
                 Err(e) => {
                     error(format!(
                         "Failed to remove file {}.\n{}",
-                        tmp_reference_vec[0].path, e
+                        tmp_reference_vec[0].path(), e
                     ));
                     return Err(CalendarReturnMessage::Abort);
                 }
@@ -211,7 +221,7 @@ impl CalendarIndex {
             }
         }
 
-        self.calendars.retain(|r| r.name != name);
+        self.calendars.retain(|r| r.name() != &name);
         Ok(())
     }
 
@@ -245,10 +255,10 @@ impl CalendarIndex {
         // Set the desired calendar as active
 
         for r in &mut self.calendars {
-            if r.active {
+            if r.active() {
                 r.set_inactive()
             }
-            if r.name == name {
+            if r.name() == &name {
                 r.set_active()
             }
         }
@@ -256,6 +266,6 @@ impl CalendarIndex {
 
     #[allow(dead_code)]
     pub fn list(&self) {
-        self.calendars.iter().for_each(|c| println!("{}", c.name))
+        self.calendars.iter().for_each(|c| println!("{}", c.name()))
     }
 }

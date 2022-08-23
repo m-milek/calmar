@@ -52,13 +52,13 @@ pub fn get_new_event(name: Option<String>) -> Event {
     print!("Priority: ");
     let priority = get_priority();
 
-    Event {
+    Event::new(
         name,
-        start: start_date.and_time(start_time).unwrap(),
-        end: end_date.and_time(end_time).unwrap(),
+        start_date.and_time(start_time).unwrap(),
+        end_date.and_time(end_time).unwrap(),
         priority,
         difficulty,
-    }
+    )
 }
 
 pub fn edit_event(event_name: &str) {
@@ -70,13 +70,14 @@ pub fn edit_event(event_name: &str) {
 	}
     };
 
-    let path = match index.active_calendar_reference() {
+    let active_ref = match index.active_calendar_reference() {
 	Ok(r) => r,
 	Err(e) => {
 	    print_err_msg(e, &String::new());
 	    return
 	}
-    }.path;
+    };
+    let path = active_ref.path();
     
     let mut active_calendar = match index.active_calendar() {
 	Ok(i) => i,
@@ -86,11 +87,11 @@ pub fn edit_event(event_name: &str) {
 	}
     };
 
-    let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events.len());
+    let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());
 
     let mut i = 0;
-    for (num, event) in active_calendar.events.iter().enumerate() {
-        if event.name == event_name {
+    for (num, event) in active_calendar.events().iter().enumerate() {
+        if event.name() == event_name {
             index_map.insert(i, num);
             i += 1;
         }
@@ -98,11 +99,12 @@ pub fn edit_event(event_name: &str) {
 
     // Choose an event to be edited
     let events_named_like_arg: Vec<EventJSON> = active_calendar
-        .events
+        .events()
         .clone()
         .into_iter()
-        .filter(|event| event.name == event_name)
+        .filter(|event| event.name() == event_name)
         .collect();
+    
     if events_named_like_arg.is_empty() {
         warning(format!("No event named {} found.", event_name));
         return;
@@ -123,14 +125,14 @@ pub fn edit_event(event_name: &str) {
         .enumerate()
         .for_each(|(i, field)| println!("{}. {field}", i + 1));
 
-    let edited_event = &mut active_calendar.events[index_map[&index_to_select]];
+    let edited_event = &mut active_calendar.events_mut()[index_map[&index_to_select]];
     let num: usize = select_in_range("Select what to edit", fields_list.len());
 
     match num {
         // Edit name
         1 => {
             print!("Name: ");
-            edited_event.name = get_valid_event_name();
+            edited_event.set_name(&get_valid_event_name());
         }
         // Edit start timedate
         2 => {
@@ -147,10 +149,10 @@ pub fn edit_event(event_name: &str) {
                     print!("Start date: ");
                     new_start_date = get_start_date();
                 }
-                edited_event.start = new_start_date
+                edited_event.set_start(&new_start_date
                     .and_time(current_start.time())
                     .unwrap()
-                    .to_string();
+                    .to_string());
             }
             if num == 2 || num == 3 {
                 print!("Start time: ");
@@ -160,11 +162,11 @@ pub fn edit_event(event_name: &str) {
                     print!("Start date: ");
                     new_start_time = get_start_time();
                 }
-                edited_event.start = current_start
+                edited_event.set_start(&current_start
                     .date()
                     .and_time(new_start_time)
                     .unwrap()
-                    .to_string();
+                    .to_string());
             }
         }
         // Edit duration
@@ -172,9 +174,9 @@ pub fn edit_event(event_name: &str) {
             print!("Duration: ");
             let new_duration = get_duration();
             let start =
-                DateTime::<Local>::from_str(&edited_event.start).expect("Valid start timedate");
+                DateTime::<Local>::from_str(&edited_event.start()).expect("Valid start timedate");
             let end = start + new_duration;
-            edited_event.end = end.to_string();
+            edited_event.set_end(&end.to_string());
         }
         // Edit end datetime
         4 => {
@@ -191,10 +193,10 @@ pub fn edit_event(event_name: &str) {
                     print!("End date: ");
                     new_end_date = get_end_date(&current_start.date());
                 }
-                edited_event.end = new_end_date
+                edited_event.set_end(&new_end_date
                     .and_time(current_end.time())
                     .unwrap()
-                    .to_string();
+                    .to_string());
             }
             if num == 2 || num == 3 {
                 current_end = edited_event.parsed_end().unwrap();
@@ -213,33 +215,25 @@ pub fn edit_event(event_name: &str) {
                         &edited_event.parsed_end().unwrap().date(),
                     );
                 }
-                edited_event.end = current_end
+                edited_event.set_end(&current_end
                     .date()
                     .and_time(new_end_time)
                     .unwrap()
-                    .to_string();
+                    .to_string());
             }
         }
         // Edit priority
         5 => {
             print!("Priority: ");
-            edited_event.priority = get_priority()
+            edited_event.set_priority(get_priority())
         }
         // Edit difficulty
         6 => {
             print!("Difficulty: ");
-            edited_event.difficulty = get_difficulty()
+            edited_event.set_difficulty(get_difficulty())
         }
         _ => panic!("Impossible"),
     }
-    
-    let path = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return
-	}
-    }.path;
     
     if let Err(e) = active_calendar.save(&path) {
 	print_err_msg(e, &path)

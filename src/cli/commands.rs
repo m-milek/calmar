@@ -38,8 +38,8 @@ pub fn cal(split_input: &Vec<&str>) {
         }
     };
 
-    if index.calendars.is_empty() {
-        new_reference.active = true;
+    if index.calendars().is_empty() {
+        new_reference.set_active()
     }
 
     match index.add_entry(&new_reference) {
@@ -55,7 +55,7 @@ pub fn cal(split_input: &Vec<&str>) {
     };
     success("Saved calendar index".to_string());
     if let Err(e) = new_reference.create_file() {
-        print_err_msg(e, &new_reference.path);
+        print_err_msg(e, &new_reference.path());
         return;
     }
 }
@@ -129,7 +129,7 @@ pub fn remove(split_input: &Vec<&str>) {
             return;
         }
     }
-    .path;
+    .path().clone();
 
     let mut active_calendar = match index.active_calendar() {
         Ok(c) => c,
@@ -139,7 +139,7 @@ pub fn remove(split_input: &Vec<&str>) {
         }
     };
 
-    active_calendar.events.retain(|event| event.name != name);
+    active_calendar.events_mut().retain(|event| event.name().ne(&name));
 
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
@@ -223,7 +223,7 @@ pub fn add(split_input: &Vec<&str>) {
             return;
         }
     }
-    .path;
+    .path().clone();
 
     let mut active_calendar = match index.active_calendar() {
         Ok(cal) => cal,
@@ -257,6 +257,7 @@ pub fn list(split_input: &[&str]) {
         }
     };
 
+    
     let path = match index.active_calendar_reference() {
         Ok(r) => r,
         Err(e) => {
@@ -264,7 +265,7 @@ pub fn list(split_input: &[&str]) {
             return;
         }
     }
-    .path;
+    .path().clone();
 
     let active_calendar = match index.active_calendar() {
         Ok(c) => c,
@@ -275,11 +276,11 @@ pub fn list(split_input: &[&str]) {
     };
 
     active_calendar
-        .events
+        .events()
         .iter()
         .filter(|e| {
             if split_input.len().ne(&1) {
-                split_input[1..].contains(&e.name.as_str())
+                split_input[1..].contains(&e.name().as_str())
             } else {
                 true
             }
@@ -312,11 +313,11 @@ pub fn listcal(split_input: &Vec<&str>) {
         }
     };
 
-    index.calendars
+    index.calendars()
         .iter()
         .filter(|r| {
 	    if split_input.len().ne(&1) {
-		split_input[1..].contains(&r.name.as_str())
+		split_input[1..].contains(&r.name().as_str())
 	    }
 	    else {true}
 	})

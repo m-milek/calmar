@@ -13,8 +13,8 @@ pub enum CalendarReturnMessage {
 /// An empty `Calendar` may be created with `Calendar::new("foo")`
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Calendar {
-    pub name: String,
-    pub events: Vec<EventJSON>,
+    name: String,
+    events: Vec<EventJSON>,
 }
 
 impl Calendar {
@@ -24,6 +24,18 @@ impl Calendar {
             name: name.to_string(),
             events: Vec::<EventJSON>::new(),
         }
+    }
+
+    // Getters
+    pub fn name(&self) -> &String {
+	&self.name
+    }
+
+    pub fn events(&self) -> &Vec<EventJSON> {
+	&self.events
+    }
+    pub fn events_mut(&mut self) -> &mut Vec<EventJSON> {
+	&mut self.events
     }
 
     pub fn set_name(&mut self, name: String) {

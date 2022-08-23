@@ -12,9 +12,9 @@ use super::calmar_error::CalmarError;
 /// `active`: determines if the `Calendar` under `path` is currently selected.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CalendarReference {
-    pub name: String,
-    pub path: String,
-    pub active: bool,
+    name: String,
+    path: String,
+    active: bool,
 }
 
 impl CalendarReference {
@@ -22,7 +22,19 @@ impl CalendarReference {
     pub fn new(name: String, path: String, active: bool) -> Self {
         CalendarReference { name, path, active }
     }
-    
+
+    // Getters
+    pub fn name(&self) -> &String {
+	&self.name
+    }
+    pub fn path(&self) -> &String {
+	&self.path
+    }
+    pub fn active(&self) -> bool {
+	self.active
+    }
+
+    // Setters
     pub fn set_name(&mut self, name: String) {
         self.name = name
     }
@@ -38,7 +50,8 @@ impl CalendarReference {
     pub fn set_inactive(&mut self) {
         self.active = false
     }
-    
+
+    //Other    
     pub fn create_file(&self) -> Result<(), CalmarError> {
         let mut calendar_file = match std::fs::File::create(&self.path) {
             Ok(file) => file,
