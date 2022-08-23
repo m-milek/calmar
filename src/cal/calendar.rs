@@ -37,7 +37,7 @@ impl Calendar {
             .open(&path)
         {
             Ok(file) => file,
-            Err(e) => return Err(CalmarError::OpenFile { e }),
+            Err(e) => return Err(CalmarError::ReadFile { e }),
         };
 
         let calendar_json = match serde_json::to_string_pretty(&self) {

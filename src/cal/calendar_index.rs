@@ -1,3 +1,4 @@
+use super::calmar_error::CalmarError;
 use super::{
     calendar::Calendar,
     calendar_ref::CalendarReference,
@@ -20,34 +21,20 @@ pub struct CalendarIndex {
 
 impl CalendarIndex {
     /// Returns `CalendarIndex` struct from `$HOME/.config/calmar/index.json`.
-    pub fn get() -> Self {
-        let mut home = get_home_dir();
-        home.push(".config/calmar/index.json");
-        let index_file_path = home;
+    pub fn get() -> Result<Self, CalmarError> {
+	let index_file_path = get_home_dir().join(".config/calmar/index.json");
 
         let content = match read_to_string(&index_file_path) {
             Ok(result) => result,
             Err(e) => {
-                error(format!(
-                    "Failed to read {}.\n{}",
-                    index_file_path.display(),
-                    e
-                ));
-                std::process::exit(1);
+		return Err(CalmarError::ReadFile { e })
             }
         };
 
         match serde_json::from_str(&content) {
-            Ok(result) => result,
-            Err(e) => {
-                error(format!(
-                    "Failed to parse {} to CalendarIndex struct. Check for syntax errors.\n{}",
-                    index_file_path.display(),
-                    e
-                ));
-                std::process::exit(1);
-            }
-        }
+            Ok(result) => Ok(result),
+            Err(e) => Err(CalmarError::ParseJSON { e })
+	}
     }
 
     pub fn contains_one_named(&self, name: &String) -> bool {
@@ -70,55 +57,42 @@ impl CalendarIndex {
 
     /// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`
     /// currently set as active in `$HOME/.config/calmar/index.json`.
-    pub fn active_calendar(&self) -> Calendar {
+    pub fn active_calendar(&self) -> Result<Calendar, CalmarError> {
         let num = self.calendars.iter().filter(|r| r.active).count();
 
         let current_calendar = match num {
             1 => &self.calendars[self.calendars.iter().position(|r| r.active).unwrap()],
             _ => {
-                error(format!(
-                    "{} calendars are set as active. There must be exactly one.",
-                    num
-                ));
-                std::process::exit(1);
-            }
+		return Err(CalmarError::ActiveCalendarCount { e: num })
+	    }
         };
 
         let current_calendar_content = match read_to_string(&current_calendar.path) {
             Ok(content) => content,
             Err(e) => {
-                error(format!("Failed to read {}.\n{}", current_calendar.path, e));
-                std::process::exit(1);
+		return Err(CalmarError::ReadFile { e })
             }
         };
 
         match serde_json::from_str(&current_calendar_content) {
-            Ok(result) => result,
+            Ok(result) => Ok(result),
             Err(e) => {
-                error(format!(
-                    "Failed to parse {} to Calendar struct. Check for syntax errors,\n{}",
-                    current_calendar.path, e
-                ));
-                std::process::exit(1);
+		return Err(CalmarError::ParseJSON { e })
             }
         }
     }
 
     /// Returns a `CalendarReference` currently set as active in `$HOME/.config/calmar/index.json`.
-    pub fn active_calendar_reference(&self) -> CalendarReference {
+    pub fn active_calendar_reference(&self) -> Result<CalendarReference, CalmarError> {
         let mut refs = self.calendars.clone();
         let num = refs.iter().filter(|r| r.active).count();
         match num {
             1 => {
                 refs.retain(|r| r.active);
-                refs[0].clone()
+                Ok(refs[0].clone())
             }
             _ => {
-                error(format!(
-                    "{} calendars are set as active. There must be exactly one.",
-                    num
-                ));
-                std::process::exit(1);
+		Err(CalmarError::ActiveCalendarCount { e: num })
             }
         }
     }
@@ -241,43 +215,28 @@ impl CalendarIndex {
         Ok(())
     }
 
-    pub fn save(&self) {
-        let home_dir = get_home_dir();
+    pub fn save(&self) -> Result<(), CalmarError> {
+        let index_file_path = get_home_dir().join(".config/calmar/index.json");
+
         let mut index_file = match std::fs::OpenOptions::new()
             .write(true)
             .truncate(true)
-            .open(home_dir.join(".config/calmar/index.json"))
+            .open(index_file_path)
         {
             Ok(file) => file,
             Err(e) => {
-                error(format!(
-                    "Failed to open {}.\n{}",
-                    home_dir.join(".config/calmar/index.json").display(),
-                    e
-                ));
-                std::process::exit(1);
+		return Err(CalmarError::ReadFile { e })
             }
         };
         let calendar_index_json: String = match serde_json::ser::to_string_pretty(&self) {
             Ok(result) => result,
-            Err(e) => {
-                error(format!(
-                    "Failed to serialize calendar index to string.\n{}",
-                    e
-                ));
-                std::process::exit(1);
-            }
+            Err(e) => return Err(CalmarError::ToJSON { e })
+
         };
 
         match write!(index_file, "{}", calendar_index_json) {
-            Ok(_) => (),
-            Err(e) => {
-                error(format!(
-                    "Failed to write to {}.\n{}",
-                    home_dir.join(".config/calmar/index.json").display(),
-                    e
-                ));
-            }
+            Ok(_) => Ok(()),
+            Err(e) => Err(CalmarError::WriteFile { e })
         }
     }
 
@@ -295,6 +254,7 @@ impl CalendarIndex {
         }
     }
 
+    #[allow(dead_code)]
     pub fn list(&self) {
         self.calendars.iter().for_each(|c| println!("{}", c.name))
     }

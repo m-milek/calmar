@@ -1,17 +1,15 @@
 #![allow(dead_code)]
 
 use crate::cal::calendar::Calendar;
-use crate::cli::messages::success;
-use crate::cli::messages::error;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
+use super::calmar_error::CalmarError;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
 /// `name`: name of the calendar in file under `path`
 /// `path`: path to the file containing a `Calendar` struct
 /// `active`: determines if the `Calendar` under `path` is currently selected.
-/// There can be only one active calendar.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CalendarReference {
     pub name: String,
@@ -20,46 +18,45 @@ pub struct CalendarReference {
 }
 
 impl CalendarReference {
+    
     pub fn new(name: String, path: String, active: bool) -> Self {
         CalendarReference { name, path, active }
     }
+    
     pub fn set_name(&mut self, name: String) {
         self.name = name
     }
+    
     pub fn set_path(&mut self, path: String) {
         self.path = path
     }
+    
     pub fn set_active(&mut self) {
         self.active = true
     }
+    
     pub fn set_inactive(&mut self) {
         self.active = false
     }
-    pub fn create_file(&self) {
+    
+    pub fn create_file(&self) -> Result<(), CalmarError> {
         let mut calendar_file = match std::fs::File::create(&self.path) {
             Ok(file) => file,
             Err(e) => {
-                error(format!("Failed to create {}.\n{}", self.path, e));
-                return;
+		return Err(CalmarError::CreateFile { e })
             }
         };
 
         let calendar_json: String =
             match serde_json::to_string_pretty(&Calendar::new(self.name.as_str())) {
                 Ok(result) => result,
-                Err(e) => {
-                    error(format!("Failed to serialize calendar to string.\n{}", e));
-                    return;
-                }
+                Err(e) => return Err(CalmarError::ToJSON { e })
             };
 
-        match write!(calendar_file, "{}", calendar_json) {
-            Ok(_) => (),
-            Err(e) => {
-                error(format!("Failed to write to {}.\n{}", self.name, e));
-            }
+        if let Err(e) = write!(calendar_file, "{}", calendar_json) {
+           return Err(CalmarError::WriteFile { e })
         }
-        success(format!("Written to {}.", self.path));
+	Ok(())
     }
 }
 

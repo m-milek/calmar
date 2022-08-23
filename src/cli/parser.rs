@@ -1,6 +1,5 @@
-use crate::cal::calendar_index::CalendarIndex;
 use crate::cli::help;
-use super::commands::{cal, clear, edit, add, remove, removecal, set, list};
+use super::commands::{cal, clear, edit, add, remove, removecal, set, list, listcal};
 use super::messages::warning;
 
 /// Handle input and call appropriate functions.
@@ -16,7 +15,7 @@ pub fn parse(input: String) {
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "set" | "s" => set(&split_input),
         "list" | "l" | "ls" => list(&split_input),
-	"listcal" | "lc" => CalendarIndex::get().list(),
+	"listcal" | "lc" => listcal(&split_input),
         "quit" | "q" => std::process::exit(0),
         _ => warning(format!("Unknown command: {}", split_input[0].trim())),
     }
