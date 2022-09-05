@@ -66,5 +66,9 @@ impl Calendar {
     pub fn add_event(&mut self, event: EventJSON) {
         self.events.push(event)
     }
+
+    pub fn set_events(&mut self, events: Vec<EventJSON>) {
+	self.events = events;
+    }
 }
 

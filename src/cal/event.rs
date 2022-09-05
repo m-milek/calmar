@@ -5,7 +5,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::str::FromStr;
 use struct_field_names_as_array::FieldNamesAsArray;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Ord)]
 pub struct Event {
     name: String,
     start: DateTime<Local>,
@@ -21,6 +21,15 @@ pub struct EventJSON {
     end: String,
     priority: u8,
     difficulty: u8,
+}
+
+impl PartialOrd for Event {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+	if self.start == other.start {
+	    return Some(self.name.cmp(&other.name))
+	}
+	Some(self.start.cmp(&other.start))
+    }
 }
 
 impl Event {
