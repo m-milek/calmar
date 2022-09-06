@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{cli::validator::get_home_dir, cli::messages::error};
+use crate::{cli::messages::error, cli::validator::get_home_dir};
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
@@ -26,7 +26,7 @@ impl Config {
             date_format: "DD/MM/YYYY".to_string(),
             time_format: "HH:MM".to_string(),
             default_path: "/home/michal/.calmar".to_string(),
-	    index_path: "/home/michal/.calmar".to_string(),
+            index_path: "/home/michal/.calmar".to_string(),
             print_success_messages: true,
             print_warning_messages: true,
             print_error_messages: true,

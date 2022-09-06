@@ -1,13 +1,10 @@
 use super::calmar_error::CalmarError;
-use super::{
-    calendar::Calendar,
-    calendar_ref::CalendarReference,
-
-};
+use super::{calendar::Calendar, calendar_ref::CalendarReference};
 use crate::cal::calendar::CalendarReturnMessage;
 use crate::cli::{
     messages::{error, warning},
-    util::yesno, validator::get_home_dir,
+    util::yesno,
+    validator::get_home_dir,
 };
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
@@ -22,30 +19,28 @@ pub struct CalendarIndex {
 impl CalendarIndex {
     /// Returns `CalendarIndex` struct from `$HOME/.config/calmar/index.json`.
     pub fn get() -> Result<Self, CalmarError> {
-	let index_file_path = get_home_dir().join(".config/calmar/index.json");
+        let index_file_path = get_home_dir().join(".config/calmar/index.json");
 
         let content = match read_to_string(&index_file_path) {
             Ok(result) => result,
-            Err(e) => {
-		return Err(CalmarError::ReadFile { e })
-            }
+            Err(e) => return Err(CalmarError::ReadFile { e }),
         };
 
         match serde_json::from_str(&content) {
             Ok(result) => Ok(result),
-            Err(e) => Err(CalmarError::ParseJSON { e })
-	}
+            Err(e) => Err(CalmarError::ParseJSON { e }),
+        }
     }
 
     // Getters
     pub fn calendars(&self) -> &Vec<CalendarReference> {
-	&self.calendars
+        &self.calendars
     }
     #[allow(dead_code)]
     pub fn calendars_mut(&mut self) -> &mut Vec<CalendarReference> {
-	&mut self.calendars
+        &mut self.calendars
     }
-    
+
     // Other
     pub fn contains_one_named(&self, name: &String) -> bool {
         let num = self.calendars.iter().filter(|r| r.name() == name).count();
@@ -72,23 +67,17 @@ impl CalendarIndex {
 
         let current_calendar = match num {
             1 => &self.calendars[self.calendars.iter().position(|r| r.active()).unwrap()],
-            _ => {
-		return Err(CalmarError::ActiveCalendarCount { e: num })
-	    }
+            _ => return Err(CalmarError::ActiveCalendarCount { e: num }),
         };
 
         let current_calendar_content = match read_to_string(&current_calendar.path()) {
             Ok(content) => content,
-            Err(e) => {
-		return Err(CalmarError::ReadFile { e })
-            }
+            Err(e) => return Err(CalmarError::ReadFile { e }),
         };
 
         match serde_json::from_str(&current_calendar_content) {
             Ok(result) => Ok(result),
-            Err(e) => {
-		return Err(CalmarError::ParseJSON { e })
-            }
+            Err(e) => return Err(CalmarError::ParseJSON { e }),
         }
     }
 
@@ -101,9 +90,7 @@ impl CalendarIndex {
                 refs.retain(|r| r.active());
                 Ok(refs[0].clone())
             }
-            _ => {
-		Err(CalmarError::ActiveCalendarCount { e: num })
-            }
+            _ => Err(CalmarError::ActiveCalendarCount { e: num }),
         }
     }
 
@@ -146,7 +133,11 @@ impl CalendarIndex {
                         match std::fs::remove_file(&reference.path()) {
                             Ok(_) => (),
                             Err(e) => {
-                                error(format!("Failed to delete file {}.\n{}", reference.path(), e));
+                                error(format!(
+                                    "Failed to delete file {}.\n{}",
+                                    reference.path(),
+                                    e
+                                ));
                                 std::process::exit(1);
                             }
                         }
@@ -178,7 +169,11 @@ impl CalendarIndex {
                     match std::fs::remove_file(&reference.path()) {
                         Ok(_) => (),
                         Err(e) => {
-                            error(format!("Failed to delete file {}.\n{}", reference.path(), e));
+                            error(format!(
+                                "Failed to delete file {}.\n{}",
+                                reference.path(),
+                                e
+                            ));
                             std::process::exit(1);
                         }
                     }
@@ -210,7 +205,8 @@ impl CalendarIndex {
                 Err(e) => {
                     error(format!(
                         "Failed to remove file {}.\n{}",
-                        tmp_reference_vec[0].path(), e
+                        tmp_reference_vec[0].path(),
+                        e
                     ));
                     return Err(CalendarReturnMessage::Abort);
                 }
@@ -234,19 +230,16 @@ impl CalendarIndex {
             .open(index_file_path)
         {
             Ok(file) => file,
-            Err(e) => {
-		return Err(CalmarError::ReadFile { e })
-            }
+            Err(e) => return Err(CalmarError::ReadFile { e }),
         };
         let calendar_index_json: String = match serde_json::ser::to_string_pretty(&self) {
             Ok(result) => result,
-            Err(e) => return Err(CalmarError::ToJSON { e })
-
+            Err(e) => return Err(CalmarError::ToJSON { e }),
         };
 
         match write!(index_file, "{}", calendar_index_json) {
             Ok(_) => Ok(()),
-            Err(e) => Err(CalmarError::WriteFile { e })
+            Err(e) => Err(CalmarError::WriteFile { e }),
         }
     }
 

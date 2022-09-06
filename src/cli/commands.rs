@@ -129,7 +129,8 @@ pub fn remove(split_input: &Vec<&str>) {
             return;
         }
     }
-    .path().clone();
+    .path()
+    .clone();
 
     let mut active_calendar = match index.active_calendar() {
         Ok(c) => c,
@@ -139,7 +140,9 @@ pub fn remove(split_input: &Vec<&str>) {
         }
     };
 
-    active_calendar.events_mut().retain(|event| event.name().ne(&name));
+    active_calendar
+        .events_mut()
+        .retain(|event| event.name().ne(&name));
 
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
@@ -223,7 +226,8 @@ pub fn add(split_input: &Vec<&str>) {
             return;
         }
     }
-    .path().clone();
+    .path()
+    .clone();
 
     let mut active_calendar = match index.active_calendar() {
         Ok(cal) => cal,
@@ -257,7 +261,6 @@ pub fn list(split_input: &[&str]) {
         }
     };
 
-    
     let path = match index.active_calendar_reference() {
         Ok(r) => r,
         Err(e) => {
@@ -265,7 +268,8 @@ pub fn list(split_input: &[&str]) {
             return;
         }
     }
-    .path().clone();
+    .path()
+    .clone();
 
     let active_calendar = match index.active_calendar() {
         Ok(c) => c,
@@ -313,89 +317,92 @@ pub fn listcal(split_input: &Vec<&str>) {
         }
     };
 
-    index.calendars()
+    index
+        .calendars()
         .iter()
         .filter(|r| {
-	    if split_input.len().ne(&1) {
-		split_input[1..].contains(&r.name().as_str())
-	    }
-	    else {true}
-	})
+            if split_input.len().ne(&1) {
+                split_input[1..].contains(&r.name().as_str())
+            } else {
+                true
+            }
+        })
         .for_each(|r| println!("{:#?}", r))
 }
 
 pub fn sort(split_input: &Vec<&str>) {
-    
     let index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return;
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
-    
+
     let mut active_calendar = match index.active_calendar() {
-	Ok(events) => events,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return;
-	}
+        Ok(events) => events,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
     };
 
     let active_calendar_reference = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return;
-	}
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
     };
 
     if !(1..=3).contains(&split_input.len()) {
-	warning(format!("sort: Invalid number of arguments. Expected: 0 or 1. Got: {}", split_input.len()));
-	return;
+        warning(format!(
+            "sort: Invalid number of arguments. Expected: 0 or 1. Got: {}",
+            split_input.len()
+        ));
+        return;
     }
-    
+
     let mut events_std: Vec<Event> = active_calendar.events().to_vec();
-    
+
     match split_input.len() {
-	1 => {
-	    events_std.sort();
-	    println!("Sorted normally");
-	}
-	_ => {
-	    match split_input[1].trim() {
-		"name" => events_std.sort_by_key(|e| e.name().clone()),
-		"start" => events_std.sort_by_key(|e| e.start().clone()),
-		"end" => events_std.sort_by_key(|e| e.end().clone()),
-		"priority" => events_std.sort_by_key(|e| e.priority()),
-		"difficulty" => events_std.sort_by_key(|e| e.difficulty()),
-		_ => {
-		    warning(format!("sort: {} is not a valid key.", {split_input[1].trim()}));
-		    return;
-		}
-	    }
-	}
+        1 => {
+            events_std.sort();
+            println!("Sorted normally");
+        }
+        _ => match split_input[1].trim() {
+            "name" => events_std.sort_by_key(|e| e.name().clone()),
+            "start" => events_std.sort_by_key(|e| e.start().clone()),
+            "end" => events_std.sort_by_key(|e| e.end().clone()),
+            "priority" => events_std.sort_by_key(|e| e.priority()),
+            "difficulty" => events_std.sort_by_key(|e| e.difficulty()),
+            _ => {
+                warning(format!("sort: {} is not a valid key.", {
+                    split_input[1].trim()
+                }));
+                return;
+            }
+        },
     }
 
     match split_input.get(2) {
-	Some(arg) => {
-	    match arg.trim() {
-		"ascending" | "asc" | "a" => {},
-		"descending" | "desc" | "d" | "rev" | "reverse" => {
-		    events_std.reverse()
-		},
-		_ => {
-		    warning(format!("sort: {} is not a valid ordering argument", split_input[2]));
-		    return;
-		}
-	    }
-	},
-	None => {}
+        Some(arg) => match arg.trim() {
+            "ascending" | "asc" | "a" => {}
+            "descending" | "desc" | "d" | "rev" | "reverse" => events_std.reverse(),
+            _ => {
+                warning(format!(
+                    "sort: {} is not a valid ordering argument",
+                    split_input[2]
+                ));
+                return;
+            }
+        },
+        None => {}
     }
-    
+
     active_calendar.set_events(events_std);
     if let Err(e) = active_calendar.save(active_calendar_reference.path()) {
-	print_err_msg(e, active_calendar_reference.path());
-	return;
+        print_err_msg(e, active_calendar_reference.path());
+        return;
     }
 }

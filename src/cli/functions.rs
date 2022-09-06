@@ -1,16 +1,24 @@
-use crate::{cal::{event::Event, calendar_ref::CalendarReference}, cli::{repl::get_input, getdata::get_dir_path, messages::{error, print_err_msg}}, CONFIG};
-use std::collections::HashMap;
+use crate::cli::commands::default_or_custom_save_path;
+use crate::cli::getdata::{
+    get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
+    get_start_time, get_valid_event_name,
+};
 use crate::{
     cal::calendar_index::CalendarIndex,
     cli::messages::warning,
     cli::util::{select_in_range, uppercase_first_letter},
 };
-use crate::cli::getdata::{
-            get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
-    get_start_time, get_valid_event_name};
-use crate::cli::commands::default_or_custom_save_path;
+use crate::{
+    cal::{calendar_ref::CalendarReference, event::Event},
+    cli::{
+        getdata::get_dir_path,
+        messages::{error, print_err_msg},
+        repl::get_input,
+    },
+    CONFIG,
+};
+use std::collections::HashMap;
 use std::path::PathBuf;
-
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -61,28 +69,28 @@ pub fn get_new_event(name: Option<String>) -> Event {
 
 pub fn edit_event(event_name: &str) {
     let index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
 
     let active_ref = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return
-	}
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
     };
     let path = active_ref.path();
-    
+
     let mut active_calendar = match index.active_calendar() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
     };
 
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());
@@ -102,7 +110,7 @@ pub fn edit_event(event_name: &str) {
         .into_iter()
         .filter(|event| event.name() == event_name)
         .collect();
-    
+
     if events_named_like_arg.is_empty() {
         warning(format!("No event named {} found.", event_name));
         return;
@@ -147,8 +155,7 @@ pub fn edit_event(event_name: &str) {
                     print!("Start date: ");
                     new_start_date = get_start_date();
                 }
-                edited_event.set_start(&new_start_date
-                    .and_time(current_start.time()).unwrap())
+                edited_event.set_start(&new_start_date.and_time(current_start.time()).unwrap())
             }
             if num == 2 || num == 3 {
                 print!("Start time: ");
@@ -158,18 +165,15 @@ pub fn edit_event(event_name: &str) {
                     print!("Start date: ");
                     new_start_time = get_start_time();
                 }
-                edited_event.set_start(&current_start
-                    .date()
-                    .and_time(new_start_time)
-                    .unwrap())
+                edited_event.set_start(&current_start.date().and_time(new_start_time).unwrap())
             }
         }
         // Edit duration
         3 => {
             print!("Duration: ");
             let new_duration = get_duration();
-	    let start = edited_event.start();
-	    edited_event.set_end(&(*start + new_duration));
+            let start = edited_event.start();
+            edited_event.set_end(&(*start + new_duration));
         }
         // Edit end datetime
         4 => {
@@ -186,9 +190,7 @@ pub fn edit_event(event_name: &str) {
                     print!("End date: ");
                     new_end_date = get_end_date(&current_start.date());
                 }
-                edited_event.set_end(&new_end_date
-                    .and_time(current_end.time())
-                    .unwrap());
+                edited_event.set_end(&new_end_date.and_time(current_end.time()).unwrap());
             }
             if num == 2 || num == 3 {
                 current_end = *edited_event.end();
@@ -207,10 +209,7 @@ pub fn edit_event(event_name: &str) {
                         &edited_event.end().date(),
                     );
                 }
-                edited_event.set_end(&current_end
-                    .date()
-                    .and_time(new_end_time)
-                    .unwrap());
+                edited_event.set_end(&current_end.date().and_time(new_end_time).unwrap());
             }
         }
         // Edit priority
@@ -225,9 +224,9 @@ pub fn edit_event(event_name: &str) {
         }
         _ => panic!("Impossible"),
     }
-    
+
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, &path)
+        print_err_msg(e, &path)
     }
 }
 

@@ -83,10 +83,7 @@ pub fn validate_date(date_string: &str) -> bool {
     }
     let re = Regex::new(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$").unwrap();
     if !re.is_match(date_string.trim()) {
-warning(
-
-            "Input does not conform to specified format".to_string()
-        );
+        warning("Input does not conform to specified format".to_string());
         return false;
     }
 

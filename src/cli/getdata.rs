@@ -1,5 +1,5 @@
 use crate::cli::repl::get_input;
-use crate::{cli::validator::*, cli::messages::warning};
+use crate::{cli::messages::warning, cli::validator::*};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 
 /*

@@ -1,8 +1,8 @@
 #![allow(dead_code)]
+use super::calmar_error::CalmarError;
 use crate::cal::event::Event;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
-use super::calmar_error::CalmarError;
 
 pub enum CalendarReturnMessage {
     Abort,
@@ -28,14 +28,14 @@ impl Calendar {
 
     // Getters
     pub fn name(&self) -> &String {
-	&self.name
+        &self.name
     }
 
     pub fn events(&self) -> &Vec<Event> {
-	&self.events
+        &self.events
     }
     pub fn events_mut(&mut self) -> &mut Vec<Event> {
-	&mut self.events
+        &mut self.events
     }
 
     pub fn set_name(&mut self, name: String) {
@@ -58,9 +58,9 @@ impl Calendar {
         };
 
         if let Err(e) = write!(calendar_file, "{}", calendar_json) {
-	    return Err(CalmarError::WriteFile { e })
+            return Err(CalmarError::WriteFile { e });
         }
-	Ok(())
+        Ok(())
     }
 
     pub fn add_event(&mut self, event: Event) {
@@ -68,7 +68,6 @@ impl Calendar {
     }
 
     pub fn set_events(&mut self, events: Vec<Event>) {
-	self.events = events;
+        self.events = events;
     }
 }
-

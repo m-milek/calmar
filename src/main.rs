@@ -6,8 +6,8 @@ mod cal {
     pub mod event;
 }
 mod cli {
-    pub mod config;
     pub mod commands;
+    pub mod config;
     pub mod display;
     pub mod functions;
     pub mod getdata;

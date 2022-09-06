@@ -1,6 +1,6 @@
-use crate::cli::help;
-use super::commands::{cal, clear, edit, add, remove, removecal, set, list, listcal, sort};
+use super::commands::{add, cal, clear, edit, list, listcal, remove, removecal, set, sort};
 use super::messages::warning;
+use crate::cli::help;
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -14,9 +14,9 @@ pub fn parse(input: String) {
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "set" | "s" => set(&split_input),
-	"sort" | "S" => sort(&split_input),
+        "sort" | "S" => sort(&split_input),
         "list" | "l" | "ls" => list(&split_input),
-	"listcal" | "lc" => listcal(&split_input),
+        "listcal" | "lc" => listcal(&split_input),
         "quit" | "q" => std::process::exit(0),
         _ => warning(format!("Unknown command: {}", split_input[0].trim())),
     }
