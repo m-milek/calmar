@@ -1,5 +1,5 @@
 use crate::{
-    cal::{calendar_index::CalendarIndex, event::{Event, EventJSON}},
+    cal::{calendar_index::CalendarIndex, event::Event},
     cli::functions::{edit_event, get_new_event},
     CONFIG,
 };
@@ -233,7 +233,7 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
 
-    active_calendar.add_event(new_event.to_event_json());
+    active_calendar.add_event(new_event);
 
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
@@ -285,7 +285,7 @@ pub fn list(split_input: &[&str]) {
                 true
             }
         })
-        .for_each(|e| println!("{:#?}", e.to_standard_event()))
+        .for_each(|e| println!("{:#?}", e))
 }
 
 /// Clear the screen
@@ -354,7 +354,8 @@ pub fn sort(split_input: &Vec<&str>) {
 	warning(format!("sort: Invalid number of arguments. Expected: 0 or 1. Got: {}", split_input.len()));
 	return;
     }
-    let mut events_std: Vec<Event> = active_calendar.events().iter().map(|e| e.to_standard_event()).collect();
+    
+    let mut events_std: Vec<Event> = active_calendar.events().to_vec();
     
     match split_input.len() {
 	1 => {
@@ -392,8 +393,7 @@ pub fn sort(split_input: &Vec<&str>) {
 	None => {}
     }
     
-    let events_json: Vec<EventJSON> = events_std.iter().map(|e| e.to_event_json()).collect();
-    active_calendar.set_events(events_json);
+    active_calendar.set_events(events_std);
     if let Err(e) = active_calendar.save(active_calendar_reference.path()) {
 	print_err_msg(e, active_calendar_reference.path());
 	return;

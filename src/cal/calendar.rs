@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use crate::cal::event::EventJSON;
+use crate::cal::event::Event;
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 use super::calmar_error::CalmarError;
@@ -14,7 +14,7 @@ pub enum CalendarReturnMessage {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Calendar {
     name: String,
-    events: Vec<EventJSON>,
+    events: Vec<Event>,
 }
 
 impl Calendar {
@@ -22,7 +22,7 @@ impl Calendar {
     pub fn new(name: &str) -> Self {
         Calendar {
             name: name.to_string(),
-            events: Vec::<EventJSON>::new(),
+            events: Vec::<Event>::new(),
         }
     }
 
@@ -31,10 +31,10 @@ impl Calendar {
 	&self.name
     }
 
-    pub fn events(&self) -> &Vec<EventJSON> {
+    pub fn events(&self) -> &Vec<Event> {
 	&self.events
     }
-    pub fn events_mut(&mut self) -> &mut Vec<EventJSON> {
+    pub fn events_mut(&mut self) -> &mut Vec<Event> {
 	&mut self.events
     }
 
@@ -63,11 +63,11 @@ impl Calendar {
 	Ok(())
     }
 
-    pub fn add_event(&mut self, event: EventJSON) {
+    pub fn add_event(&mut self, event: Event) {
         self.events.push(event)
     }
 
-    pub fn set_events(&mut self, events: Vec<EventJSON>) {
+    pub fn set_events(&mut self, events: Vec<Event>) {
 	self.events = events;
     }
 }

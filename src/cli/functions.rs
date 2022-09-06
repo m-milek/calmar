@@ -1,9 +1,7 @@
-use crate::{cal::{event::EventJSON, calendar_ref::CalendarReference}, cli::{repl::get_input, getdata::get_dir_path, messages::{error, print_err_msg}}, CONFIG};
-use chrono::{DateTime, Local};
-use std::str::FromStr;
+use crate::{cal::{event::Event, calendar_ref::CalendarReference}, cli::{repl::get_input, getdata::get_dir_path, messages::{error, print_err_msg}}, CONFIG};
 use std::collections::HashMap;
 use crate::{
-    cal::{calendar_index::CalendarIndex, event::Event},
+    cal::calendar_index::CalendarIndex,
     cli::messages::warning,
     cli::util::{select_in_range, uppercase_first_letter},
 };
@@ -98,7 +96,7 @@ pub fn edit_event(event_name: &str) {
     }
 
     // Choose an event to be edited
-    let events_named_like_arg: Vec<EventJSON> = active_calendar
+    let events_named_like_arg: Vec<Event> = active_calendar
         .events()
         .clone()
         .into_iter()
@@ -116,7 +114,7 @@ pub fn edit_event(event_name: &str) {
     };
 
     // Choose a property to be edited
-    let fields = EventJSON::FIELD_NAMES_AS_ARRAY.to_vec();
+    let fields = Event::FIELD_NAMES_AS_ARRAY.to_vec();
     let mut fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
     fields_list.insert(2, "Duration".to_string());
 
@@ -138,8 +136,8 @@ pub fn edit_event(event_name: &str) {
         2 => {
             println!("1. Start date\n2. Start time\n3. Start datetime");
             let num = select_in_range("Select what to edit", 3);
-            let current_end = edited_event.parsed_end().unwrap();
-            let current_start = edited_event.parsed_start().unwrap();
+            let current_end = *edited_event.end();
+            let current_start = *edited_event.start();
 
             if num == 1 || num == 3 {
                 print!("Start date: ");
@@ -150,9 +148,7 @@ pub fn edit_event(event_name: &str) {
                     new_start_date = get_start_date();
                 }
                 edited_event.set_start(&new_start_date
-                    .and_time(current_start.time())
-                    .unwrap()
-                    .to_string());
+                    .and_time(current_start.time()).unwrap())
             }
             if num == 2 || num == 3 {
                 print!("Start time: ");
@@ -165,25 +161,22 @@ pub fn edit_event(event_name: &str) {
                 edited_event.set_start(&current_start
                     .date()
                     .and_time(new_start_time)
-                    .unwrap()
-                    .to_string());
+                    .unwrap())
             }
         }
         // Edit duration
         3 => {
             print!("Duration: ");
             let new_duration = get_duration();
-            let start =
-                DateTime::<Local>::from_str(&edited_event.start()).expect("Valid start timedate");
-            let end = start + new_duration;
-            edited_event.set_end(&end.to_string());
+	    let start = edited_event.start();
+	    edited_event.set_end(&(*start + new_duration));
         }
         // Edit end datetime
         4 => {
             println!("1. End date\n2. End time\n3. End datetime");
             let num: usize = select_in_range("Select what to edit", 3);
-            let mut current_end = edited_event.parsed_end().unwrap();
-            let current_start = edited_event.parsed_start().unwrap();
+            let mut current_end = *edited_event.end();
+            let current_start = *edited_event.start();
 
             if num == 1 || num == 3 {
                 print!("End date: ");
@@ -195,11 +188,10 @@ pub fn edit_event(event_name: &str) {
                 }
                 edited_event.set_end(&new_end_date
                     .and_time(current_end.time())
-                    .unwrap()
-                    .to_string());
+                    .unwrap());
             }
             if num == 2 || num == 3 {
-                current_end = edited_event.parsed_end().unwrap();
+                current_end = *edited_event.end();
                 print!("End time: ");
                 let mut new_end_time = get_end_time(
                     &current_start.date(),
@@ -212,14 +204,13 @@ pub fn edit_event(event_name: &str) {
                     new_end_time = get_end_time(
                         &current_start.date(),
                         &current_start.time(),
-                        &edited_event.parsed_end().unwrap().date(),
+                        &edited_event.end().date(),
                     );
                 }
                 edited_event.set_end(&current_end
                     .date()
                     .and_time(new_end_time)
-                    .unwrap()
-                    .to_string());
+                    .unwrap());
             }
         }
         // Edit priority
