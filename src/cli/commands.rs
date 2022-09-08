@@ -5,7 +5,7 @@ use crate::{
 };
 
 use super::{
-    functions::get_new_calendar_reference,
+    functions::{get_new_calendar_reference, duration_fmt},
     getdata::{get_valid_calendar_name, get_valid_event_name},
     messages::{error, print_err_msg, success, warning},
 };
@@ -438,6 +438,6 @@ pub fn duration(split_input: &Vec<&str>) {
 
     active_calendar.events().iter().for_each(|e|
 					     if name_arr.contains(e.name()) {
-						 println!("{:?}", e.duration())
+						 println!("Duration of \"{}\": {}", e.name(), duration_fmt(e.duration()))
 					     })
 }

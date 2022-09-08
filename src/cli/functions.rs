@@ -1,3 +1,5 @@
+use chrono::Duration;
+
 use crate::cli::commands::default_or_custom_save_path;
 use crate::cli::getdata::{
     get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
@@ -255,4 +257,25 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         }
     };
     CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
+}
+
+pub fn duration_fmt(duration: Duration) -> String {
+    if duration.num_seconds() < 60 {
+	format!("{}s", duration.num_seconds())
+    }
+    else if duration.num_minutes() < 60 {
+	format!("{}m {}s", duration.num_minutes(), duration.num_seconds()-duration.num_minutes()*60)
+    }
+    else if duration.num_hours() < 24 {
+	let num_h = duration.num_hours();
+	// remaining minutes after accounting for the whole hours (occurs further into the function as well)
+	let num_m = duration.num_minutes() - num_h*60;
+	format!("{}h {}m", num_h, num_m)
+    }
+    else {
+	let num_d = duration.num_days();
+	let num_h = duration.num_hours() - num_d*24;
+	let num_m = duration.num_minutes() - num_h*60 - num_d*24*60;
+	format!("{}d {}h {}m", num_d, num_h, num_m)
+    }
 }
