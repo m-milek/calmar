@@ -406,3 +406,38 @@ pub fn sort(split_input: &Vec<&str>) {
         return;
     }
 }
+
+pub fn duration(split_input: &Vec<&str>) {
+    let index = match CalendarIndex::get() {
+	Ok(i) => i,
+	Err(e) => {print_err_msg(e, &CONFIG.index_path); return;}
+    };
+    
+    let active_ref = &match index.active_calendar_reference() {
+	Ok(r) => r,
+	Err(e) => {print_err_msg(e, &String::new()); return;}
+    };
+    let path = active_ref.path();
+    
+    let active_calendar = match index.active_calendar() {
+	Ok(c) => c,
+	Err(e) => {print_err_msg(e, &path); return;}
+    };
+
+    let name_arr = match split_input.len() {
+	1 => {
+	    print!("Name: ");
+	    let mut v: Vec<String> = vec![];
+	    v.push(get_valid_event_name());
+	    v
+	}
+	_ => {
+	    split_input[1..].iter().map(|a| a.to_string()).collect()
+	}
+    };
+
+    active_calendar.events().iter().for_each(|e|
+					     if name_arr.contains(e.name()) {
+						 println!("{:?}", e.duration())
+					     })
+}

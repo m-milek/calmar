@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, Duration};
 use serde_derive::{Deserialize, Serialize};
 use struct_field_names_as_array::FieldNamesAsArray;
 
@@ -74,5 +74,7 @@ impl Event {
         self.difficulty = d
     }
 
-    pub fn duration() {}
+    pub fn duration(&self) -> Duration {
+	self.end - self.start
+    }
 }
