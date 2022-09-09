@@ -1,3 +1,7 @@
+use std::{ops::Neg, collections::hash_map::DefaultHasher};
+
+use chrono::Local;
+
 use crate::{
     cal::{calendar_index::CalendarIndex, event::Event},
     cli::functions::{edit_event, get_new_event},
@@ -438,6 +442,64 @@ pub fn duration(split_input: &Vec<&str>) {
 
     active_calendar.events().iter().for_each(|e|
 					     if name_arr.contains(e.name()) {
-						 println!("Duration of \"{}\": {}", e.name(), duration_fmt(e.duration()))
+						 println!("Duration of {}: {}", e.name(), duration_fmt(e.duration()))
 					     })
+}
+
+pub fn until(split_input: &Vec<&str>) {
+        let index = match CalendarIndex::get() {
+	Ok(i) => i,
+	Err(e) => {print_err_msg(e, &CONFIG.index_path); return;}
+    };
+    
+    let active_ref = &match index.active_calendar_reference() {
+	Ok(r) => r,
+	Err(e) => {print_err_msg(e, &String::new()); return;}
+    };
+    let path = active_ref.path();
+    
+    let active_calendar = match index.active_calendar() {
+	Ok(c) => c,
+	Err(e) => {print_err_msg(e, &path); return;}
+    };
+
+    let name_arr = match split_input.len() {
+	1 => {
+	    print!("Name: ");
+	    let mut v: Vec<String> = vec![];
+	    v.push(get_valid_event_name());
+	    v
+	}
+	_ => {
+	    split_input[1..].iter().map(|a| a.to_string()).collect()
+	}
+    };
+
+    let names_in_cal: Vec<&String> = active_calendar.events().iter().map(|e| e.name()).collect();
+
+    for name in &name_arr {
+	if !names_in_cal.contains(&name) {
+	    warning(format!("until: No event named {}", name))
+	}
+    }
+
+    active_calendar
+	.events()
+	.iter()
+	.for_each(|e| {
+	    if name_arr.contains(e.name()) {
+		let now = Local::now();
+		if now < *e.start() {
+		    println!("Until {}: {}",
+			     e.name(),
+			     duration_fmt(*e.start() - now))
+		}
+		else {
+		    println!("{} started {} ago",
+			     e.name(),
+			     duration_fmt((*e.start() - now).neg()))
+		}
+	}
+    })
+    
 }

@@ -1,4 +1,4 @@
-use super::commands::{add, cal, clear, edit, list, listcal, remove, removecal, set, sort, duration};
+use super::commands::{add, cal, clear, edit, list, listcal, remove, removecal, set, sort, duration, until};
 use super::messages::warning;
 use crate::cli::help;
 
@@ -18,6 +18,7 @@ pub fn parse(input: String) {
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "set" | "s" => set(&split_input),
         "sort" | "S" => sort(&split_input),
+	"until" | "u" => until(&split_input),
         "quit" | "q" => std::process::exit(0),
         _ => warning(format!("Unknown command: {}", split_input[0].trim())),
     }
