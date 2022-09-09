@@ -1,42 +1,361 @@
 use colored::*;
+use crate::CONFIG;
+use super::messages::warning;
 
-pub fn print_help(arg: &str) {
-    match arg.trim().to_lowercase().as_str() {
-        "" => {
+pub fn print_help(split_input: &Vec<&str>) {
+    let add_doc = format!(
+        "
+{}
+
+Your calendars consist of events. `add` lets you add a new event to the calendar
+set as active in your index.json file.
+
+{}
+> add
+> add {}
+> a
+> a {}
+
+Defined in {}
+",
+        "add, a".bold(),
+        "Syntax".bold(),
+        "event_name".italic(),
+	"event_name".italic(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let cal_doc = format!(
+	"
+{}
+
+Create a new, empty calendar and write it to your index.json file.
+You can specify the name and path of the new calendar.
+
+{}
+> cal
+> cal {}
+> c
+> c {}
+
+Defined in {}
+",
+	"cal, c".bold(),
+	"Syntax".bold(),
+	"calendar_name".italic(),
+	"calendar_name".italic(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let clear_doc = format!(
+	"
+{}
+
+Print an ANSI escape code to clear the screen.
+
+{}
+> clear
+
+Defined in {}
+",
+	"clear".bold(),
+	"Syntax".bold(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let duration_doc = format!(
+	"
+{}
+
+Print a formatted, human-readable duration of all events passed in as arguments.
+If no arguments are given, the user is prompted for input.
+
+{}
+> duration
+> duration [{}]...
+> d
+> d [{}]...
+
+Defined in {}
+",
+	"duration, d".bold(),
+	"Syntax".bold(),
+	"event_name".italic(),
+	"event_name".italic(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let edit_doc = format!(
+	"
+{}
+
+Edit a property of all events passed in as arguments. If no arguments are given,
+the user is prompted for input.
+
+{}
+> edit
+> edit [{}]...
+> e
+> e [{}]...
+
+Defined in {}
+",
+	"edit, e".bold(),
+	"Syntax".bold(),
+	"event_name".italic(),
+	"event_name".italic(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let help_doc = format!(
+	"
+{}
+
+Print a help page. If no arguments are given, print a general help page.
+Otherwise, print a help page for a specific command.
+
+{}
+> help
+> help {}
+> h
+> h {}
+
+Defined in {}
+",
+	"help, h".bold(),
+	"Syntax".bold(),
+	"command_name".italic(),
+	"command_name".italic(),
+	"src/cli/help.rs".italic());
+
+    let list_doc = format!(
+	"
+{}
+
+List all events in the active calendar that match one of the arguments passed in.
+If no arguments have been passed, list all events in the active calendar.
+
+{}
+> list
+> list [{}]...
+> ls
+> ls [{}]...
+> l
+> l [{}]...
+",
+	"list, ls, l".bold(),
+	"Syntax".bold(),
+	"event_name".italic(),
+	"event_name".italic(),
+	"event_name".italic()
+    );
+
+    let listcal_doc = format!(
+	"
+{}
+
+List all calendars in your index.json file.
+Currently, the index file is {}.
+
+{}
+> listcal
+> lc
+",
+	"listcal, lc".bold(),
+	&CONFIG.index_path.italic(),
+	"Syntax".bold()
+    );
+
+    let remove_doc = format!(
+	"
+{}
+
+Remove events from the active calendar.
+If no event names are passed in, the user is asked for input.
+
+{}
+> remove
+> remove [{}]...
+> rm
+> rm [{}]...
+> r
+> r [{}]...
+
+Defined in {}
+",
+	"remove, rm, r".bold(),
+	"Syntax".bold(),
+	"event_name".italic(),
+	"event_name".italic(),
+	"event_name".italic(),
+	"src/cli/commands.rs".italic(),
+    );
+
+    let removecal_doc = format!(
+	"
+{}
+
+Remove a calendar from index.json along with the associated calendar file.
+Every calendar that matches one of the arguments will be removed.
+If no arguments are provided, the user is asked for input.
+
+{}
+> removecal
+> removecal [{}]...
+> rmcal
+> rmcal [{}]...
+> rc
+> rc [{}]...
+
+Defined in {}
+",
+	"removecal, rmcal, rc".bold(),
+	"Syntax".bold(),
+	"calendar_name".italic(),
+	"calendar_name".italic(),
+	"calendar_name".italic(),
+	"src/cli/commmands.rs".italic()
+    );
+
+    let set_doc = format!(
+	"
+{}
+
+Set the active calendar.
+The active calendar will be set to the calendar passed as argument.
+If no arguments are passed in, user is asked for input.
+
+{}
+> set
+> set {}
+> s
+> s {}
+
+Defined in {}
+",
+	"set, s".bold(),
+	"Syntax".bold(),
+	"calendar_name".italic(),
+	"calendar_name".italic(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let sort_doc = format!(
+	"
+{}
+
+Sort events in the active calendar by default or by specified key and ordering.
+Default ordering: Sort by start timedate, if equal - sort by name.
+Ascending ordering is applied, unless stated otherwise.
+
+{}
+> sort
+> sort {}
+> sort {} {}
+> S
+> S {}
+> S {} {}
+
+{}
+asc, ascending
+desc, descending
+
+Defined in {}
+",
+	"sort, S".bold(),
+	"Syntax".bold(),
+	"key".italic(),
+	"key".italic(),
+	"ordering".italic(),
+	"key".italic(),
+	"key".italic(),
+	"ordering".italic(),
+	"Ordering Syntax".bold(),
+	"src/cli/commands.rs".italic()
+    );
+
+    let quit_doc = format!(
+	"
+{}
+
+Quit the program.
+
+{}
+> quit
+> q
+",
+	"quit, q".bold(),
+	"Syntax".bold()
+    );
+
+    match split_input.len() {
+        1 => {
             println!(
                 "
-        The list of available commands:
+The list of available commands:
 
-        {}, {} -- print this information or command documentation
-        {}, {} -- display events or calendars
-        {}, {} -- create events or calendars
-        {}, {} -- remove specified events or calendars
-        {}, {} -- exit the program
+{}, {} -- add an event
+{}, {} -- add a calendar
+{} -- clear the screen
+{}, {} -- print the duration of an event
+{}, {} -- edit an event
+{}, {} -- print this information or command documentation
+{}, {} -- list events
+{}, {} -- list calendars
+{}, {} -- remove events
+{}, {} -- remove calendars
+{}, {} -- set the active calendar
+{}, {} -- sort events
+{}, {} -- exit the program
 
-        Type \"help\" followed by command name for full documentation.
+Type \"help\" followed by command name for full documentation.
         ",
+                "add".bold(),
+                "a".dimmed(),
+                "cal".bold(),
+                "c".dimmed(),
+                "clear".bold(),
+                "duration".bold(),
+                "d".dimmed(),
+                "edit".bold(),
+                "e".dimmed(),
                 "help".bold(),
-                "hel, he, h".dimmed(),
-                "show".bold(),
-                "sho, sh, s".dimmed(),
-                "new".bold(),
-                "ne, n".dimmed(),
-                "remove".bold(),
-                "rem, re, r".dimmed(),
-                "exit".bold(),
-                "ex, e".dimmed()
+                "h".dimmed(),
+                "list".bold(),
+                "ls, l".dimmed(),
+                "listcal".bold(),
+                "lc".dimmed(),
+		"remove".bold(),
+		"rm, r".dimmed(),
+		"removecal".bold(),
+		"rmcal, rc".dimmed(),
+		"set".bold(),
+		"s".dimmed(),
+		"sort".bold(),
+		"S".dimmed(),
+		"quit".bold(),
+		"q".dimmed()
             );
         }
-        "show" | "sho" | "sh" | "s" => {
-            println!(
-                "
-	        {}
-	        ",
-                "show, sho, sh, s".bold()
-            );
-        }
-        _ => {
-            println!("No documentation entries for: {}", arg);
-        }
+        2 => match split_input[1] {
+            "add" | "a" => println!("{add_doc}"),
+            "cal" | "c" => println!("{cal_doc}"),
+            "clear" => println!("{clear_doc}"),
+            "duration" | "d" => println!("{duration_doc}"),
+            "edit" | "e" => println!("{edit_doc}"),
+            "help" | "h" => println!("{help_doc}"),
+            "list" | "l" | "ls" => println!("{list_doc}"),
+            "listcal" | "lc" => println!("{listcal_doc}"),
+            "remove" | "rm" | "r" => println!("{remove_doc}"),
+            "removecal" | "rmcal" | "rc" => println!("{removecal_doc}"),
+            "set" | "s" => println!("{set_doc}"),
+            "sort" | "S" => println!("{sort_doc}"),
+            "quit" | "q" => println!("{quit_doc}"),
+            _ => warning(format!("help: No documentation for command \"{}\"", split_input[1]))
+        },
+        _ => warning(format!(
+            "help: Too many arguments provided. Expected: 0 or 1. Got: {}",
+            split_input.len()
+        )),
     }
 }

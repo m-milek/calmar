@@ -11,7 +11,7 @@ pub fn parse(input: String) {
         "clear" => clear(&split_input),
 	"duration" | "d" => duration(&split_input),
         "edit" | "e" => edit(&split_input),
-        "help" | "h" => help::print_help(split_input[0]),
+        "help" | "h" => help::print_help(&split_input),
         "list" | "l" | "ls" => list(&split_input),
         "listcal" | "lc" => listcal(&split_input),
         "remove" | "rm" | "r" => remove(&split_input),
