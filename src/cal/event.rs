@@ -1,13 +1,17 @@
 #![allow(dead_code)]
 use chrono::{DateTime, Duration, Local};
 use serde_derive::{Deserialize, Serialize};
+use serde_with::serde_as;
 use struct_field_names_as_array::FieldNamesAsArray;
 
+#[serde_with::serde_as]
 #[derive(Debug, PartialEq, Eq, FieldNamesAsArray, Serialize, Deserialize, Clone)]
 pub struct Event {
     name: String,
     start: DateTime<Local>,
     end: DateTime<Local>,
+    #[serde_as(as = "serde_with::DurationSeconds<i64>")]
+    repeat: Duration,
     priority: u8,
     difficulty: u8,
 }
@@ -32,6 +36,7 @@ impl Event {
         name: String,
         start: DateTime<Local>,
         end: DateTime<Local>,
+        repeat: Duration,
         priority: u8,
         difficulty: u8,
     ) -> Self {
@@ -39,19 +44,23 @@ impl Event {
             name,
             start,
             end,
+            repeat,
             priority,
             difficulty,
         }
     }
 
-    pub fn name(&self) -> &String {
-        &self.name
+    pub fn name(&self) -> String {
+        self.name.clone()
     }
-    pub fn start(&self) -> &DateTime<Local> {
-        &self.start
+    pub fn start(&self) -> DateTime<Local> {
+        self.start
     }
-    pub fn end(&self) -> &DateTime<Local> {
-        &self.end
+    pub fn end(&self) -> DateTime<Local> {
+        self.end
+    }
+    pub fn repeat(&self) -> Duration {
+	self.repeat
     }
     pub fn priority(&self) -> u8 {
         self.priority
@@ -72,6 +81,9 @@ impl Event {
     pub fn set_end_time() {}
     pub fn set_end(&mut self, new_end: &DateTime<Local>) {
         self.end = *new_end
+    }
+    pub fn set_repeat(&mut self, d: &Duration) {
+	self.repeat = *d
     }
     pub fn set_priority(&mut self, p: u8) {
         self.priority = p

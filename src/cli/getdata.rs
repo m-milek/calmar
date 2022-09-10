@@ -75,6 +75,16 @@ pub fn get_end_time(
     parse_into_time(input.as_str())
 }
 
+pub fn get_repeat() -> Duration {
+    let mut input = get_input();
+    while !validate_duration(&input) {
+        warning(format!("{input} is not a valid duration input"));
+        print!("Repeat: ");
+        input = get_input();
+    }
+    parse_into_duration(input.as_str())
+}
+
 /*
 Return a valid difficulty
 */

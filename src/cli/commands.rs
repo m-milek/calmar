@@ -158,7 +158,10 @@ pub fn set(split_input: &Vec<&str>) {
         }
     };
     let name = match split_input.len() {
-        1 => get_valid_event_name(),
+        1 => {
+	    print!("Name: ");
+	    get_valid_event_name()
+	},
         2 => split_input[1].to_string(),
         _ => {
             warning(format!(
@@ -174,10 +177,7 @@ pub fn set(split_input: &Vec<&str>) {
     }
 
     match index.number_of_active_calendars() {
-        0 => {
-            warning("No calendars are set as active. Please correct this and retry.".to_string());
-        }
-        1 => {
+        0 | 1 => {
             index.set_active(name);
             if let Err(e) = index.save() {
                 print_err_msg(e, &CONFIG.index_path);
@@ -370,8 +370,8 @@ pub fn sort(split_input: &Vec<&str>) {
         }
         _ => match split_input[1].trim() {
             "name" => events_std.sort_by_key(|e| e.name().clone()),
-            "start" => events_std.sort_by_key(|e| *e.start()),
-            "end" => events_std.sort_by_key(|e| *e.end()),
+            "start" => events_std.sort_by_key(|e| e.start()),
+            "end" => events_std.sort_by_key(|e| e.end()),
             "priority" => events_std.sort_by_key(|e| e.priority()),
             "difficulty" => events_std.sort_by_key(|e| e.difficulty()),
             _ => {
@@ -439,7 +439,7 @@ pub fn duration(split_input: &Vec<&str>) {
     };
 
     active_calendar.events().iter().for_each(|e| {
-        if name_arr.contains(e.name()) {
+        if name_arr.contains(&e.name()) {
             println!("Duration of {}: {}", e.name(), duration_fmt(e.duration()))
         }
     })
@@ -480,15 +480,15 @@ pub fn until(split_input: &Vec<&str>) {
     };
 
     active_calendar.events().iter().for_each(|e| {
-        if name_arr.contains(e.name()) {
+        if name_arr.contains(&e.name()) {
             let now = Local::now();
-            if now < *e.start() {
-                println!("Until {}: {}", e.name(), duration_fmt(*e.start() - now))
+            if now < e.start() {
+                println!("Until {}: {}", e.name(), duration_fmt(e.start() - now))
             } else {
                 println!(
                     "{} started {} ago",
                     e.name(),
-                    duration_fmt((*e.start() - now).neg())
+                    duration_fmt((e.start() - now).neg())
                 )
             }
         }
@@ -499,7 +499,7 @@ pub fn until(split_input: &Vec<&str>) {
             .events()
             .iter()
             .map(|e| e.name())
-            .any(|x| x == name)
+            .any(|x| x == *name)
         {
             warning(format!("until: No event named {}", name))
         }
