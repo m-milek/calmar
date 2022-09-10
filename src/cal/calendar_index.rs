@@ -1,10 +1,14 @@
-use super::calmar_error::CalmarError;
-use super::{calendar::Calendar, calendar_ref::CalendarReference};
-use crate::cal::calendar::CalendarReturnMessage;
-use crate::cli::{
-    messages::{error, warning},
-    util::yesno,
-    validator::get_home_dir,
+use crate::{
+    cal::{
+        calendar::{Calendar, CalendarReturnMessage},
+        calendar_ref::CalendarReference,
+        calmar_error::CalmarError,
+    },
+    cli::{
+        messages::{error, warning},
+        util::yesno,
+        validator::get_home_dir,
+    },
 };
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
@@ -77,7 +81,7 @@ impl CalendarIndex {
 
         match serde_json::from_str(&current_calendar_content) {
             Ok(result) => Ok(result),
-            Err(e) => return Err(CalmarError::ParseJSON { e }),
+            Err(e) => Err(CalmarError::ParseJSON { e }),
         }
     }
 
@@ -117,7 +121,7 @@ impl CalendarIndex {
             already_saved_entry_names.push(reference.name().clone());
         }
 
-        if already_saved_entry_names.contains(&new_calendar.name()) {
+        if already_saved_entry_names.contains(new_calendar.name()) {
             if !yesno(
                 format!(
                     "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
@@ -154,7 +158,7 @@ impl CalendarIndex {
             already_saved_entry_paths.push(reference.path().clone());
         }
 
-        if already_saved_entry_paths.contains(&new_calendar.path()) {
+        if already_saved_entry_paths.contains(new_calendar.path()) {
             if !yesno(
                 format!(
                     "Calendar with path {} already exists. Do you want to overwrite it?",

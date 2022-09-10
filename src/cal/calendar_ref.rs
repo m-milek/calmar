@@ -1,7 +1,5 @@
 #![allow(dead_code)]
-
-use super::calmar_error::CalmarError;
-use crate::cal::calendar::Calendar;
+use crate::cal::{calendar::Calendar, calmar_error::CalmarError};
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 

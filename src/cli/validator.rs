@@ -1,9 +1,8 @@
+use crate::cli::messages::{error, warning};
 use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
 use regex::Regex;
 use std::{path::PathBuf, str::FromStr};
-
-use crate::cli::messages::{error, warning};
 
 pub fn get_home_dir() -> PathBuf {
     match home_dir() {

@@ -1,24 +1,18 @@
-use chrono::Duration;
-
-use crate::cli::commands::default_or_custom_save_path;
-use crate::cli::getdata::{
-    get_difficulty, get_duration, get_end_date, get_end_time, get_priority, get_start_date,
-    get_start_time, get_valid_event_name,
-};
 use crate::{
-    cal::calendar_index::CalendarIndex,
-    cli::messages::warning,
-    cli::util::{select_in_range, uppercase_first_letter},
-};
-use crate::{
-    cal::{calendar_ref::CalendarReference, event::Event},
+    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event},
     cli::{
-        getdata::get_dir_path,
-        messages::{error, print_err_msg},
+        commands::default_or_custom_save_path,
+        getdata::{
+            get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
+            get_start_date, get_start_time, get_valid_event_name,
+        },
+        messages::{error, print_err_msg, warning},
         repl::get_input,
+        util::{select_in_range, uppercase_first_letter},
     },
     CONFIG,
 };
+use chrono::Duration;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -90,7 +84,7 @@ pub fn edit_event(event_name: &str) {
     let mut active_calendar = match index.active_calendar() {
         Ok(i) => i,
         Err(e) => {
-            print_err_msg(e, &path);
+            print_err_msg(e, path);
             return;
         }
     };
@@ -227,8 +221,8 @@ pub fn edit_event(event_name: &str) {
         _ => panic!("Impossible"),
     }
 
-    if let Err(e) = active_calendar.save(&path) {
-        print_err_msg(e, &path)
+    if let Err(e) = active_calendar.save(path) {
+        print_err_msg(e, path)
     }
 }
 
@@ -261,21 +255,22 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
 
 pub fn duration_fmt(duration: Duration) -> String {
     if duration.num_seconds() < 60 {
-	format!("{}s", duration.num_seconds())
-    }
-    else if duration.num_minutes() < 60 {
-	format!("{}m {}s", duration.num_minutes(), duration.num_seconds()-duration.num_minutes()*60)
-    }
-    else if duration.num_hours() < 24 {
-	let num_h = duration.num_hours();
-	// remaining minutes after accounting for the whole hours (occurs further into the function as well)
-	let num_m = duration.num_minutes() - num_h*60;
-	format!("{}h {}m", num_h, num_m)
-    }
-    else {
-	let num_d = duration.num_days();
-	let num_h = duration.num_hours() - num_d*24;
-	let num_m = duration.num_minutes() - num_h*60 - num_d*24*60;
-	format!("{}d {}h {}m", num_d, num_h, num_m)
+        format!("{}s", duration.num_seconds())
+    } else if duration.num_minutes() < 60 {
+        format!(
+            "{}m {}s",
+            duration.num_minutes(),
+            duration.num_seconds() - duration.num_minutes() * 60
+        )
+    } else if duration.num_hours() < 24 {
+        let num_h = duration.num_hours();
+        // remaining minutes after accounting for the whole hours (occurs further into the function as well)
+        let num_m = duration.num_minutes() - num_h * 60;
+        format!("{}h {}m", num_h, num_m)
+    } else {
+        let num_d = duration.num_days();
+        let num_h = duration.num_hours() - num_d * 24;
+        let num_m = duration.num_minutes() - num_h * 60 - num_d * 24 * 60;
+        format!("{}d {}h {}m", num_d, num_h, num_m)
     }
 }

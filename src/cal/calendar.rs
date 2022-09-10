@@ -1,6 +1,5 @@
 #![allow(dead_code)]
-use super::calmar_error::CalmarError;
-use crate::cal::event::Event;
+use crate::cal::{calmar_error::CalmarError, event::Event};
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
 

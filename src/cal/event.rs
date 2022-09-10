@@ -1,9 +1,9 @@
 #![allow(dead_code)]
-use chrono::{DateTime, Local, Duration};
+use chrono::{DateTime, Duration, Local};
 use serde_derive::{Deserialize, Serialize};
 use struct_field_names_as_array::FieldNamesAsArray;
 
-#[derive(Debug, PartialEq, Eq, Ord, FieldNamesAsArray, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Eq, FieldNamesAsArray, Serialize, Deserialize, Clone)]
 pub struct Event {
     name: String,
     start: DateTime<Local>,
@@ -18,6 +18,12 @@ impl PartialOrd for Event {
             return Some(self.name.cmp(&other.name));
         }
         Some(self.start.cmp(&other.start))
+    }
+}
+
+impl Ord for Event {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (self.start, &self.name).cmp(&(other.start, &other.name))
     }
 }
 
@@ -75,6 +81,6 @@ impl Event {
     }
 
     pub fn duration(&self) -> Duration {
-	self.end - self.start
+        self.end - self.start
     }
 }
