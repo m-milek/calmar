@@ -1,5 +1,5 @@
 use crate::{
-    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event},
+    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event, calendar::Calendar},
     cli::{
         commands::default_or_custom_save_path,
         getdata::{
@@ -12,8 +12,8 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::Duration;
-use std::collections::HashMap;
+use chrono::{Duration, DateTime, Local};
+use std::{collections::HashMap, sync::{Arc, Mutex}, thread};
 use std::path::PathBuf;
 
 /// Create a new event and return it.
@@ -284,3 +284,46 @@ pub fn duration_fmt(duration: Duration) -> String {
         format!("{}d {}h {}m", num_d, num_h, num_m)
     }
 }
+
+
+pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
+
+    let event_vec = Arc::new(Mutex::new(vec![]));
+    let mut threads = vec![];
+    let events = calendar.events().to_vec();
+    
+    for event in events {
+	threads.push(thread::spawn({
+	    let clone = Arc::clone(&event_vec);
+	    move || {
+		let mut temp_vec = vec![];
+		let mut e_to_push = event.to_owned();
+		let mut new_start = e_to_push.start();
+		let mut new_end = new_start + e_to_push.duration();
+		while new_start + e_to_push.repeat() < end {
+		    let mut e = e_to_push.clone();
+		    e.set_end(&new_end);
+		    temp_vec.push(e);
+		    new_start += e_to_push.repeat();
+		    new_end = new_start + e_to_push.duration();
+		    e_to_push.set_start(&new_start);
+		    e_to_push.set_end(&new_end);
+		}
+		let mut v = clone.lock().unwrap();
+		v.append(&mut temp_vec);
+	    }
+	}))
+    }
+    for t in threads {
+    	t.join().unwrap()
+    }
+
+    // get the Vec<Event> out of Arc and Mutex
+    let getter = event_vec.lock().unwrap();
+    let mut out = vec![];
+    for item in &*getter {
+	out.push(item.clone());
+    }
+    out.sort();
+    out
+} 

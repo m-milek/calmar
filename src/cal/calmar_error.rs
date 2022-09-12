@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum CalmarError {
     ReadFile { e: std::io::Error },
     ParseJSON { e: serde_json::Error },

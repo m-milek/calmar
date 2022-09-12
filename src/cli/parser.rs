@@ -6,6 +6,8 @@ use crate::cli::{
     messages::warning,
 };
 
+use super::commands::generate;
+
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
     let split_input: Vec<&str> = input.split_whitespace().collect();
