@@ -7,8 +7,10 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::Local;
+use chrono::{Local, Duration};
 use std::ops::Neg;
+
+use super::{functions::generate_until, getdata::parse_into_duration};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -250,7 +252,7 @@ pub fn edit(split_input: &[&str]) {
 }
 
 /// Display events in the active calendar
-pub fn list(split_input: &[&str]) {
+pub fn raw(split_input: &[&str]) {
     let index = match CalendarIndex::get() {
         Ok(i) => i,
         Err(e) => {
@@ -504,4 +506,28 @@ pub fn until(split_input: &Vec<&str>) {
             warning(format!("until: No event named {}", name))
         }
     }
+}
+
+/// Generate and view
+pub fn list(split_input: &Vec<&str>) {
+    let index = match CalendarIndex::get() {
+	Ok(i) => i,
+	Err(e) => {
+	    print_err_msg(e, &&CONFIG.index_path);
+	    return
+	}
+    };
+    let path = match index.active_calendar_reference() {
+	Ok(r) => r,
+	Err(e) => {
+	    print_err_msg(e, &String::new());
+	    return
+	}
+    }.path().clone();
+    
+}
+
+/// Generate, maybe view and maybe output to a file
+pub fn generate(split_input: &Vec<&str>) {
+    
 }

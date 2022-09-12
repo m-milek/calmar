@@ -6,7 +6,7 @@ use crate::cli::{
     messages::warning,
 };
 
-use super::commands::generate;
+use super::commands::{raw, generate};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -17,9 +17,11 @@ pub fn parse(input: String) {
         "clear" => clear(&split_input),
         "duration" | "d" => duration(&split_input),
         "edit" | "e" => edit(&split_input),
+	"generate" | "gen" | "g" => generate(&split_input),
         "help" | "h" => print_help(&split_input),
         "list" | "l" | "ls" => list(&split_input),
         "listcal" | "lc" => listcal(&split_input),
+	"raw" | "R" => raw(&split_input),
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
         "set" | "s" => set(&split_input),
