@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+use std::fmt::{Display, Formatter, self};
+
 use chrono::{DateTime, Duration, Local};
 use serde_derive::{Deserialize, Serialize};
 use serde_with::serde_as;
@@ -28,6 +30,13 @@ impl PartialOrd for Event {
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         (self.start, &self.name).cmp(&(other.start, &other.name))
+    }
+}
+
+impl Display for Event {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+	write!(f, "Name: {} | Start: {} | End: {} | Repeat: {} | Priority: {} | Difficulty: {}",
+	self.name, self.start, self.end, self.repeat(), self.priority, self.difficulty)
     }
 }
 

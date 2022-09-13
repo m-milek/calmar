@@ -548,7 +548,7 @@ pub fn list(split_input: &Vec<&str>) {
     }
     generate_until(calendar, Local::now() + span)
         .iter()
-        .for_each(|e| println!("{e:?}"))
+        .for_each(|e| println!("{e}"))
 }
 
 /// Generate, maybe view and maybe output to a file
