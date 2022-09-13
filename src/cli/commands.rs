@@ -1,3 +1,4 @@
+use super::{functions::generate_until, getdata::parse_into_duration};
 use crate::{
     cal::{calendar_index::CalendarIndex, event::Event},
     cli::{
@@ -7,10 +8,8 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::{Local, Duration};
+use chrono::Local;
 use std::ops::Neg;
-
-use super::{functions::generate_until, getdata::parse_into_duration};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -161,9 +160,9 @@ pub fn set(split_input: &Vec<&str>) {
     };
     let name = match split_input.len() {
         1 => {
-	    print!("Name: ");
-	    get_valid_event_name()
-	},
+            print!("Name: ");
+            get_valid_event_name()
+        }
         2 => split_input[1].to_string(),
         _ => {
             warning(format!(
@@ -511,23 +510,46 @@ pub fn until(split_input: &Vec<&str>) {
 /// Generate and view
 pub fn list(split_input: &Vec<&str>) {
     let index = match CalendarIndex::get() {
-	Ok(i) => i,
-	Err(e) => {
-	    print_err_msg(e, &&CONFIG.index_path);
-	    return
-	}
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
     };
     let path = match index.active_calendar_reference() {
-	Ok(r) => r,
-	Err(e) => {
-	    print_err_msg(e, &String::new());
-	    return
-	}
-    }.path().clone();
-    
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path()
+    .clone();
+
+    let mut span = parse_into_duration(&CONFIG.default_calendar_span);
+
+    let calendar = match index.active_calendar() {
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
+    };
+
+    match split_input.len() {
+        1 => {}
+        2 => {
+            span = parse_into_duration(split_input[1]);
+        }
+        _ => warning(format!(
+            "list: Invalid number of arguments. Expected: 0 or 1. Got: {}",
+            split_input.len()
+        )),
+    }
+    generate_until(calendar, Local::now() + span)
+        .iter()
+        .for_each(|e| println!("{e:?}"))
 }
 
 /// Generate, maybe view and maybe output to a file
-pub fn generate(split_input: &Vec<&str>) {
-    
-}
+pub fn generate(split_input: &Vec<&str>) {}
