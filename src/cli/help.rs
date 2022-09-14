@@ -166,6 +166,26 @@ Currently, the index file is {}.
         "Syntax".bold()
     );
 
+    let raw_doc = format!(
+        "
+{}
+
+Print a raw version of the events in the active calendar that match the arguments passed in.
+If no arguments are passed, print the entire raw calendar.
+
+{}
+> raw
+> raw [{}]...
+> R
+> R [{}]...
+
+",
+        "raw, R".bold(),
+        "Syntax".bold(),
+        "event_name".italic(),
+        "event_name".italic()
+    );
+
     let remove_doc = format!(
         "
 {}
@@ -302,6 +322,7 @@ The list of available commands:
 {}, {} -- print this information or command documentation
 {}, {} -- list events
 {}, {} -- list calendars
+{}, {} -- print a raw calendar
 {}, {} -- remove events
 {}, {} -- remove calendars
 {}, {} -- set the active calendar
@@ -325,6 +346,8 @@ Type \"help\" followed by command name for full documentation.
                 "ls, l".dimmed(),
                 "listcal".bold(),
                 "lc".dimmed(),
+                "raw".bold(),
+                "R".dimmed(),
                 "remove".bold(),
                 "rm, r".dimmed(),
                 "removecal".bold(),
@@ -346,6 +369,7 @@ Type \"help\" followed by command name for full documentation.
             "help" | "h" => println!("{help_doc}"),
             "list" | "l" | "ls" => println!("{list_doc}"),
             "listcal" | "lc" => println!("{listcal_doc}"),
+            "raw" | "R" => println!("{raw_doc}"),
             "remove" | "rm" | "r" => println!("{remove_doc}"),
             "removecal" | "rmcal" | "rc" => println!("{removecal_doc}"),
             "set" | "s" => println!("{set_doc}"),
