@@ -6,7 +6,7 @@ use crate::cli::{
     messages::warning,
 };
 
-use super::commands::{raw, generate};
+use super::commands::{raw, write};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -17,7 +17,6 @@ pub fn parse(input: String) {
         "clear" => clear(&split_input),
         "duration" | "d" => duration(&split_input),
         "edit" | "e" => edit(&split_input),
-	"generate" | "gen" | "g" => generate(&split_input),
         "help" | "h" => print_help(&split_input),
         "list" | "l" | "ls" => list(&split_input),
         "listcal" | "lc" => listcal(&split_input),
@@ -28,6 +27,7 @@ pub fn parse(input: String) {
         "sort" | "S" => sort(&split_input),
         "until" | "u" => until(&split_input),
         "quit" | "q" => std::process::exit(0),
+	"write" | "w" => write(&split_input),
         _ => warning(format!("Unknown command: {}", split_input[0].trim())),
     }
 }

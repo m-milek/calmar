@@ -8,8 +8,8 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::Local;
-use std::ops::Neg;
+use chrono::{Duration, Local};
+use std::{io::Write, ops::Neg};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -167,7 +167,7 @@ pub fn set(split_input: &Vec<&str>) {
         _ => {
             warning(format!(
                 "set: Too many arguments provided. Expected: 1 or 2. Got: {}",
-                split_input.len()
+                split_input.len() - 1
             ));
             return;
         }
@@ -357,7 +357,7 @@ pub fn sort(split_input: &Vec<&str>) {
     if !(1..=3).contains(&split_input.len()) {
         warning(format!(
             "sort: Invalid number of arguments. Expected: 0 or 1. Got: {}",
-            split_input.len()
+            split_input.len() - 1
         ));
         return;
     }
@@ -543,7 +543,7 @@ pub fn list(split_input: &Vec<&str>) {
         }
         _ => warning(format!(
             "list: Invalid number of arguments. Expected: 0 or 1. Got: {}",
-            split_input.len()
+            split_input.len() - 1
         )),
     }
     generate_until(calendar, Local::now() + span)
@@ -551,5 +551,87 @@ pub fn list(split_input: &Vec<&str>) {
         .for_each(|e| println!("{e}"))
 }
 
-/// Generate, maybe view and maybe output to a file
-pub fn generate(split_input: &Vec<&str>) {}
+/// Generate, output to a file
+pub fn write(split_input: &Vec<&str>) {
+    // write filename - default span
+    // write 10h filename
+
+    let filename: String;
+    let span: Duration;
+
+    match split_input.len() {
+        2 => {
+            span = parse_into_duration(&CONFIG.default_calendar_span);
+            filename = split_input[1].to_string();
+        }
+        3 => {
+            span = parse_into_duration(split_input[1]);
+            filename = split_input[2].to_string();
+        }
+        _ => {
+            warning(format!(
+                "write: Invalid number of arguments. Expected: 1 or 2. Got: {}",
+                split_input.len() - 1
+            ));
+            return;
+        }
+    }
+
+    let current_dir = match std::env::current_dir() {
+        Ok(d) => d,
+        Err(e) => {
+            error(format!("Failed to get current directory.\n{e}"));
+            return;
+        }
+    };
+
+    let mut file = match std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(current_dir.join(&filename))
+    {
+        Ok(f) => f,
+        Err(e) => {
+            error(format!(
+                "Failed to create file {}.\n{e}",
+                current_dir.join(filename).display()
+            ));
+            return;
+        }
+    };
+
+    let index = match CalendarIndex::get() {
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
+    };
+    let path = match index.active_calendar_reference() {
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path()
+    .clone();
+
+    let calendar = match index.active_calendar() {
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
+    };
+
+    let gen_events = generate_until(calendar, Local::now() + span);
+
+    gen_events.iter().for_each(|e| {
+        if let Err(e) = writeln!(&mut file, "{e}") {
+            error(format!("Failed to write to file {filename}.\n{e}"));
+        }
+    })
+}
