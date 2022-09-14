@@ -1,10 +1,10 @@
 use crate::{
-    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event},
+    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event, calendar::Calendar},
     cli::{
         commands::default_or_custom_save_path,
         getdata::{
             get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
-            get_start_date, get_start_time, get_valid_event_name,
+            get_start_date, get_start_time, get_valid_event_name, get_repeat,
         },
         messages::{error, print_err_msg, warning},
         repl::get_input,
@@ -12,8 +12,8 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::Duration;
-use std::collections::HashMap;
+use chrono::{Duration, DateTime, Local};
+use std::{collections::HashMap, sync::{Arc, Mutex}, thread};
 use std::path::PathBuf;
 
 /// Create a new event and return it.
@@ -48,6 +48,9 @@ pub fn get_new_event(name: Option<String>) -> Event {
         end_time = end_timedate.time();
     }
 
+    print!("Repeat: ");
+    let repeat = get_duration();
+
     print!("Difficulty: ");
     let difficulty = get_difficulty();
 
@@ -58,6 +61,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
         name,
         start_date.and_time(start_time).unwrap(),
         end_date.and_time(end_time).unwrap(),
+	repeat,
         priority,
         difficulty,
     )
@@ -120,6 +124,7 @@ pub fn edit_event(event_name: &str) {
     // Choose a property to be edited
     let fields = Event::FIELD_NAMES_AS_ARRAY.to_vec();
     let mut fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
+    // Duration is not a struct property, but it still should be easily editable
     fields_list.insert(2, "Duration".to_string());
 
     fields_list
@@ -140,8 +145,8 @@ pub fn edit_event(event_name: &str) {
         2 => {
             println!("1. Start date\n2. Start time\n3. Start datetime");
             let num = select_in_range("Select what to edit", 3);
-            let current_end = *edited_event.end();
-            let current_start = *edited_event.start();
+            let current_end = edited_event.end();
+            let current_start = edited_event.start();
 
             if num == 1 || num == 3 {
                 print!("Start date: ");
@@ -169,14 +174,14 @@ pub fn edit_event(event_name: &str) {
             print!("Duration: ");
             let new_duration = get_duration();
             let start = edited_event.start();
-            edited_event.set_end(&(*start + new_duration));
+            edited_event.set_end(&(start + new_duration));
         }
         // Edit end datetime
         4 => {
             println!("1. End date\n2. End time\n3. End datetime");
             let num: usize = select_in_range("Select what to edit", 3);
-            let mut current_end = *edited_event.end();
-            let current_start = *edited_event.start();
+            let mut current_end = edited_event.end();
+            let current_start = edited_event.start();
 
             if num == 1 || num == 3 {
                 print!("End date: ");
@@ -189,7 +194,7 @@ pub fn edit_event(event_name: &str) {
                 edited_event.set_end(&new_end_date.and_time(current_end.time()).unwrap());
             }
             if num == 2 || num == 3 {
-                current_end = *edited_event.end();
+                current_end = edited_event.end();
                 print!("End time: ");
                 let mut new_end_time = get_end_time(
                     &current_start.date(),
@@ -208,13 +213,18 @@ pub fn edit_event(event_name: &str) {
                 edited_event.set_end(&current_end.date().and_time(new_end_time).unwrap());
             }
         }
+	// Edit repeat
+	5 => {
+	    print!("Repeat: ");
+	    edited_event.set_repeat(&get_repeat())
+	}
         // Edit priority
-        5 => {
+        6 => {
             print!("Priority: ");
             edited_event.set_priority(get_priority())
         }
         // Edit difficulty
-        6 => {
+        7 => {
             print!("Difficulty: ");
             edited_event.set_difficulty(get_difficulty())
         }
@@ -274,3 +284,46 @@ pub fn duration_fmt(duration: Duration) -> String {
         format!("{}d {}h {}m", num_d, num_h, num_m)
     }
 }
+
+
+pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
+
+    let event_vec = Arc::new(Mutex::new(vec![]));
+    let mut threads = vec![];
+    let events = calendar.events().to_vec();
+    
+    for event in events {
+	threads.push(thread::spawn({
+	    let clone = Arc::clone(&event_vec);
+	    move || {
+		let mut temp_vec = vec![];
+		let mut e_to_push = event.to_owned();
+		let mut new_start = e_to_push.start();
+		let mut new_end = new_start + e_to_push.duration();
+		while new_start + e_to_push.repeat() < end {
+		    let mut e = e_to_push.clone();
+		    e.set_end(&new_end);
+		    temp_vec.push(e);
+		    new_start += e_to_push.repeat();
+		    new_end = new_start + e_to_push.duration();
+		    e_to_push.set_start(&new_start);
+		    e_to_push.set_end(&new_end);
+		}
+		let mut v = clone.lock().unwrap();
+		v.append(&mut temp_vec);
+	    }
+	}))
+    }
+    for t in threads {
+    	t.join().unwrap()
+    }
+
+    // get the Vec<Event> out of Arc and Mutex
+    let getter = event_vec.lock().unwrap();
+    let mut out = vec![];
+    for item in &*getter {
+	out.push(item.clone());
+    }
+    out.sort();
+    out
+} 

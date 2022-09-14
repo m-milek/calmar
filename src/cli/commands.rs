@@ -1,3 +1,4 @@
+use super::{functions::generate_until, getdata::parse_into_duration};
 use crate::{
     cal::{calendar_index::CalendarIndex, event::Event},
     cli::{
@@ -7,8 +8,8 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::Local;
-use std::ops::Neg;
+use chrono::{Duration, Local};
+use std::{io::Write, ops::Neg};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -158,12 +159,15 @@ pub fn set(split_input: &Vec<&str>) {
         }
     };
     let name = match split_input.len() {
-        1 => get_valid_event_name(),
+        1 => {
+            print!("Name: ");
+            get_valid_event_name()
+        }
         2 => split_input[1].to_string(),
         _ => {
             warning(format!(
                 "set: Too many arguments provided. Expected: 1 or 2. Got: {}",
-                split_input.len()
+                split_input.len() - 1
             ));
             return;
         }
@@ -174,10 +178,7 @@ pub fn set(split_input: &Vec<&str>) {
     }
 
     match index.number_of_active_calendars() {
-        0 => {
-            warning("No calendars are set as active. Please correct this and retry.".to_string());
-        }
-        1 => {
+        0 | 1 => {
             index.set_active(name);
             if let Err(e) = index.save() {
                 print_err_msg(e, &CONFIG.index_path);
@@ -250,7 +251,7 @@ pub fn edit(split_input: &[&str]) {
 }
 
 /// Display events in the active calendar
-pub fn list(split_input: &[&str]) {
+pub fn raw(split_input: &[&str]) {
     let index = match CalendarIndex::get() {
         Ok(i) => i,
         Err(e) => {
@@ -356,7 +357,7 @@ pub fn sort(split_input: &Vec<&str>) {
     if !(1..=3).contains(&split_input.len()) {
         warning(format!(
             "sort: Invalid number of arguments. Expected: 0 or 1. Got: {}",
-            split_input.len()
+            split_input.len() - 1
         ));
         return;
     }
@@ -370,8 +371,8 @@ pub fn sort(split_input: &Vec<&str>) {
         }
         _ => match split_input[1].trim() {
             "name" => events_std.sort_by_key(|e| e.name().clone()),
-            "start" => events_std.sort_by_key(|e| *e.start()),
-            "end" => events_std.sort_by_key(|e| *e.end()),
+            "start" => events_std.sort_by_key(|e| e.start()),
+            "end" => events_std.sort_by_key(|e| e.end()),
             "priority" => events_std.sort_by_key(|e| e.priority()),
             "difficulty" => events_std.sort_by_key(|e| e.difficulty()),
             _ => {
@@ -439,7 +440,7 @@ pub fn duration(split_input: &Vec<&str>) {
     };
 
     active_calendar.events().iter().for_each(|e| {
-        if name_arr.contains(e.name()) {
+        if name_arr.contains(&e.name()) {
             println!("Duration of {}: {}", e.name(), duration_fmt(e.duration()))
         }
     })
@@ -480,15 +481,15 @@ pub fn until(split_input: &Vec<&str>) {
     };
 
     active_calendar.events().iter().for_each(|e| {
-        if name_arr.contains(e.name()) {
+        if name_arr.contains(&e.name()) {
             let now = Local::now();
-            if now < *e.start() {
-                println!("Until {}: {}", e.name(), duration_fmt(*e.start() - now))
+            if now < e.start() {
+                println!("Until {}: {}", e.name(), duration_fmt(e.start() - now))
             } else {
                 println!(
                     "{} started {} ago",
                     e.name(),
-                    duration_fmt((*e.start() - now).neg())
+                    duration_fmt((e.start() - now).neg())
                 )
             }
         }
@@ -499,9 +500,138 @@ pub fn until(split_input: &Vec<&str>) {
             .events()
             .iter()
             .map(|e| e.name())
-            .any(|x| x == name)
+            .any(|x| x == *name)
         {
             warning(format!("until: No event named {}", name))
         }
     }
+}
+
+/// Generate and view
+pub fn list(split_input: &Vec<&str>) {
+    let index = match CalendarIndex::get() {
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
+    };
+    let path = match index.active_calendar_reference() {
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path()
+    .clone();
+
+    let mut span = parse_into_duration(&CONFIG.default_calendar_span);
+
+    let calendar = match index.active_calendar() {
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
+    };
+
+    match split_input.len() {
+        1 => {}
+        2 => {
+            span = parse_into_duration(split_input[1]);
+        }
+        _ => warning(format!(
+            "list: Invalid number of arguments. Expected: 0 or 1. Got: {}",
+            split_input.len() - 1
+        )),
+    }
+    generate_until(calendar, Local::now() + span)
+        .iter()
+        .for_each(|e| println!("{e}"))
+}
+
+/// Generate, output to a file
+pub fn write(split_input: &Vec<&str>) {
+    // write filename - default span
+    // write 10h filename
+
+    let filename: String;
+    let span: Duration;
+
+    match split_input.len() {
+        2 => {
+            span = parse_into_duration(&CONFIG.default_calendar_span);
+            filename = split_input[1].to_string();
+        }
+        3 => {
+            span = parse_into_duration(split_input[1]);
+            filename = split_input[2].to_string();
+        }
+        _ => {
+            warning(format!(
+                "write: Invalid number of arguments. Expected: 1 or 2. Got: {}",
+                split_input.len() - 1
+            ));
+            return;
+        }
+    }
+
+    let current_dir = match std::env::current_dir() {
+        Ok(d) => d,
+        Err(e) => {
+            error(format!("Failed to get current directory.\n{e}"));
+            return;
+        }
+    };
+
+    let mut file = match std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(current_dir.join(&filename))
+    {
+        Ok(f) => f,
+        Err(e) => {
+            error(format!(
+                "Failed to create file {}.\n{e}",
+                current_dir.join(filename).display()
+            ));
+            return;
+        }
+    };
+
+    let index = match CalendarIndex::get() {
+        Ok(i) => i,
+        Err(e) => {
+            print_err_msg(e, &CONFIG.index_path);
+            return;
+        }
+    };
+    let path = match index.active_calendar_reference() {
+        Ok(r) => r,
+        Err(e) => {
+            print_err_msg(e, &String::new());
+            return;
+        }
+    }
+    .path()
+    .clone();
+
+    let calendar = match index.active_calendar() {
+        Ok(c) => c,
+        Err(e) => {
+            print_err_msg(e, &path);
+            return;
+        }
+    };
+
+    let gen_events = generate_until(calendar, Local::now() + span);
+
+    gen_events.iter().for_each(|e| {
+        if let Err(e) = writeln!(&mut file, "{e}") {
+            error(format!("Failed to write to file {filename}.\n{e}"));
+        }
+    })
 }
