@@ -1,6 +1,5 @@
-use crate::CONFIG;
-use colored::Colorize;
-use std::io::{self, Write};
+use crate::{CONFIG, EDITOR_CONFIG};
+use colored::{ColoredString, Colorize};
 
 /*
 Perfom everything necessary to get clean input from stdin:
@@ -10,19 +9,30 @@ Perfom everything necessary to get clean input from stdin:
 - trim trailing whitespace
  */
 /// Get clean stdin input without trailing spaces and newline
-pub fn get_input() -> String {
-    let mut input = String::new();
-    io::stdout().flush().expect("flush stdout");
-    io::stdin()
-        .read_line(&mut input)
-        .expect("read a line from stdin");
-    input.pop();
-    input.as_str().trim().to_owned()
+pub fn get_input(prompt: &str) -> String {
+    let mut rl = Editor::<()>::with_config(*EDITOR_CONFIG).unwrap();
+    let readline = rl.readline(prompt);
+
+    match readline {
+        Ok(line) => line,
+        Err(ReadlineError::Interrupted) => {
+            println!("CTRL-C");
+            std::process::exit(1);
+        }
+        Err(ReadlineError::Eof) => {
+            println!("EOF");
+            std::process::exit(1);
+        }
+        Err(err) => {
+            println!("Error: {err}");
+            std::process::exit(1);
+        }
+    }
 }
 
 /// Print a prompt as defined in config.json,
 /// add a space at the end.
-fn print_prompt() {
+fn get_prompt() -> ColoredString {
     let prompt_text = &CONFIG.prompt_text;
     let mut prompt = prompt_text.white();
 
@@ -59,20 +69,60 @@ fn print_prompt() {
         _ => "INVALID CONFIG".red().bold(),
     };
 
-    print!("{} ", prompt);
+    prompt
 }
+
+use super::messages::error;
+use rustyline::{
+    error::ReadlineError,
+    Editor
+};
 
 /*
 Continously get input and handle it until the process ends
  */
 pub fn run() {
-    let mut input;
+    let config = rustyline::config::Config::builder()
+        .color_mode(rustyline::ColorMode::Enabled)
+        .history_ignore_dups(true)
+        .build();
+
+    let mut rl = match Editor::<()>::with_config(config) {
+	Ok(editor) => editor,
+	Err(err) => {
+	    error(format!("Failed to construct rustyline::Editor with given config. Should be unreachable and checked beforehand.\n{}", err));
+	    return;
+	}
+    };
+    if rl.load_history("history.txt").is_err() {
+        println!("No previous history");
+    }
+
     loop {
-        print_prompt();
-        input = get_input();
-        match input.as_str() {
-            "" => (),
-            _ => crate::cli::parser::parse(input),
+        let readline = rl.readline(&(get_prompt().to_string() + " "));
+
+        match readline {
+            Ok(line) => match line.as_str() {
+                "" => {}
+                _ => {
+                    rl.add_history_entry(line.as_str());
+                    if let Err(_e) = rl.save_history("history.txt") {
+                        error("Failed to save command to history.\n{e}".to_string());
+                        break;
+                    };
+                    crate::cli::parser::parse(line);
+                }
+            },
+            Err(ReadlineError::Interrupted) => {
+                break;
+            }
+            Err(ReadlineError::Eof) => {
+                break;
+            }
+            Err(err) => {
+                println!("Error: {err}");
+                break;
+            }
         }
     }
 }

@@ -370,7 +370,7 @@ pub fn sort(split_input: &Vec<&str>) {
             println!("Sorted normally");
         }
         _ => match split_input[1].trim() {
-            "name" => events_std.sort_by_key(|e| e.name().clone()),
+            "name" => events_std.sort_by_key(|e| e.name()),
             "start" => events_std.sort_by_key(|e| e.start()),
             "end" => events_std.sort_by_key(|e| e.end()),
             "priority" => events_std.sort_by_key(|e| e.priority()),

@@ -11,8 +11,7 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
     };
 
     loop {
-        print!("{} [{}]: ", prompt, displayed_range);
-        match get_input().parse::<usize>() {
+        match get_input(format!("{} [{}]:", prompt, displayed_range).as_str()).parse::<usize>() {
             Ok(num) => match (1..=max).contains(&num) {
                 true => {
                     return num;
@@ -28,5 +27,8 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
 
 pub fn yesno(prompt: &str) -> bool {
     print!("{}", prompt);
-    matches!(get_input().trim().to_lowercase().as_str(), "yes" | "y")
+    matches!(
+        get_input(prompt).trim().to_lowercase().as_str(),
+        "yes" | "y"
+    )
 }

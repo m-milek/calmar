@@ -5,11 +5,11 @@ use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 Return a valid date
 */
 pub fn get_start_date() -> Date<Local> {
-    let mut input = get_input();
+    let prompt: &str = "Start Date: ";
+    let mut input = get_input(prompt);
     while !validate_date(&input) {
         warning(format!("{input} is not a valid date."));
-        print!("Start date: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_date(input.as_str())
 }
@@ -18,11 +18,11 @@ pub fn get_start_date() -> Date<Local> {
 Return a valid time
 */
 pub fn get_start_time() -> NaiveTime {
-    let mut input = get_input();
+    let prompt: &str = "Start Time: ";
+    let mut input = get_input(prompt);
     while !validate_time(&input) {
         warning(format!("{input} is not a valid time input."));
-        print!("Start time: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_time(input.as_str())
 }
@@ -31,11 +31,11 @@ pub fn get_start_time() -> NaiveTime {
 Return a valid duration
 */
 pub fn get_duration() -> Duration {
-    let mut input = get_input();
+    let prompt: &str = "Duration: ";
+    let mut input = get_input(prompt);
     while !validate_duration(&input) {
         warning(format!("{input} is not a valid duration input"));
-        print!("Duration: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_duration(input.as_str())
 }
@@ -45,12 +45,12 @@ Return a valid date equal or greater than start date
 TODO: Different errors depending on error type (match expression)
 */
 pub fn get_end_date(start_date: &Date<Local>) -> Date<Local> {
-    let mut input = get_input();
+    let prompt: &str = "End Date: ";
+    let mut input = get_input(prompt);
     while !validate_date(&input) || &parse_into_date(&input) < start_date {
         warning(format!("{input} is not a valid date input."));
         // we have to handle errors differently if the second condition is false
-        print!("End date: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_date(input.as_str())
 }
@@ -64,23 +64,23 @@ pub fn get_end_time(
     start_time: &NaiveTime,
     end_date: &Date<Local>,
 ) -> NaiveTime {
-    let mut input = get_input();
+    let prompt: &str = "End Time: ";
+    let mut input = get_input(prompt);
     while !validate_time(&input)
         || ((start_date == end_date) && (&parse_into_time(&input) <= start_time))
     {
         warning(format!("{input} is not a valid time input."));
-        print!("End time: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_time(input.as_str())
 }
 
 pub fn get_repeat() -> Duration {
-    let mut input = get_input();
+    let prompt: &str = "Repeat: ";
+    let mut input = get_input(prompt);
     while !validate_duration(&input) {
         warning(format!("{input} is not a valid duration input"));
-        print!("Repeat: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     parse_into_duration(input.as_str())
 }
@@ -89,11 +89,11 @@ pub fn get_repeat() -> Duration {
 Return a valid difficulty
 */
 pub fn get_difficulty() -> u8 {
-    let mut input = get_input();
+    let prompt: &str = "Difficulty: ";
+    let mut input = get_input(prompt);
     while !validate_difficulty(&input) {
         warning(format!("{input} is not a valid difficulty input."));
-        print!("Difficulty: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     input.parse::<u8>().unwrap()
 }
@@ -102,41 +102,42 @@ pub fn get_difficulty() -> u8 {
 Return a valid priority
 */
 pub fn get_priority() -> u8 {
-    let mut input = get_input();
+    let prompt: &str = "Priority: ";
+    let mut input = get_input(prompt);
     while !validate_priority(&input) {
         warning("Entered priority is not valid.".to_string());
-        print!("Priority: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     input.parse::<u8>().unwrap()
 }
 
 pub fn get_dir_path() -> String {
-    let mut input = get_input();
+    let prompt: &str = "Path: ";
+    let mut input = get_input(prompt);
     while !validate_dir_path(&input) {
         warning(format!("{input} is not a valid directory path"));
-        print!("Path: ");
-        input = get_input();
+        input = get_input(prompt);
     }
     input
 }
 
 pub fn get_valid_calendar_name() -> String {
-    let mut input = get_input();
+    let prompt: &str = "Calendar Name: ";
+    let mut input = get_input(prompt);
     while input.is_empty() {
         warning("Calendar name cannot be an empty string.".to_string());
-        print!("Name: ");
-        input = get_input()
+        input = get_input(prompt);
     }
     input
 }
 
 pub fn get_valid_event_name() -> String {
-    let mut input = get_input();
+    let prompt: &str = "Event Name: ";
+    let mut input = get_input(prompt);
     while input.is_empty() {
         warning("Event name cannot be an empty string".to_string());
-        print!("Name: ");
-        input = get_input();
+        //print!("Name: ");
+        input = get_input(prompt);
     }
     input
 }
