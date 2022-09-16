@@ -28,7 +28,7 @@ impl Config {
             time_format: "HH:MM".to_string(),
             default_path: "/home/michal/.calmar".to_string(),
             index_path: "/home/michal/.calmar".to_string(),
-	    default_calendar_span: "7d".to_string(),
+            default_calendar_span: "7d".to_string(),
             print_success_messages: true,
             print_warning_messages: true,
             print_error_messages: true,

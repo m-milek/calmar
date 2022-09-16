@@ -1,10 +1,13 @@
 use crate::{
-    cal::{calendar_index::CalendarIndex, calendar_ref::CalendarReference, event::Event, calendar::Calendar},
+    cal::{
+        calendar::Calendar, calendar_index::CalendarIndex, calendar_ref::CalendarReference,
+        event::Event,
+    },
     cli::{
         commands::default_or_custom_save_path,
         getdata::{
             get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
-            get_start_date, get_start_time, get_valid_event_name, get_repeat,
+            get_repeat, get_start_date, get_start_time, get_valid_event_name,
         },
         messages::{error, print_err_msg, warning},
         repl::get_input,
@@ -12,35 +15,32 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::{Duration, DateTime, Local};
-use std::{collections::HashMap, sync::{Arc, Mutex}, thread};
+use chrono::{DateTime, Duration, Local};
 use std::path::PathBuf;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    thread,
+};
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
     let name = match name {
         Some(name) => name,
-        None => {
-            print!("Name: ");
-            get_valid_event_name()
-        }
+        None => get_valid_event_name(),
     };
 
-    print!("Start date: ");
     let start_date = get_start_date();
 
-    print!("Start time: ");
     let start_time = get_start_time();
 
-    print!("Duration: ");
     let duration = get_duration();
 
     let end_date;
     let end_time;
     if duration.is_zero() {
-        print!("End date: ");
         end_date = get_end_date(&start_date);
-        print!("End time: ");
+
         end_time = get_end_time(&start_date, &start_time, &end_date);
     } else {
         let end_timedate = start_date.and_time(start_time).unwrap() + duration;
@@ -48,20 +48,17 @@ pub fn get_new_event(name: Option<String>) -> Event {
         end_time = end_timedate.time();
     }
 
-    print!("Repeat: ");
-    let repeat = get_duration();
+    let repeat = get_repeat();
 
-    print!("Difficulty: ");
     let difficulty = get_difficulty();
 
-    print!("Priority: ");
     let priority = get_priority();
 
     Event::new(
         name,
         start_date.and_time(start_time).unwrap(),
         end_date.and_time(end_time).unwrap(),
-	repeat,
+        repeat,
         priority,
         difficulty,
     )
@@ -213,11 +210,11 @@ pub fn edit_event(event_name: &str) {
                 edited_event.set_end(&current_end.date().and_time(new_end_time).unwrap());
             }
         }
-	// Edit repeat
-	5 => {
-	    print!("Repeat: ");
-	    edited_event.set_repeat(&get_repeat())
-	}
+        // Edit repeat
+        5 => {
+            print!("Repeat: ");
+            edited_event.set_repeat(&get_repeat())
+        }
         // Edit priority
         6 => {
             print!("Priority: ");
@@ -240,10 +237,7 @@ pub fn edit_event(event_name: &str) {
 pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let name = match name {
         Some(name) => name,
-        None => {
-            print!("Name: ");
-            get_input()
-        }
+        None => get_input("Calendar Name: "),
     };
 
     print!("Path: ");
@@ -285,45 +279,43 @@ pub fn duration_fmt(duration: Duration) -> String {
     }
 }
 
-
 pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
-
     let event_vec = Arc::new(Mutex::new(vec![]));
     let mut threads = vec![];
     let events = calendar.events().to_vec();
-    
+
     for event in events {
-	threads.push(thread::spawn({
-	    let clone = Arc::clone(&event_vec);
-	    move || {
-		let mut temp_vec = vec![];
-		let mut e_to_push = event.to_owned();
-		let mut new_start = e_to_push.start();
-		let mut new_end = new_start + e_to_push.duration();
-		while new_start + e_to_push.repeat() < end {
-		    let mut e = e_to_push.clone();
-		    e.set_end(&new_end);
-		    temp_vec.push(e);
-		    new_start += e_to_push.repeat();
-		    new_end = new_start + e_to_push.duration();
-		    e_to_push.set_start(&new_start);
-		    e_to_push.set_end(&new_end);
-		}
-		let mut v = clone.lock().unwrap();
-		v.append(&mut temp_vec);
-	    }
-	}))
+        threads.push(thread::spawn({
+            let clone = Arc::clone(&event_vec);
+            move || {
+                let mut temp_vec = vec![];
+                let mut e_to_push = event.to_owned();
+                let mut new_start = e_to_push.start();
+                let mut new_end = new_start + e_to_push.duration();
+                while new_start + e_to_push.repeat() < end {
+                    let mut e = e_to_push.clone();
+                    e.set_end(&new_end);
+                    temp_vec.push(e);
+                    new_start += e_to_push.repeat();
+                    new_end = new_start + e_to_push.duration();
+                    e_to_push.set_start(&new_start);
+                    e_to_push.set_end(&new_end);
+                }
+                let mut v = clone.lock().unwrap();
+                v.append(&mut temp_vec);
+            }
+        }))
     }
     for t in threads {
-    	t.join().unwrap()
+        t.join().unwrap()
     }
 
     // get the Vec<Event> out of Arc and Mutex
     let getter = event_vec.lock().unwrap();
     let mut out = vec![];
     for item in &*getter {
-	out.push(item.clone());
+        out.push(item.clone());
     }
     out.sort();
     out
-} 
+}

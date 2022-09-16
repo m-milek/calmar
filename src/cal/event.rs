@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use std::fmt::{Display, Formatter, self};
+use std::fmt::{self, Display, Formatter};
 
 use chrono::{DateTime, Duration, Local};
 use serde_derive::{Deserialize, Serialize};
@@ -35,8 +35,16 @@ impl Ord for Event {
 
 impl Display for Event {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-	write!(f, "Name: {} | Start: {} | End: {} | Repeat: {} | Priority: {} | Difficulty: {}",
-	self.name, self.start, self.end, self.repeat(), self.priority, self.difficulty)
+        write!(
+            f,
+            "Name: {} | Start: {} | End: {} | Repeat: {} | Priority: {} | Difficulty: {}",
+            self.name,
+            self.start,
+            self.end,
+            self.repeat(),
+            self.priority,
+            self.difficulty
+        )
     }
 }
 
@@ -69,7 +77,7 @@ impl Event {
         self.end
     }
     pub fn repeat(&self) -> Duration {
-	self.repeat
+        self.repeat
     }
     pub fn priority(&self) -> u8 {
         self.priority
@@ -92,7 +100,7 @@ impl Event {
         self.end = *new_end
     }
     pub fn set_repeat(&mut self, d: &Duration) {
-	self.repeat = *d
+        self.repeat = *d
     }
     pub fn set_priority(&mut self, p: u8) {
         self.priority = p

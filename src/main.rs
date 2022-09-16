@@ -24,6 +24,10 @@ use lazy_static::lazy_static;
 
 lazy_static! {
     pub static ref CONFIG: Config = get_config();
+    pub static ref EDITOR_CONFIG: rustyline::Config = rustyline::config::Config::builder()
+        .color_mode(rustyline::ColorMode::Enabled)
+        .history_ignore_dups(true)
+        .build();
 }
 
 fn main() {
