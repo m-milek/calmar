@@ -23,6 +23,15 @@ macro_rules! active_calendar_reference {
                 return;
             }
         }
+    };
+    ($expression:expr) => {
+        match $expression.active_calendar_reference() {
+            Ok(r) => r,
+            Err(e) => {
+                $crate::cli::messages::print_err_msg(e, &String::new());
+                return;
+            }
+        }
     }
 }
 
@@ -31,6 +40,15 @@ macro_rules! active_calendar_reference {
 macro_rules! active_calendar {
     () => {
         match calendar_index!().active_calendar() {
+            Ok(c) => c,
+            Err(e) => {
+                $crate::cli::messages::print_err_msg(e, active_calendar_reference!().path());
+                return;
+            }
+        }
+    };
+    ($expression:expr) => {
+        match $expression.active_calendar() {
             Ok(c) => c,
             Err(e) => {
                 $crate::cli::messages::print_err_msg(e, active_calendar_reference!().path());
