@@ -21,6 +21,7 @@ mod cli {
 }
 use crate::cli::config::{get_config, Config};
 use crate::cli::repl;
+use cli::help::print_startup_message;
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -32,6 +33,7 @@ lazy_static! {
 }
 
 fn main() {
+	print_startup_message();
     repl::run();
     std::process::exit(0);
 }

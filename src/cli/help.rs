@@ -1,5 +1,23 @@
-use crate::{cli::messages::warning, CONFIG};
+use crate::{cli::messages::warning, CONFIG, EDITOR_CONFIG};
 use colored::*;
+
+pub fn print_startup_message() {
+	let str = format!(
+		"{}
+Copyright (C) 2022 Michał Miłek & Artur Gulik.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+To report issues, please see:
+<https://gitlab.com/calmar-team/calmar/-/issues>
+Find the Calmar documentation and other helpful resources at:
+    <https://gitlab.com/calmar-team/calmar/-/wikis/home>
+
+For help, type \"help\".",
+		"Calmar v0.9.0".purple().bold()
+	);
+	println!("{str}");
+}
 
 pub fn print_help(split_input: &Vec<&str>) {
     let add_doc = format!(
@@ -308,6 +326,28 @@ Quit the program.
         "Syntax".bold()
     );
 
+	let write_doc = format!(
+		"
+{}
+
+Generate a calendar for a given duration and write it to a new file.
+
+{}
+> write {}
+> write {} {}
+> w {}
+> w {} {}
+",
+		"write, w".bold(),
+		"Syntax".bold(),
+		"filename".italic(),
+		"duration".italic(),
+		"filename".italic(),
+		"filename".italic(),
+		"duration".italic(),
+		"filename".italic(),
+	);
+
     match split_input.len() {
         1 => {
             println!(
@@ -328,8 +368,15 @@ The list of available commands:
 {}, {} -- set the active calendar
 {}, {} -- sort events
 {}, {} -- exit the program
+{}, {} -- write calendar to a file
 
 Type \"help\" followed by command name for full documentation.
+
+Your current keymap is \"{:#?}\".
+
+Keyboard shortcut lists:
+- Emacs: {}
+- vi: {}
         ",
                 "add".bold(),
                 "a".dimmed(),
@@ -357,7 +404,12 @@ Type \"help\" followed by command name for full documentation.
                 "sort".bold(),
                 "S".dimmed(),
                 "quit".bold(),
-                "q".dimmed()
+                "q".dimmed(),
+				"write".bold(),
+				"w".dimmed(),
+				EDITOR_CONFIG.edit_mode(),
+				"https://catonmat.net/ftp/readline-emacs-editing-mode-cheat-sheet.pdf",
+				"https://catonmat.net/ftp/bash-vi-editing-mode-cheat-sheet.pdf"
             );
         }
         2 => match split_input[1] {
@@ -375,6 +427,7 @@ Type \"help\" followed by command name for full documentation.
             "set" | "s" => println!("{set_doc}"),
             "sort" | "S" => println!("{sort_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
+			"write" | "w" => println!("{write_doc}"),
             _ => warning(format!(
                 "help: No documentation for command \"{}\"",
                 split_input[1]
