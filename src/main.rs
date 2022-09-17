@@ -4,6 +4,7 @@ mod cal {
     pub mod calendar_ref;
     pub mod calmar_error;
     pub mod event;
+	pub mod macros;
 }
 mod cli {
     pub mod commands;

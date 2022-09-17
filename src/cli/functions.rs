@@ -1,6 +1,6 @@
 use crate::{
     cal::{
-        calendar::Calendar, calendar_index::CalendarIndex, calendar_ref::CalendarReference,
+        calendar::Calendar, calendar_ref::CalendarReference,
         event::Event,
     },
     cli::{
@@ -13,7 +13,7 @@ use crate::{
         repl::get_input,
         util::{select_in_range, uppercase_first_letter},
     },
-    CONFIG,
+    CONFIG, active_calendar, calendar_index, active_calendar_reference
 };
 use chrono::{DateTime, Duration, Local};
 use std::path::PathBuf;
@@ -65,31 +65,9 @@ pub fn get_new_event(name: Option<String>) -> Event {
 }
 
 pub fn edit_event(event_name: &str) {
-    let index = match CalendarIndex::get() {
-        Ok(i) => i,
-        Err(e) => {
-            print_err_msg(e, &CONFIG.index_path);
-            return;
-        }
-    };
-
-    let active_ref = match index.active_calendar_reference() {
-        Ok(r) => r,
-        Err(e) => {
-            print_err_msg(e, &String::new());
-            return;
-        }
-    };
-    let path = active_ref.path();
-
-    let mut active_calendar = match index.active_calendar() {
-        Ok(i) => i,
-        Err(e) => {
-            print_err_msg(e, path);
-            return;
-        }
-    };
-
+	
+    let path = active_calendar_reference!().path().clone();
+    let mut active_calendar = active_calendar!();
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());
 
     let mut i = 0;
@@ -228,8 +206,8 @@ pub fn edit_event(event_name: &str) {
         _ => panic!("Impossible"),
     }
 
-    if let Err(e) = active_calendar.save(path) {
-        print_err_msg(e, path)
+    if let Err(e) = active_calendar.save(&path) {
+        print_err_msg(e, &path)
     }
 }
 
