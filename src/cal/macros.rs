@@ -1,4 +1,4 @@
-
+/// Returns the calendar index. On error, prints an error message from cli::messages::print_err_msg and returns the function
 #[macro_export]
 macro_rules! calendar_index {
     () => {
@@ -12,6 +12,7 @@ macro_rules! calendar_index {
     }
 }
 
+/// Returns the active calendar reference. On error, prints an error message from cli::messages::print_err_msg and returns the function
 #[macro_export]
 macro_rules! active_calendar_reference {
     () => {
@@ -25,6 +26,7 @@ macro_rules! active_calendar_reference {
     }
 }
 
+/// Returns the active calendar. On error, prints an error message from cli::messages::print_err_msg and returns the function
 #[macro_export]
 macro_rules! active_calendar {
     () => {
@@ -38,24 +40,3 @@ macro_rules! active_calendar {
     }
 }
 
-// {
-// 	use crate::cal::calendar_index::CalendarIndex;
-
-//         let path = match index.active_calendar_reference() {
-//             Ok(r) => r,
-//             Err(e) => {
-//                 print_err_msg(e, &String::new());
-//                 return;
-//             }
-//         }
-//         .path()
-//         .clone();
-
-//         let active = match index.active_calendar() {
-//             Ok(c) => c,
-//             Err(e) => {
-//                 print_err_msg(e, &path);
-//                 return;
-//             }
-//         };
-// }
