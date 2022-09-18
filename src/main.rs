@@ -4,7 +4,7 @@ mod cal {
     pub mod calendar_ref;
     pub mod calmar_error;
     pub mod event;
-	pub mod macros;
+    pub mod macros;
 }
 mod cli {
     pub mod commands;
@@ -33,7 +33,7 @@ lazy_static! {
 }
 
 fn main() {
-	print_startup_message();
+    print_startup_message();
     repl::run();
     std::process::exit(0);
 }

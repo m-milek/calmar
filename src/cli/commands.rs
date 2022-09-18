@@ -1,12 +1,14 @@
 use super::{functions::generate_until, getdata::parse_into_duration};
 use crate::{
+    active_calendar, active_calendar_reference,
     cal::event::Event,
+    calendar_index,
     cli::{
         functions::{duration_fmt, edit_event, get_new_calendar_reference, get_new_event},
         getdata::{get_valid_calendar_name, get_valid_event_name},
         messages::{error, print_err_msg, success, warning},
     },
-    CONFIG, calendar_index, active_calendar, active_calendar_reference,
+    CONFIG,
 };
 use chrono::{Duration, Local};
 use std::{io::Write, ops::Neg};
@@ -56,9 +58,8 @@ pub fn cal(split_input: &Vec<&str>) {
 
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
-	
     let mut index = calendar_index!();
-	
+
     let name = match split_input.len() {
         1 => get_valid_calendar_name(),
         2 => split_input[1].to_string(),
@@ -104,8 +105,8 @@ pub fn remove(split_input: &Vec<&str>) {
         }
     };
 
-	let mut active_calendar = active_calendar!();
-	let path = active_calendar_reference!().path().clone();
+    let mut active_calendar = active_calendar!();
+    let path = active_calendar_reference!().path().clone();
 
     active_calendar
         .events_mut()
@@ -233,7 +234,7 @@ pub fn listcal(split_input: &Vec<&str>) {
 }
 
 pub fn sort(split_input: &Vec<&str>) {
-	let index = calendar_index!();
+    let index = calendar_index!();
     let mut active_calendar = active_calendar!(index);
     let active_calendar_reference = active_calendar_reference!(index);
 
@@ -289,7 +290,6 @@ pub fn sort(split_input: &Vec<&str>) {
 }
 
 pub fn duration(split_input: &Vec<&str>) {
-	
     let active_calendar = active_calendar!();
 
     let name_arr = match split_input.len() {
@@ -308,7 +308,6 @@ pub fn duration(split_input: &Vec<&str>) {
 }
 
 pub fn until(split_input: &Vec<&str>) {
-	
     let active_calendar = active_calendar!();
 
     let name_arr = match split_input.len() {
@@ -348,7 +347,6 @@ pub fn until(split_input: &Vec<&str>) {
 
 /// Generate and view
 pub fn list(split_input: &Vec<&str>) {
-	
     let mut span = parse_into_duration(&CONFIG.default_calendar_span);
 
     let active_calendar = active_calendar!();

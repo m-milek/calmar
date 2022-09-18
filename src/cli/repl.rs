@@ -73,10 +73,7 @@ fn get_prompt() -> ColoredString {
 }
 
 use super::messages::error;
-use rustyline::{
-    error::ReadlineError,
-    Editor
-};
+use rustyline::{error::ReadlineError, Editor};
 
 /*
 Continously get input and handle it until the process ends
@@ -88,11 +85,11 @@ pub fn run() {
         .build();
 
     let mut rl = match Editor::<()>::with_config(config) {
-	Ok(editor) => editor,
-	Err(err) => {
-	    error(format!("Failed to construct rustyline::Editor with given config. Should be unreachable and checked beforehand.\n{}", err));
-	    return;
-	}
+        Ok(editor) => editor,
+        Err(err) => {
+            error(format!("Failed to construct rustyline::Editor with given config. Should be unreachable and checked beforehand.\n{}", err));
+            return;
+        }
     };
     if rl.load_history("history.txt").is_err() {
         println!("No previous history");

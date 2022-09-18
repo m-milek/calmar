@@ -1,8 +1,7 @@
 use crate::{
-    cal::{
-        calendar::Calendar, calendar_ref::CalendarReference,
-        event::Event,
-    },
+    active_calendar, active_calendar_reference,
+    cal::{calendar::Calendar, calendar_ref::CalendarReference, event::Event},
+    calendar_index,
     cli::{
         commands::default_or_custom_save_path,
         getdata::{
@@ -13,7 +12,7 @@ use crate::{
         repl::get_input,
         util::{select_in_range, uppercase_first_letter},
     },
-    CONFIG, active_calendar, calendar_index, active_calendar_reference
+    CONFIG,
 };
 use chrono::{DateTime, Duration, Local};
 use std::path::PathBuf;
@@ -65,7 +64,6 @@ pub fn get_new_event(name: Option<String>) -> Event {
 }
 
 pub fn edit_event(event_name: &str) {
-	
     let path = active_calendar_reference!().path().clone();
     let mut active_calendar = active_calendar!();
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());

@@ -9,7 +9,7 @@ macro_rules! calendar_index {
                 return;
             }
         }
-    }
+    };
 }
 
 /// Returns the active calendar reference. On error, prints an error message from cli::messages::print_err_msg and returns the function
@@ -32,7 +32,7 @@ macro_rules! active_calendar_reference {
                 return;
             }
         }
-    }
+    };
 }
 
 /// Returns the active calendar. On error, prints an error message from cli::messages::print_err_msg and returns the function
@@ -55,6 +55,5 @@ macro_rules! active_calendar {
                 return;
             }
         }
-    }
+    };
 }
-
