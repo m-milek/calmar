@@ -84,13 +84,6 @@ pub fn removecal(split_input: &Vec<&str>) {
     success("Successfully removed calendar".to_string());
 }
 
-pub fn default_or_custom_save_path(input: String) -> String {
-    if input.trim().is_empty() {
-        return CONFIG.default_path.clone();
-    }
-    input
-}
-
 /// Delete an event from the active calendar
 pub fn remove(split_input: &Vec<&str>) {
     let name = match split_input.len() {

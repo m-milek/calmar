@@ -1,4 +1,5 @@
 use crate::cli::{messages::warning, repl::get_input};
+use crate::CONFIG;
 
 pub fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
@@ -31,4 +32,11 @@ pub fn yesno(prompt: &str) -> bool {
         get_input(prompt).trim().to_lowercase().as_str(),
         "yes" | "y"
     )
+}
+
+pub fn default_or_custom_save_path(input: String) -> String {
+    if input.trim().is_empty() {
+        return CONFIG.default_path.clone();
+    }
+    input
 }
