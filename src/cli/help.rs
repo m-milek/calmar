@@ -19,6 +19,18 @@ For help, type \"help\".",
     println!("{str}");
 }
 
+pub fn print_version() {
+    let str = format!(
+	"{}
+Copyright (C) 2022 Michał Miłek & Artur Gulik.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.",
+	"Calmar v0.9.0".purple().bold()
+    );
+    println!("{str}");
+}
+
 pub fn print_help(split_input: &Vec<&str>) {
     let add_doc = format!(
         "
@@ -352,6 +364,19 @@ Quit the program.
         "Syntax".bold()
     );
 
+    let version_doc = format!(
+	"
+{}
+
+Print version information.
+
+{}
+> version
+",
+	"version, v".bold(),
+	"Syntax".bold()
+    );
+
     let write_doc = format!(
         "
 {}
@@ -396,6 +421,7 @@ The list of available commands:
 {}, {} -- sort events
 {}, {} -- print current time
 {}, {} -- exit the program
+{}, {} -- print version information
 {}, {} -- write calendar to a file
 
 Type \"help\" followed by command name for full documentation.
@@ -437,6 +463,8 @@ Keyboard shortcut lists:
 		"T".dimmed(),
                 "quit".bold(),
                 "q".dimmed(),
+		"version".bold(),
+		"v".dimmed(),
                 "write".bold(),
                 "w".dimmed(),
                 EDITOR_CONFIG.edit_mode(),
@@ -461,6 +489,7 @@ Keyboard shortcut lists:
             "sort" | "S" => println!("{sort_doc}"),
 	    "time" | "T" => println!("{time_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
+	    "version" | "v" => println!("{version_doc}"),
             "write" | "w" => println!("{write_doc}"),
             _ => warning(format!(
                 "help: No documentation for command \"{}\"",
