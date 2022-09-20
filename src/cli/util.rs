@@ -1,3 +1,5 @@
+use chrono::{DateTime, Local, Timelike};
+
 use crate::cli::{messages::warning, repl::get_input};
 use crate::CONFIG;
 
@@ -80,4 +82,13 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
         }
     }
     column[v1.len()]
+}
+
+pub fn round_to_full_day(d: DateTime<Local>) -> DateTime<Local> {
+    d.with_hour(23)
+	.unwrap()
+	.with_minute(59)
+	.unwrap()
+	.with_second(59)
+	.unwrap()
 }

@@ -1,4 +1,4 @@
-use super::{functions::generate_until, getdata::parse_into_duration};
+use super::{functions::generate_until, getdata::parse_into_duration, util::round_to_full_day};
 use crate::{
     active_calendar, active_calendar_reference,
     cal::event::Event,
@@ -354,7 +354,20 @@ pub fn list(split_input: &Vec<&str>) {
             split_input.len() - 1
         )),
     }
-    generate_until(active_calendar, Local::now() + span)
+
+    
+    let re_days = regex::Regex::new(
+	"^[0-9]+(d| +d|days| +days)$"
+    ).unwrap();
+    
+    // if the user typed something like '3d', round the duration
+    // to full days for convenience
+    let mut end_date = Local::now() + span;
+    if split_input.len() == 2 && re_days.is_match(split_input[1]) {
+	end_date = round_to_full_day(end_date);
+    }
+    
+    generate_until(active_calendar, end_date)
         .iter()
         .for_each(|e| println!("{e}"))
 }
@@ -410,9 +423,20 @@ pub fn write(split_input: &Vec<&str>) {
         }
     };
 
-    let calendar = active_calendar!();
+    let re_days = regex::Regex::new(
+	"^[0-9]+(d| +d|days| +days)$"
+    ).unwrap();
 
-    let gen_events = generate_until(calendar, Local::now() + span);
+    // if the user typed something like '3d', round the duration
+    // to full days for convenience
+    let mut end_date = Local::now() + span;
+    if re_days.is_match(split_input[1]) {
+	end_date = round_to_full_day(end_date);
+    }
+
+    let calendar = active_calendar!();
+    
+    let gen_events = generate_until(calendar, end_date);
 
     gen_events.iter().for_each(|e| {
         if let Err(e) = writeln!(&mut file, "{e}") {
