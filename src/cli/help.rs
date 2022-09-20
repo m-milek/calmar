@@ -80,6 +80,19 @@ Defined in {}
         "src/cli/commands.rs".italic()
     );
 
+    let date_doc = format!(
+	"
+{}
+
+Print current date.
+
+{}
+> date
+",
+	"date, D".bold(),
+	"Syntax".bold()
+    );
+
     let duration_doc = format!(
         "
 {}
@@ -312,6 +325,19 @@ Defined in {}
         "src/cli/commands.rs".italic()
     );
 
+    let time_doc = format!(
+	"
+{}
+
+Print current time.
+
+{}
+> time
+",
+	"time, T".bold(),
+	"Syntax".bold()
+    );
+
     let quit_doc = format!(
         "
 {}
@@ -357,6 +383,7 @@ The list of available commands:
 {}, {} -- add an event
 {}, {} -- add a calendar
 {} -- clear the screen
+{}, {} -- print current date
 {}, {} -- print the duration of an event
 {}, {} -- edit an event
 {}, {} -- print this information or command documentation
@@ -367,6 +394,7 @@ The list of available commands:
 {}, {} -- remove calendars
 {}, {} -- set the active calendar
 {}, {} -- sort events
+{}, {} -- print current time
 {}, {} -- exit the program
 {}, {} -- write calendar to a file
 
@@ -383,6 +411,8 @@ Keyboard shortcut lists:
                 "cal".bold(),
                 "c".dimmed(),
                 "clear".bold(),
+		"date".bold(),
+		"D".dimmed(),
                 "duration".bold(),
                 "d".dimmed(),
                 "edit".bold(),
@@ -403,6 +433,8 @@ Keyboard shortcut lists:
                 "s".dimmed(),
                 "sort".bold(),
                 "S".dimmed(),
+		"time".bold(),
+		"T".dimmed(),
                 "quit".bold(),
                 "q".dimmed(),
                 "write".bold(),
@@ -416,6 +448,7 @@ Keyboard shortcut lists:
             "add" | "a" => println!("{add_doc}"),
             "cal" | "c" => println!("{cal_doc}"),
             "clear" => println!("{clear_doc}"),
+	    "date" | "D" => println!("{date_doc}"),
             "duration" | "d" => println!("{duration_doc}"),
             "edit" | "e" => println!("{edit_doc}"),
             "help" | "h" => println!("{help_doc}"),
@@ -426,6 +459,7 @@ Keyboard shortcut lists:
             "removecal" | "rmcal" | "rc" => println!("{removecal_doc}"),
             "set" | "s" => println!("{set_doc}"),
             "sort" | "S" => println!("{sort_doc}"),
+	    "time" | "T" => println!("{time_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
             "write" | "w" => println!("{write_doc}"),
             _ => warning(format!(
