@@ -444,3 +444,11 @@ pub fn write(split_input: &Vec<&str>) {
         }
     })
 }
+
+pub fn date() {
+    println!("{}", Local::now().date_naive())
+}
+
+pub fn time() {
+    println!("{}", Local::now().time().format("%H:%M:%S").to_string())
+}
