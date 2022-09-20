@@ -273,7 +273,9 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
                 while new_start + e_to_push.repeat() < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-                    temp_vec.push(e);
+		    if e.start() >= Local::now() {
+			temp_vec.push(e);
+		    }
                     new_start += e_to_push.repeat();
                     new_end = new_start + e_to_push.duration();
                     e_to_push.set_start(&new_start);
@@ -318,7 +320,7 @@ pub fn handle_unknown_command(s: &str) {
 	"write"
     ];
 
-    let mut best_match: &str = "not found";
+    let mut best_match: &str = "not found"; // this never gets printed
     let mut min_distance: usize = s.len();
 
     // Find the best match among commands based on edit distance
