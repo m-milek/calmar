@@ -40,3 +40,44 @@ pub fn default_or_custom_save_path(input: String) -> String {
     }
     input
 }
+
+pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
+    let v1: Vec<char> = s1.chars().collect();
+    let v2: Vec<char> = s2.chars().collect();
+
+    if v1.len() == 0 {
+        return v2.len();
+    }
+    if !v2.len() == 0 {
+        return v1.len();
+    }
+
+    fn min3<T: Ord>(a: T, b: T, c: T) -> T {
+        use std::cmp::min;
+        min(a, min(b, c))
+    }
+
+    fn delta(x: char, y: char) -> usize {
+        if x == y {
+            0
+        } else {
+            1
+        }
+    }
+
+    let mut column: Vec<usize> = (0..v1.len() + 1).collect();
+    for x in 1..v2.len() + 1 {
+        column[0] = x;
+        let mut lastdiag = x - 1;
+        for y in 1..v1.len() + 1 {
+            let olddiag = column[y];
+            column[y] = min3(
+                column[y] + 1,
+                column[y - 1] + 1,
+                lastdiag + delta(v1[y - 1], v2[x - 1]),
+            );
+	    lastdiag = olddiag;
+        }
+    }
+    column[v1.len()]
+}

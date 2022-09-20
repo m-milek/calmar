@@ -22,6 +22,8 @@ use std::{
     thread,
 };
 
+use super::util::levenshtein_distance;
+
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
     let name = match name {
@@ -294,4 +296,45 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
     }
     out.sort();
     out
+}
+
+pub fn handle_unknown_command(s: &str) {
+    let command_list = [
+	"add",
+	"cal",
+	"clear",
+	"duration",
+	"edit",
+	"help",
+	"list",
+	"listcal",
+	"raw",
+	"remove",
+	"removecal",
+	"set",
+	"sort",
+	"until",
+	"quit",
+	"write"
+    ];
+
+    let mut best_match: &str = "not found";
+    let mut min_distance: usize = s.len();
+
+    // Find the best match among commands based on edit distance
+    for command in command_list {
+	let distance = levenshtein_distance(s, command);
+	if distance < min_distance {
+	    best_match = command;
+	    min_distance = distance;
+	}
+    }
+
+    // If the match would be somewhat helpful
+    // (distance has to be small, hence 0.8 multiplier) print the suggestion
+    if (min_distance as f32) < (s.len() as f32 * 0.8) {
+	warning(format!("Unknown command: {}. Did you mean '{}'?", s.trim(), best_match));
+	return
+    }
+    warning(format!("Unknown command: {}", s.trim()))
 }

@@ -3,10 +3,9 @@ use crate::cli::{
         add, cal, clear, duration, edit, list, listcal, remove, removecal, set, sort, until,
     },
     help::print_help,
-    messages::warning,
 };
 
-use super::commands::{raw, write};
+use super::{commands::{raw, write}, functions::handle_unknown_command};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -28,6 +27,6 @@ pub fn parse(input: String) {
         "until" | "u" => until(&split_input),
         "quit" | "q" => std::process::exit(0),
         "write" | "w" => write(&split_input),
-        _ => warning(format!("Unknown command: {}", split_input[0].trim())),
+        _ => handle_unknown_command(split_input[0])
     }
 }
