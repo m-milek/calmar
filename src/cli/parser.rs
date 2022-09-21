@@ -5,7 +5,7 @@ use crate::cli::{
     help::print_help,
 };
 
-use super::{commands::{raw, write, date, time}, functions::handle_unknown_command, help::print_version};
+use super::{commands::{raw, write, date, time, update}, functions::handle_unknown_command, help::print_version};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -27,6 +27,7 @@ pub fn parse(input: String) {
         "sort" | "S" => sort(&split_input),
 	"time" | "T" => time(),
         "until" | "u" => until(&split_input),
+	"update" | "U" => update(),
         "quit" | "q" => std::process::exit(0),
 	"version" | "v" => print_version(),
         "write" | "w" => write(&split_input),

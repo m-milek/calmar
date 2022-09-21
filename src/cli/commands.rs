@@ -4,7 +4,7 @@ use crate::{
     cal::event::Event,
     calendar_index,
     cli::{
-        functions::{duration_fmt, edit_event, get_new_calendar_reference, get_new_event},
+        functions::{duration_fmt, edit_event, get_new_calendar_reference, get_new_event, closest_occurence_start},
         getdata::{get_valid_calendar_name, get_valid_event_name},
         messages::{error, print_err_msg, success, warning},
     },
@@ -451,4 +451,30 @@ pub fn date() {
 
 pub fn time() {
     println!("{}", Local::now().time().format("%H:%M:%S").to_string())
+}
+
+pub fn update() {
+    let index = calendar_index!();
+    let mut active_calendar = active_calendar!(index);
+    let path = active_calendar_reference!(index).path().clone();
+    let now = Local::now();
+    
+    // Set time of recurring events to their nearest occurence
+    for event in active_calendar.events_mut() {
+	if !event.repeat().is_zero() {
+	    let new_start = closest_occurence_start(&event);
+	    event.set_start(&new_start);
+	}
+    }
+    
+    // retain only events that are recurring or they will end in the future.
+    // this retains events currently happening
+    active_calendar.events_mut().retain(|e| {
+	!e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero())
+    });
+
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, &path);
+	return;
+    }
 }

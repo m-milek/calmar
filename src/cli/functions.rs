@@ -266,6 +266,12 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
         threads.push(thread::spawn({
             let clone = Arc::clone(&event_vec);
             move || {
+		// If the event is not recurring, just push its only occurrence and return
+		if event.repeat().is_zero() {
+		    let mut v = clone.lock().unwrap();
+		    v.push(event);
+		    return;
+		}
                 let mut temp_vec = vec![];
                 let mut e_to_push = event.to_owned();
                 let mut new_start = e_to_push.start();
@@ -339,4 +345,25 @@ pub fn handle_unknown_command(s: &str) {
 	return
     }
     warning(format!("Unknown command: {}", s.trim()))
+}
+
+pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
+    // Searches for the closest occurence of an event.
+    // if the event is currently happening, return start datetime of the current occurence.
+    // if it's not, return start datetime of the next occurence
+    
+    let mut start = event.start();
+    let now = Local::now();
+
+    let is_happenning = |event: &Event| {
+	event.start() < now && event.start() + event.duration() > now
+    };
+    
+    while start < now {
+	start += event.repeat();
+    }
+    if is_happenning(&event) {
+	start -= event.repeat()
+    }
+    start
 }
