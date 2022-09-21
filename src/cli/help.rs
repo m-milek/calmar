@@ -465,8 +465,8 @@ Type \"help\" followed by command name for full documentation.
 Your current keymap is \"{:#?}\".
 
 Keyboard shortcut lists:
-- Emacs: {}
-- vi: {}
+- Emacs: https://catonmat.net/ftp/readline-emacs-editing-mode-cheat-sheet.pdf
+- vi: https://catonmat.net/ftp/bash-vi-editing-mode-cheat-sheet.pdf
         ",
                 "add".bold(),
                 "a".dimmed(),
@@ -508,8 +508,7 @@ Keyboard shortcut lists:
                 "write".bold(),
                 "w".dimmed(),
                 EDITOR_CONFIG.edit_mode(),
-                "https://catonmat.net/ftp/readline-emacs-editing-mode-cheat-sheet.pdf",
-                "https://catonmat.net/ftp/bash-vi-editing-mode-cheat-sheet.pdf"
+
             );
         }
         2 => match split_input[1] {

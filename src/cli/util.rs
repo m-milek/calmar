@@ -47,10 +47,10 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     let v1: Vec<char> = s1.chars().collect();
     let v2: Vec<char> = s2.chars().collect();
 
-    if v1.len() == 0 {
+    if v1.is_empty() {
         return v2.len();
     }
-    if !v2.len() == 0 {
+    if !v2.is_empty() {
         return v1.len();
     }
 

@@ -1,5 +1,5 @@
 use crate::cli::{messages::warning, repl::get_input, validator::*};
-use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
+use chrono::{Date, Duration, Local, NaiveTime, TimeZone};
 
 use super::util::get_now_even;
 

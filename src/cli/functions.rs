@@ -362,7 +362,7 @@ pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
     while start < now {
 	start += event.repeat();
     }
-    if is_happenning(&event) {
+    if is_happenning(event) {
 	start -= event.repeat()
     }
     start

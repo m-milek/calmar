@@ -10,7 +10,7 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::{Duration, Local, Timelike};
+use chrono::{Duration, Local};
 use std::{io::Write, ops::Neg};
 
 /*
@@ -450,7 +450,7 @@ pub fn date() {
 }
 
 pub fn time() {
-    println!("{}", Local::now().time().format("%H:%M:%S").to_string())
+    println!("{}", Local::now().time().format("%H:%M:%S"))
 }
 
 pub fn update() {
@@ -462,7 +462,7 @@ pub fn update() {
     // Set time of recurring events to their nearest occurence
     for event in active_calendar.events_mut() {
 	if !event.repeat().is_zero() {
-	    let new_start = closest_occurence_start(&event);
+	    let new_start = closest_occurence_start(event);
 	    event.set_start(&new_start);
 	}
     }
@@ -475,6 +475,5 @@ pub fn update() {
 
     if let Err(e) = active_calendar.save(&path) {
 	print_err_msg(e, &path);
-	return;
     }
 }
