@@ -1,7 +1,8 @@
 #![allow(dead_code)]
 use crate::cal::{calmar_error::CalmarError, event::Event};
 use serde_derive::{Deserialize, Serialize};
-use std::io::Write;
+use core::fmt;
+use std::{io::Write, fmt::{Display, Formatter}};
 
 pub enum CalendarReturnMessage {
     Abort,
@@ -14,6 +15,18 @@ pub enum CalendarReturnMessage {
 pub struct Calendar {
     name: String,
     events: Vec<Event>,
+}
+
+impl Display for Calendar {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+	write!(
+	    f,
+	    "Caledndar name: {} | Events: {:?} | Number of events: {}",
+	    self.name,
+	    self.events.iter().map(|e| e.name()).collect::<Vec<String>>(),
+	    self.events.len()
+	)
+    }
 }
 
 impl Calendar {

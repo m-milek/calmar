@@ -11,13 +11,23 @@ use crate::{
     },
 };
 use serde_derive::{Deserialize, Serialize};
-use std::fs::read_to_string;
+use std::{fs::read_to_string, fmt::Display};
 use std::io::Write;
 
 /// Holds a vector of `CalendarReference` structs.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CalendarIndex {
     calendars: Vec<CalendarReference>,
+}
+
+impl Display for CalendarIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	write!(
+	    f,
+	    "Calendars: {:#?}",
+	    self.calendars.iter().map(|r| r.to_string()).collect::<Vec<String>>()
+	)
+    }
 }
 
 impl CalendarIndex {

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use crate::cal::{calendar::Calendar, calmar_error::CalmarError};
 use serde_derive::{Deserialize, Serialize};
-use std::io::Write;
+use std::{io::Write, fmt::Display};
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
@@ -13,6 +13,18 @@ pub struct CalendarReference {
     name: String,
     path: String,
     active: bool,
+}
+
+impl Display for CalendarReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+	write!(
+	    f,
+	    "Reference name: {} | Path: {} | Active: {}",
+	    self.name,
+	    self.path,
+	    self.active
+	)
+    }
 }
 
 impl CalendarReference {
