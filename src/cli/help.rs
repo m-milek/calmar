@@ -350,6 +350,40 @@ Print current time.
 	"Syntax".bold()
     );
 
+    let until_doc = format!(
+	"
+{}
+
+Print time until the start of an event.
+Multiple event names can be provided.
+
+{}
+> until [{}]...
+> u [{}]...
+",
+	"until, u".bold(),
+	"Syntax".bold(),
+	"event_name".italic(),
+	"event_name".italic()
+    );
+    
+    let update_doc = format!(
+	"
+{}
+
+Update the active calendar.
+An event is removed if it is not recurring and already happended.
+Start and end timedates of recurring events are updated to their occurence closest future in time to current timedate.
+If a recurring event is currently happening, its start and end timedates are set to timedates of the current occurence.
+
+{}
+> update
+> U
+",
+	"update, U".bold(),
+	"Syntax".bold(),
+    );
+
     let quit_doc = format!(
         "
 {}
@@ -420,6 +454,8 @@ The list of available commands:
 {}, {} -- set the active calendar
 {}, {} -- sort events
 {}, {} -- print current time
+{}, {} -- print time remaining until an event
+{}, {} -- update the active calendar
 {}, {} -- exit the program
 {}, {} -- print version information
 {}, {} -- write calendar to a file
@@ -461,6 +497,10 @@ Keyboard shortcut lists:
                 "S".dimmed(),
 		"time".bold(),
 		"T".dimmed(),
+		"until".bold(),
+		"u".dimmed(),
+		"update".bold(),
+		"U".dimmed(),
                 "quit".bold(),
                 "q".dimmed(),
 		"version".bold(),
@@ -488,6 +528,8 @@ Keyboard shortcut lists:
             "set" | "s" => println!("{set_doc}"),
             "sort" | "S" => println!("{sort_doc}"),
 	    "time" | "T" => println!("{time_doc}"),
+	    "until" | "u" => println!("{until_doc}"),
+	    "update" | "U" => println!("{update_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
 	    "version" | "v" => println!("{version_doc}"),
             "write" | "w" => println!("{write_doc}"),
