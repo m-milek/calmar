@@ -92,3 +92,8 @@ pub fn round_to_full_day(d: DateTime<Local>) -> DateTime<Local> {
 	.with_second(59)
 	.unwrap()
 }
+
+/// Returns current time, but with seconds and nanosecond zeroed
+pub fn get_now_even() -> DateTime<Local> {
+    Local::now().with_second(0).unwrap().with_nanosecond(0).unwrap()
+}

@@ -1,4 +1,4 @@
-use super::{functions::generate_until, getdata::parse_into_duration, util::round_to_full_day};
+use super::{functions::generate_until, getdata::parse_into_duration, util::{round_to_full_day, get_now_even}};
 use crate::{
     active_calendar, active_calendar_reference,
     cal::event::Event,
@@ -10,7 +10,7 @@ use crate::{
     },
     CONFIG,
 };
-use chrono::{Duration, Local};
+use chrono::{Duration, Local, Timelike};
 use std::{io::Write, ops::Neg};
 
 /*
@@ -359,10 +359,10 @@ pub fn list(split_input: &Vec<&str>) {
     let re_days = regex::Regex::new(
 	"^[0-9]+(d| +d|days| +days)$"
     ).unwrap();
-    
+
     // if the user typed something like '3d', round the duration
     // to full days for convenience
-    let mut end_date = Local::now() + span;
+    let mut end_date = get_now_even() + span;
     if split_input.len() == 2 && re_days.is_match(split_input[1]) {
 	end_date = round_to_full_day(end_date);
     }
@@ -429,7 +429,7 @@ pub fn write(split_input: &Vec<&str>) {
 
     // if the user typed something like '3d', round the duration
     // to full days for convenience
-    let mut end_date = Local::now() + span;
+    let mut end_date = get_now_even() + span;
     if re_days.is_match(split_input[1]) {
 	end_date = round_to_full_day(end_date);
     }
@@ -457,7 +457,7 @@ pub fn update() {
     let index = calendar_index!();
     let mut active_calendar = active_calendar!(index);
     let path = active_calendar_reference!(index).path().clone();
-    let now = Local::now();
+    let now = get_now_even();
     
     // Set time of recurring events to their nearest occurence
     for event in active_calendar.events_mut() {

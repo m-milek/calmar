@@ -1,6 +1,8 @@
 use crate::cli::{messages::warning, repl::get_input, validator::*};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone, Timelike};
 
+use super::util::get_now_even;
+
 /*
 Return a valid date
 */
@@ -160,7 +162,7 @@ pub fn parse_into_date(input: &str) -> Date<Local> {
 
 pub fn parse_into_time(input: &str) -> NaiveTime {
     if input.trim().is_empty() {
-        return Local::now().time().with_second(0).unwrap();
+        return get_now_even().time();
     }
 
     let split_string: Vec<&str> = input.split(':').collect();
