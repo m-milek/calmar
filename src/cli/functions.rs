@@ -22,7 +22,7 @@ use std::{
     thread,
 };
 
-use super::util::levenshtein_distance;
+use super::util::{levenshtein_distance, round_to_full_day};
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -263,6 +263,7 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
     let events = calendar.events().to_vec();
 
     for event in events {
+	println!("Working on {}", event);
         threads.push(thread::spawn({
             let clone = Arc::clone(&event_vec);
             move || {
@@ -282,12 +283,14 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
 		    if e.start() >= Local::now() {
 			temp_vec.push(e);
 		    }
+		    println!("{}", Local::now());
                     new_start += e_to_push.repeat();
                     new_end = new_start + e_to_push.duration();
                     e_to_push.set_start(&new_start);
                     e_to_push.set_end(&new_end);
                 }
                 let mut v = clone.lock().unwrap();
+		println!("temp vec for {event}: {temp_vec:?}");
                 v.append(&mut temp_vec);
             }
         }))
