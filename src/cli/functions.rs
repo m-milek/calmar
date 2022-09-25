@@ -274,13 +274,13 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
 		}
                 let mut temp_vec = vec![];
 		let now = Local::now();
-                let mut e_to_push = event.to_owned(); //klonujemy event
+                let mut e_to_push = event.to_owned();
                 let mut new_start = e_to_push.start();
                 let mut new_end = new_start + e_to_push.duration();
                 while new_start < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-		    if e.start() >= now {
+		    if e.start() >= now || e.is_happening_on(now) {
 			temp_vec.push(e);
 		    }
                     new_start += e_to_push.repeat();
