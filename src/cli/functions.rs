@@ -22,7 +22,7 @@ use std::{
     thread,
 };
 
-use super::util::{levenshtein_distance, round_to_full_day};
+use super::util::levenshtein_distance;
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -263,7 +263,6 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
     let events = calendar.events().to_vec();
 
     for event in events {
-	println!("Working on {}", event);
         threads.push(thread::spawn({
             let clone = Arc::clone(&event_vec);
             move || {
@@ -274,23 +273,22 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
 		    return;
 		}
                 let mut temp_vec = vec![];
-                let mut e_to_push = event.to_owned();
+		let now = Local::now();
+                let mut e_to_push = event.to_owned(); //klonujemy event
                 let mut new_start = e_to_push.start();
                 let mut new_end = new_start + e_to_push.duration();
-                while new_start + e_to_push.repeat() < end {
+                while new_start < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-		    if e.start() >= Local::now() {
+		    if e.start() >= now {
 			temp_vec.push(e);
 		    }
-		    println!("{}", Local::now());
                     new_start += e_to_push.repeat();
                     new_end = new_start + e_to_push.duration();
                     e_to_push.set_start(&new_start);
                     e_to_push.set_end(&new_end);
                 }
                 let mut v = clone.lock().unwrap();
-		println!("temp vec for {event}: {temp_vec:?}");
                 v.append(&mut temp_vec);
             }
         }))

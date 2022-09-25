@@ -363,11 +363,9 @@ pub fn list(split_input: &Vec<&str>) {
     // if the user typed something like '3d', round the duration
     // to full days for convenience
     let mut end_date = get_now_even() + span;
-    println!("End date = {end_date}");
     if split_input.len() == 2 && re_days.is_match(split_input[1]) {
 	end_date = round_to_full_day(end_date);
     }
-    println!("End date = {end_date}");
     
     generate_until(active_calendar, end_date)
         .iter()
@@ -465,7 +463,9 @@ pub fn update() {
     for event in active_calendar.events_mut() {
 	if !event.repeat().is_zero() {
 	    let new_start = closest_occurence_start(event);
+	    let duration = event.duration();
 	    event.set_start(&new_start);
+	    event.set_end(&(new_start + duration));
 	}
     }
     

@@ -1,19 +1,17 @@
 use std::ops::Range;
-
 use crate::cli::{
     commands::{
         add, cal, clear, duration, edit, list, listcal, remove, removecal, set, sort, until,
     },
     help::print_help,
 };
-
 use super::{commands::{raw, write, date, time, update}, functions::handle_unknown_command, help::print_version, messages::error};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
     let quote_parsed: Vec<String>;
     if check_quotes(&input) {
-	quote_parsed = handle_quotes2(input);
+	quote_parsed = handle_quotes(input);
     } else {
 	error("Mismatched quotes".to_string());
 	return;
@@ -45,7 +43,7 @@ pub fn parse(input: String) {
     }
 }
 
-pub fn check_quotes(input: &String) -> bool {
+fn check_quotes(input: &String) -> bool {
     let chars: Vec<char> = input.chars().collect();
     if chars.iter().filter(|c| **c =='\"').count() % 2 != 0 {
 	return false
@@ -53,7 +51,7 @@ pub fn check_quotes(input: &String) -> bool {
     true
 }
 
-pub fn handle_quotes2(input: String) -> Vec<String> {
+fn handle_quotes(input: String) -> Vec<String> {
     let mut out: Vec<String> = vec![];
     let chars: Vec<char> = input.chars().collect();
     let mut processed = vec![false; chars.len()];
