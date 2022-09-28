@@ -21,8 +21,9 @@ use std::{
     sync::{Arc, Mutex},
     thread,
 };
+use crate::cal::calmar_error::CalmarError;
 
-use super::util::levenshtein_distance;
+use super::{util::levenshtein_distance, validator::get_home_dir};
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -218,7 +219,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         None => get_input("Calendar Name: "),
     };
 
-    print!("Path: ");
+//    print!("Path: ");
     let path = default_or_custom_save_path(get_dir_path());
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
@@ -368,3 +369,21 @@ pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
     }
     start
 }
+
+pub fn check_calmar_dir() {
+    let path = get_home_dir().join(".config/calmar");
+    if path.exists() {
+	return
+    }
+    error(format!("{} doesn't exist. Do you want to create it?", path.display()));
+    match get_input("[Y/n]: ").to_lowercase().trim() {
+	"yes" | "y" => warning("Use the \"mkindex\" command to generate an empty index.json in the created directory.".to_string()),
+	_ => return
+    }
+    if let Err(e) = std::fs::create_dir(&path) {
+	print_err_msg(CalmarError::CreateDir { e }, path.display());
+    }
+}
+
+// Verify config values
+pub fn check_config() {}

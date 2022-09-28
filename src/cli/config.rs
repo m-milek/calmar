@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-use crate::{cli::messages::error, cli::validator::get_home_dir};
+use crate::cli::validator::get_home_dir;
+use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::read_to_string;
 
@@ -22,12 +23,12 @@ pub struct Config {
 }
 
 impl Config {
-    fn default(&self) -> Config {
+    pub fn default() -> Self {
         Config {
             date_format: "DD/MM/YYYY".to_string(),
             time_format: "HH:MM".to_string(),
-            default_path: "/home/michal/.calmar".to_string(),
-            index_path: "/home/michal/.calmar".to_string(),
+            default_path: get_home_dir().join(".calmar").to_str().unwrap().to_string(),
+            index_path: get_home_dir().join(".config/calmar/index.json").to_str().unwrap().to_string(),
             default_calendar_span: "7d".to_string(),
             print_success_messages: true,
             print_warning_messages: true,
@@ -58,19 +59,17 @@ pub fn get_config() -> Config {
     let config_file = match read_to_string(&config_path) {
         Ok(content) => content,
         Err(e) => {
-            error(format!("Failed to read {}.\n{}", config_path.display(), e));
-            std::process::exit(1);
+	    eprintln!("{}",format!("Failed to read {}.\n{}.", config_path.display(), e).red().bold());
+	    eprintln!("{}","Using default configuration. Use the \"mkconfig\" command to generate a configuration file.".yellow().bold());
+	    return Config::default()
         }
     };
     match serde_json::from_str(&config_file) {
         Ok(config) => config,
         Err(e) => {
-            error(format!(
-                "Failed to parse {}. Check for syntax errors.\n{}",
-                config_path.display(),
-                e
-            ));
-            std::process::exit(1);
+	    eprintln!("{}",format!("Failed to parse {}.\n{}.", config_path.display(), e).red().bold());
+	    eprintln!("{}","Using default configuration. Use the \"mkconfig\" command to generate a configuration file.".yellow().bold());
+	    return Config::default()
         }
     }
 }

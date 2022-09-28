@@ -6,4 +6,5 @@ pub enum CalmarError {
     CreateFile { e: std::io::Error },
     ToJSON { e: serde_json::Error },
     ActiveCalendarCount { e: usize },
+    CreateDir { e: std::io::Error }
 }

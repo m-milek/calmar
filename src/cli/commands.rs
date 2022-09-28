@@ -1,17 +1,18 @@
-use super::{functions::generate_until, getdata::parse_into_duration, util::{round_to_full_day, get_now_even}};
+use super::{functions::generate_until, getdata::parse_into_duration, util::{round_to_full_day, get_now_even}, validator::get_home_dir, repl::get_input, config::Config};
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::event::Event,
+    cal::{event::Event, calendar_index::CalendarIndex},
     calendar_index,
     cli::{
         functions::{duration_fmt, edit_event, get_new_calendar_reference, get_new_event, closest_occurence_start},
         getdata::{get_valid_calendar_name, get_valid_event_name},
-        messages::{error, print_err_msg, success, warning},
+        messages::{error, print_err_msg, warning},
     },
     CONFIG,
 };
 use chrono::{Duration, Local};
-use std::{io::Write, ops::Neg};
+use std::{io::Write, ops::Neg, fs::OpenOptions, path::PathBuf, str::FromStr};
+use crate::cal::calmar_error::CalmarError;
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -40,7 +41,7 @@ pub fn cal(split_input: &Vec<&str>) {
     }
 
     match index.add_entry(&new_reference) {
-        Ok(_) => success("Added entry to calendar index.".to_string()),
+        Ok(_) => {},
         Err(_) => {
             error("Failed to add new calendar reference to calendar index.".to_string());
             return;
@@ -50,7 +51,6 @@ pub fn cal(split_input: &Vec<&str>) {
         print_err_msg(e, &CONFIG.index_path);
         return;
     };
-    success("Saved calendar index".to_string());
     if let Err(e) = new_reference.create_file() {
         print_err_msg(e, new_reference.path())
     }
@@ -81,7 +81,6 @@ pub fn removecal(split_input: &Vec<&str>) {
         print_err_msg(e, &CONFIG.index_path);
         return;
     };
-    success("Successfully removed calendar".to_string());
 }
 
 /// Delete an event from the active calendar
@@ -477,5 +476,68 @@ pub fn update() {
 
     if let Err(e) = active_calendar.save(&path) {
 	print_err_msg(e, &path);
+    }
+}
+
+pub fn mkindex() {
+    if PathBuf::from_str(&&CONFIG.index_path).unwrap().exists() {
+	warning("This will revert your index.json to its default contents. Proceed?".to_string());
+	match get_input("[y/N]: ").to_lowercase().trim() {
+	    "yes" | "y" => {},
+	    _ => return
+	}
+    }
+    
+    let new_index_json = match serde_json::to_string_pretty(&CalendarIndex::new()) {
+	Ok(s) => s,
+	Err(e) => {
+	    print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
+	    return
+	}
+    };
+    let path = PathBuf::from_str(&CONFIG.index_path).unwrap();
+    let path_str = path.to_str().unwrap();
+    let mut file = match OpenOptions::new().truncate(true).write(true).create(true).open(&path_str) {
+	Ok(f) => f,
+	Err(e) => {
+	    print_err_msg(CalmarError::CreateFile { e }, path_str);
+	    return
+	}
+    };
+    
+    if let Err(e) = file.write(new_index_json.as_bytes()) {
+	print_err_msg(CalmarError::WriteFile { e }, path_str);
+    }
+    
+}
+
+pub fn mkconfig() {
+
+    if get_home_dir().join(".config/calmar/config.json").exists() {
+	warning("This will revert your config.json to its default contents. Proceed?".to_string());
+	match get_input("[y/N]: ").to_lowercase().trim() {
+	    "yes" | "y" => {},
+	    _ => return
+	}
+    }
+    
+    let new_config = Config::default();
+    let path = get_home_dir().join(".config/calmar/config.json");
+    let mut file = match OpenOptions::new().truncate(true).create(true).write(true).open(&path) {
+	Ok(file) => file,
+	Err(e) => {
+	    print_err_msg(CalmarError::CreateFile { e }, &path.to_str().unwrap().to_string());
+	    return;
+	}
+    };
+    let new_config_json = match serde_json::to_string_pretty(&new_config) {
+	Ok(s) => s,
+	Err(e) => {
+	    print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
+	    return;
+	}
+    };
+    if let Err(e) = file.write(new_config_json.as_bytes()) {
+	print_err_msg(CalmarError::WriteFile { e }, &path.to_str().unwrap().to_string())
     }
 }

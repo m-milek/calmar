@@ -5,7 +5,8 @@ use crate::cli::{
     },
     help::print_help,
 };
-use super::{commands::{raw, write, date, time, update}, functions::handle_unknown_command, help::print_version, messages::error, display::print_stuff};
+use super::{commands::{raw, write, date, time, update, mkindex}, functions::handle_unknown_command, help::print_version, messages::error, display::print_stuff};
+use crate::cli::commands::mkconfig;
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -28,6 +29,8 @@ pub fn parse(input: String) {
         "help" | "h" => print_help(&split_input),
         "list" | "l" | "ls" => list(&split_input),
         "listcal" | "lc" => listcal(&split_input),
+	"mkindex" => mkindex(),
+	"mkconfig" => mkconfig(),
         "raw" | "R" => raw(&split_input),
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),

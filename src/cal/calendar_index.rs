@@ -46,6 +46,10 @@ impl CalendarIndex {
         }
     }
 
+    pub fn new() -> Self {
+	CalendarIndex { calendars: vec![] }
+    }
+
     // Getters
     pub fn calendars(&self) -> &Vec<CalendarReference> {
         &self.calendars

@@ -21,7 +21,7 @@ pub fn error(s: String) {
     }
 }
 
-pub fn print_err_msg(err: CalmarError, info: &String) {
+pub fn print_err_msg<T: std::fmt::Display>(err: CalmarError, info: T) {
     match err {
         CalmarError::ReadFile { e } => error(format!("Failed to read {} \n{}", info, e)),
         CalmarError::ParseJSON { e } => error(format!("Failed to parse {} as JSON.\n{}", info, e)),
@@ -30,12 +30,12 @@ pub fn print_err_msg(err: CalmarError, info: &String) {
             error(format!("Failed to create file at {}.\n{}", info, e))
         }
         CalmarError::ToJSON { e } => error(format!(
-            "Failed to serialize struct to JSON.\n{:#?}\n{}",
-            info, e
+            "Failed to serialize struct to JSON.\n{}", e
         )),
         CalmarError::ActiveCalendarCount { e } => error(format!(
             "There are {} calendars set as 'active'. There should be exactly one.",
             e
         )),
+	CalmarError::CreateDir { e } => error(format!("Failed to create directory at {info}.\n{e}"))
     }
 }
