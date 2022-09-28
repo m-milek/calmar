@@ -68,7 +68,7 @@ impl Event {
     }
 
     pub fn is_happening_on(&self, date: DateTime<Local>) -> bool {
-	self.start <= date && date < self.end
+        self.start <= date && date < self.end
     }
 
     pub fn name(&self) -> String {

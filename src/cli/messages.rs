@@ -29,13 +29,13 @@ pub fn print_err_msg<T: std::fmt::Display>(err: CalmarError, info: T) {
         CalmarError::CreateFile { e } => {
             error(format!("Failed to create file at {}.\n{}", info, e))
         }
-        CalmarError::ToJSON { e } => error(format!(
-            "Failed to serialize struct to JSON.\n{}", e
-        )),
+        CalmarError::ToJSON { e } => error(format!("Failed to serialize struct to JSON.\n{}", e)),
         CalmarError::ActiveCalendarCount { e } => error(format!(
             "There are {} calendars set as 'active'. There should be exactly one.",
             e
         )),
-	CalmarError::CreateDir { e } => error(format!("Failed to create directory at {info}.\n{e}"))
+        CalmarError::CreateDir { e } => {
+            error(format!("Failed to create directory at {info}.\n{e}"))
+        }
     }
 }

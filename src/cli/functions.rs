@@ -1,15 +1,16 @@
+use crate::cal::calmar_error::CalmarError;
 use crate::{
     active_calendar, active_calendar_reference,
     cal::{calendar::Calendar, calendar_ref::CalendarReference, event::Event},
     calendar_index,
     cli::{
-        util::default_or_custom_save_path,
         getdata::{
             get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
             get_repeat, get_start_date, get_start_time, get_valid_event_name,
         },
         messages::{error, print_err_msg, warning},
         repl::get_input,
+        util::default_or_custom_save_path,
         util::{select_in_range, uppercase_first_letter},
     },
     CONFIG,
@@ -21,7 +22,6 @@ use std::{
     sync::{Arc, Mutex},
     thread,
 };
-use crate::cal::calmar_error::CalmarError;
 
 use super::{util::levenshtein_distance, validator::get_home_dir};
 
@@ -219,7 +219,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
         None => get_input("Calendar Name: "),
     };
 
-//    print!("Path: ");
+    //    print!("Path: ");
     let path = default_or_custom_save_path(get_dir_path());
     let mut path_to_calendar = PathBuf::from(path).join(&name);
     path_to_calendar.set_extension("json");
@@ -267,23 +267,23 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
         threads.push(thread::spawn({
             let clone = Arc::clone(&event_vec);
             move || {
-		// If the event is not recurring, just push its only occurrence and return
-		if event.repeat().is_zero() {
-		    let mut v = clone.lock().unwrap();
-		    v.push(event);
-		    return;
-		}
+                // If the event is not recurring, just push its only occurrence and return
+                if event.repeat().is_zero() {
+                    let mut v = clone.lock().unwrap();
+                    v.push(event);
+                    return;
+                }
                 let mut temp_vec = vec![];
-		let now = Local::now();
+                let now = Local::now();
                 let mut e_to_push = event.to_owned();
                 let mut new_start = e_to_push.start();
                 let mut new_end = new_start + e_to_push.duration();
                 while new_start < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-		    if e.start() >= now || e.is_happening_on(now) {
-			temp_vec.push(e);
-		    }
+                    if e.start() >= now || e.is_happening_on(now) {
+                        temp_vec.push(e);
+                    }
                     new_start += e_to_push.repeat();
                     new_end = new_start + e_to_push.duration();
                     e_to_push.set_start(&new_start);
@@ -310,22 +310,22 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
 
 pub fn handle_unknown_command(s: &str) {
     let command_list = [
-	"add",
-	"cal",
-	"clear",
-	"duration",
-	"edit",
-	"help",
-	"list",
-	"listcal",
-	"raw",
-	"remove",
-	"removecal",
-	"set",
-	"sort",
-	"until",
-	"quit",
-	"write"
+        "add",
+        "cal",
+        "clear",
+        "duration",
+        "edit",
+        "help",
+        "list",
+        "listcal",
+        "raw",
+        "remove",
+        "removecal",
+        "set",
+        "sort",
+        "until",
+        "quit",
+        "write",
     ];
 
     let mut best_match: &str = "not found"; // this never gets printed
@@ -333,18 +333,22 @@ pub fn handle_unknown_command(s: &str) {
 
     // Find the best match among commands based on edit distance
     for command in command_list {
-	let distance = levenshtein_distance(s, command);
-	if distance < min_distance {
-	    best_match = command;
-	    min_distance = distance;
-	}
+        let distance = levenshtein_distance(s, command);
+        if distance < min_distance {
+            best_match = command;
+            min_distance = distance;
+        }
     }
 
     // If the match would be somewhat helpful
     // (distance has to be small, hence 0.8 multiplier) print the suggestion
     if (min_distance as f32) < (s.len() as f32 * 0.8) {
-	warning(format!("Unknown command: {}. Did you mean '{}'?", s.trim(), best_match));
-	return
+        warning(format!(
+            "Unknown command: {}. Did you mean '{}'?",
+            s.trim(),
+            best_match
+        ));
+        return;
     }
     warning(format!("Unknown command: {}", s.trim()))
 }
@@ -353,19 +357,18 @@ pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
     // Searches for the closest occurence of an event.
     // if the event is currently happening, return start datetime of the current occurence.
     // if it's not, return start datetime of the next occurence
-    
+
     let mut start = event.start();
     let now = Local::now();
 
-    let is_happenning = |event: &Event| {
-	event.start() < now && event.start() + event.duration() > now
-    };
-    
+    let is_happenning =
+        |event: &Event| event.start() < now && event.start() + event.duration() > now;
+
     while start < now {
-	start += event.repeat();
+        start += event.repeat();
     }
     if is_happenning(event) {
-	start -= event.repeat()
+        start -= event.repeat()
     }
     start
 }
@@ -373,15 +376,21 @@ pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
 pub fn check_calmar_dir() {
     let path = get_home_dir().join(".config/calmar");
     if path.exists() {
-	return
+        return;
     }
-    error(format!("{} doesn't exist. Do you want to create it?", path.display()));
+    error(format!(
+        "{} doesn't exist. Do you want to create it?",
+        path.display()
+    ));
     match get_input("[Y/n]: ").to_lowercase().trim() {
-	"yes" | "y" => warning("Use the \"mkindex\" command to generate an empty index.json in the created directory.".to_string()),
-	_ => return
+        "yes" | "y" => warning(
+            "Use the \"mkindex\" command to generate an empty index.json in the created directory."
+                .to_string(),
+        ),
+        _ => return,
     }
     if let Err(e) = std::fs::create_dir(&path) {
-	print_err_msg(CalmarError::CreateDir { e }, path.display());
+        print_err_msg(CalmarError::CreateDir { e }, path.display());
     }
 }
 

@@ -78,7 +78,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
                 column[y - 1] + 1,
                 lastdiag + delta(v1[y - 1], v2[x - 1]),
             );
-	    lastdiag = olddiag;
+            lastdiag = olddiag;
         }
     }
     column[v1.len()]
@@ -86,14 +86,18 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
 
 pub fn round_to_full_day(d: DateTime<Local>) -> DateTime<Local> {
     d.with_hour(23)
-	.unwrap()
-	.with_minute(59)
-	.unwrap()
-	.with_second(59)
-	.unwrap()
+        .unwrap()
+        .with_minute(59)
+        .unwrap()
+        .with_second(59)
+        .unwrap()
 }
 
 /// Returns current time, but with seconds and nanosecond zeroed
 pub fn get_now_even() -> DateTime<Local> {
-    Local::now().with_second(0).unwrap().with_nanosecond(0).unwrap()
+    Local::now()
+        .with_second(0)
+        .unwrap()
+        .with_nanosecond(0)
+        .unwrap()
 }

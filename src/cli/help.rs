@@ -21,12 +21,12 @@ For help, type \"help\".",
 
 pub fn print_version() {
     let str = format!(
-	"{}
+        "{}
 Copyright (C) 2022 Michał Miłek & Artur Gulik.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.",
-	"Calmar v0.9.0".purple().bold()
+        "Calmar v0.9.0".purple().bold()
     );
     println!("{str}");
 }
@@ -93,7 +93,7 @@ Defined in {}
     );
 
     let date_doc = format!(
-	"
+        "
 {}
 
 Print current date.
@@ -101,8 +101,8 @@ Print current date.
 {}
 > date
 ",
-	"date, D".bold(),
-	"Syntax".bold()
+        "date, D".bold(),
+        "Syntax".bold()
     );
 
     let duration_doc = format!(
@@ -338,7 +338,7 @@ Defined in {}
     );
 
     let time_doc = format!(
-	"
+        "
 {}
 
 Print current time.
@@ -346,12 +346,12 @@ Print current time.
 {}
 > time
 ",
-	"time, T".bold(),
-	"Syntax".bold()
+        "time, T".bold(),
+        "Syntax".bold()
     );
 
     let until_doc = format!(
-	"
+        "
 {}
 
 Print time until the start of an event.
@@ -361,12 +361,12 @@ Multiple event names can be provided.
 > until [{}]...
 > u [{}]...
 ",
-	"until, u".bold(),
-	"Syntax".bold(),
-	"event_name".italic(),
-	"event_name".italic()
+        "until, u".bold(),
+        "Syntax".bold(),
+        "event_name".italic(),
+        "event_name".italic()
     );
-    
+
     let update_doc = format!(
 	"
 {}
@@ -399,7 +399,7 @@ Quit the program.
     );
 
     let version_doc = format!(
-	"
+        "
 {}
 
 Print version information.
@@ -407,8 +407,8 @@ Print version information.
 {}
 > version
 ",
-	"version, v".bold(),
-	"Syntax".bold()
+        "version, v".bold(),
+        "Syntax".bold()
     );
 
     let write_doc = format!(
@@ -473,8 +473,8 @@ Keyboard shortcut lists:
                 "cal".bold(),
                 "c".dimmed(),
                 "clear".bold(),
-		"date".bold(),
-		"D".dimmed(),
+                "date".bold(),
+                "D".dimmed(),
                 "duration".bold(),
                 "d".dimmed(),
                 "edit".bold(),
@@ -495,27 +495,26 @@ Keyboard shortcut lists:
                 "s".dimmed(),
                 "sort".bold(),
                 "S".dimmed(),
-		"time".bold(),
-		"T".dimmed(),
-		"until".bold(),
-		"u".dimmed(),
-		"update".bold(),
-		"U".dimmed(),
+                "time".bold(),
+                "T".dimmed(),
+                "until".bold(),
+                "u".dimmed(),
+                "update".bold(),
+                "U".dimmed(),
                 "quit".bold(),
                 "q".dimmed(),
-		"version".bold(),
-		"v".dimmed(),
+                "version".bold(),
+                "v".dimmed(),
                 "write".bold(),
                 "w".dimmed(),
                 EDITOR_CONFIG.edit_mode(),
-
             );
         }
         2 => match split_input[1] {
             "add" | "a" => println!("{add_doc}"),
             "cal" | "c" => println!("{cal_doc}"),
             "clear" => println!("{clear_doc}"),
-	    "date" | "D" => println!("{date_doc}"),
+            "date" | "D" => println!("{date_doc}"),
             "duration" | "d" => println!("{duration_doc}"),
             "edit" | "e" => println!("{edit_doc}"),
             "help" | "h" => println!("{help_doc}"),
@@ -526,11 +525,11 @@ Keyboard shortcut lists:
             "removecal" | "rmcal" | "rc" => println!("{removecal_doc}"),
             "set" | "s" => println!("{set_doc}"),
             "sort" | "S" => println!("{sort_doc}"),
-	    "time" | "T" => println!("{time_doc}"),
-	    "until" | "u" => println!("{until_doc}"),
-	    "update" | "U" => println!("{update_doc}"),
+            "time" | "T" => println!("{time_doc}"),
+            "until" | "u" => println!("{until_doc}"),
+            "update" | "U" => println!("{update_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
-	    "version" | "v" => println!("{version_doc}"),
+            "version" | "v" => println!("{version_doc}"),
             "write" | "w" => println!("{write_doc}"),
             _ => warning(format!(
                 "help: No documentation for command \"{}\"",

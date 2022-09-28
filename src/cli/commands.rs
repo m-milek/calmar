@@ -1,18 +1,28 @@
-use super::{functions::generate_until, getdata::parse_into_duration, util::{round_to_full_day, get_now_even}, validator::get_home_dir, repl::get_input, config::Config};
+use super::{
+    config::Config,
+    functions::generate_until,
+    getdata::parse_into_duration,
+    repl::get_input,
+    util::{get_now_even, round_to_full_day},
+    validator::get_home_dir,
+};
+use crate::cal::calmar_error::CalmarError;
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::{event::Event, calendar_index::CalendarIndex},
+    cal::{calendar_index::CalendarIndex, event::Event},
     calendar_index,
     cli::{
-        functions::{duration_fmt, edit_event, get_new_calendar_reference, get_new_event, closest_occurence_start},
+        functions::{
+            closest_occurence_start, duration_fmt, edit_event, get_new_calendar_reference,
+            get_new_event,
+        },
         getdata::{get_valid_calendar_name, get_valid_event_name},
         messages::{error, print_err_msg, warning},
     },
     CONFIG,
 };
 use chrono::{Duration, Local};
-use std::{io::Write, ops::Neg, fs::OpenOptions, path::PathBuf, str::FromStr};
-use crate::cal::calmar_error::CalmarError;
+use std::{fs::OpenOptions, io::Write, ops::Neg, path::PathBuf, str::FromStr};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -41,7 +51,7 @@ pub fn cal(split_input: &Vec<&str>) {
     }
 
     match index.add_entry(&new_reference) {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(_) => {
             error("Failed to add new calendar reference to calendar index.".to_string());
             return;
@@ -354,18 +364,15 @@ pub fn list(split_input: &Vec<&str>) {
         )),
     }
 
-    
-    let re_days = regex::Regex::new(
-	"^[0-9]+(d| +d|days| +days)$"
-    ).unwrap();
+    let re_days = regex::Regex::new("^[0-9]+(d| +d|days| +days)$").unwrap();
 
     // if the user typed something like '3d', round the duration
     // to full days for convenience
     let mut end_date = get_now_even() + span;
     if split_input.len() == 2 && re_days.is_match(split_input[1]) {
-	end_date = round_to_full_day(end_date);
+        end_date = round_to_full_day(end_date);
     }
-    
+
     generate_until(active_calendar, end_date)
         .iter()
         .for_each(|e| println!("{e}"))
@@ -422,19 +429,17 @@ pub fn write(split_input: &Vec<&str>) {
         }
     };
 
-    let re_days = regex::Regex::new(
-	"^[0-9]+(d| +d|days| +days)$"
-    ).unwrap();
+    let re_days = regex::Regex::new("^[0-9]+(d| +d|days| +days)$").unwrap();
 
     // if the user typed something like '3d', round the duration
     // to full days for convenience
     let mut end_date = get_now_even() + span;
     if re_days.is_match(split_input[1]) {
-	end_date = round_to_full_day(end_date);
+        end_date = round_to_full_day(end_date);
     }
 
     let calendar = active_calendar!();
-    
+
     let gen_events = generate_until(calendar, end_date);
 
     gen_events.iter().for_each(|e| {
@@ -457,87 +462,101 @@ pub fn update() {
     let mut active_calendar = active_calendar!(index);
     let path = active_calendar_reference!(index).path().clone();
     let now = get_now_even();
-    
+
     // Set time of recurring events to their nearest occurence
     for event in active_calendar.events_mut() {
-	if !event.repeat().is_zero() {
-	    let new_start = closest_occurence_start(event);
-	    let duration = event.duration();
-	    event.set_start(&new_start);
-	    event.set_end(&(new_start + duration));
-	}
+        if !event.repeat().is_zero() {
+            let new_start = closest_occurence_start(event);
+            let duration = event.duration();
+            event.set_start(&new_start);
+            event.set_end(&(new_start + duration));
+        }
     }
-    
+
     // retain only events that are recurring or they will end in the future.
     // this retains events currently happening
-    active_calendar.events_mut().retain(|e| {
-	!e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero())
-    });
+    active_calendar
+        .events_mut()
+        .retain(|e| !e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero()));
 
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, &path);
+        print_err_msg(e, &path);
     }
 }
 
 pub fn mkindex() {
     if PathBuf::from_str(&&CONFIG.index_path).unwrap().exists() {
-	warning("This will revert your index.json to its default contents. Proceed?".to_string());
-	match get_input("[y/N]: ").to_lowercase().trim() {
-	    "yes" | "y" => {},
-	    _ => return
-	}
+        warning("This will revert your index.json to its default contents. Proceed?".to_string());
+        match get_input("[y/N]: ").to_lowercase().trim() {
+            "yes" | "y" => {}
+            _ => return,
+        }
     }
-    
+
     let new_index_json = match serde_json::to_string_pretty(&CalendarIndex::new()) {
-	Ok(s) => s,
-	Err(e) => {
-	    print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
-	    return
-	}
+        Ok(s) => s,
+        Err(e) => {
+            print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
+            return;
+        }
     };
     let path = PathBuf::from_str(&CONFIG.index_path).unwrap();
     let path_str = path.to_str().unwrap();
-    let mut file = match OpenOptions::new().truncate(true).write(true).create(true).open(&path_str) {
-	Ok(f) => f,
-	Err(e) => {
-	    print_err_msg(CalmarError::CreateFile { e }, path_str);
-	    return
-	}
+    let mut file = match OpenOptions::new()
+        .truncate(true)
+        .write(true)
+        .create(true)
+        .open(&path_str)
+    {
+        Ok(f) => f,
+        Err(e) => {
+            print_err_msg(CalmarError::CreateFile { e }, path_str);
+            return;
+        }
     };
-    
+
     if let Err(e) = file.write(new_index_json.as_bytes()) {
-	print_err_msg(CalmarError::WriteFile { e }, path_str);
+        print_err_msg(CalmarError::WriteFile { e }, path_str);
     }
-    
 }
 
 pub fn mkconfig() {
-
     if get_home_dir().join(".config/calmar/config.json").exists() {
-	warning("This will revert your config.json to its default contents. Proceed?".to_string());
-	match get_input("[y/N]: ").to_lowercase().trim() {
-	    "yes" | "y" => {},
-	    _ => return
-	}
+        warning("This will revert your config.json to its default contents. Proceed?".to_string());
+        match get_input("[y/N]: ").to_lowercase().trim() {
+            "yes" | "y" => {}
+            _ => return,
+        }
     }
-    
+
     let new_config = Config::default();
     let path = get_home_dir().join(".config/calmar/config.json");
-    let mut file = match OpenOptions::new().truncate(true).create(true).write(true).open(&path) {
-	Ok(file) => file,
-	Err(e) => {
-	    print_err_msg(CalmarError::CreateFile { e }, &path.to_str().unwrap().to_string());
-	    return;
-	}
+    let mut file = match OpenOptions::new()
+        .truncate(true)
+        .create(true)
+        .write(true)
+        .open(&path)
+    {
+        Ok(file) => file,
+        Err(e) => {
+            print_err_msg(
+                CalmarError::CreateFile { e },
+                &path.to_str().unwrap().to_string(),
+            );
+            return;
+        }
     };
     let new_config_json = match serde_json::to_string_pretty(&new_config) {
-	Ok(s) => s,
-	Err(e) => {
-	    print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
-	    return;
-	}
+        Ok(s) => s,
+        Err(e) => {
+            print_err_msg(CalmarError::ToJSON { e }, &"".to_string());
+            return;
+        }
     };
     if let Err(e) = file.write(new_config_json.as_bytes()) {
-	print_err_msg(CalmarError::WriteFile { e }, &path.to_str().unwrap().to_string())
+        print_err_msg(
+            CalmarError::WriteFile { e },
+            &path.to_str().unwrap().to_string(),
+        )
     }
 }

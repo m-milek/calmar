@@ -1,6 +1,8 @@
 use super::functions::duration_fmt;
 use crate::{
-    active_calendar, active_calendar_reference, cal::{event::Event, calendar_ref::CalendarReference}, calendar_index, CONFIG,
+    active_calendar, active_calendar_reference,
+    cal::{calendar_ref::CalendarReference, event::Event},
+    calendar_index, CONFIG,
 };
 use tabled::{Disable, Style, Table, Tabled};
 
@@ -51,11 +53,11 @@ pub struct DisplayedCalendarReference {
 
 impl From<CalendarReference> for DisplayedCalendarReference {
     fn from(r: CalendarReference) -> DisplayedCalendarReference {
-	DisplayedCalendarReference {
-	    name: r.name().to_owned(),
-	    path: r.path().to_owned(),
-	    active: r.active(),
-	}
+        DisplayedCalendarReference {
+            name: r.name().to_owned(),
+            path: r.path().to_owned(),
+            active: r.active(),
+        }
     }
 }
 
