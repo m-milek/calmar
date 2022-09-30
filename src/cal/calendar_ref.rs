@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::cal::{calendar::Calendar, calmar_error::CalmarError};
 use serde_derive::{Deserialize, Serialize};
 use std::{fmt::Display, io::Write};

@@ -1,8 +1,9 @@
-use super::functions::duration_fmt;
 use crate::{
     active_calendar, active_calendar_reference,
     cal::{calendar_ref::CalendarReference, event::Event},
-    calendar_index, CONFIG,
+    calendar_index,
+    cli::util::duration_fmt,
+    CONFIG,
 };
 use tabled::{Disable, Style, Table, Tabled};
 

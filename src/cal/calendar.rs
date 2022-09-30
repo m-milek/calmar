@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use crate::cal::{calmar_error::CalmarError, event::Event};
 use core::fmt;
 use serde_derive::{Deserialize, Serialize};
@@ -6,10 +5,6 @@ use std::{
     fmt::{Display, Formatter},
     io::Write,
 };
-
-pub enum CalendarReturnMessage {
-    Abort,
-}
 
 /// Holds its own name and a vector of `Event` structs.
 /// # Use

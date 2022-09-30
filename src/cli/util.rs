@@ -1,7 +1,8 @@
-use chrono::{DateTime, Local, Timelike};
-
-use crate::cli::{messages::warning, repl::get_input};
-use crate::CONFIG;
+use crate::{
+    cli::{messages::warning, repl::get_input},
+    CONFIG,
+};
+use chrono::{DateTime, Duration, Local, Timelike};
 
 pub fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
@@ -65,11 +66,8 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
         let mut lastdiag = x - 1;
         for y in 1..v1.len() + 1 {
             let olddiag = column[y];
-            column[y] = min3(
-                column[y] + 1,
-                column[y - 1] + 1,
-                lastdiag + delta(v1[y - 1], v2[x - 1]),
-            );
+            column[y] =
+                min3(column[y] + 1, column[y - 1] + 1, lastdiag + delta(v1[y - 1], v2[x - 1]));
             lastdiag = olddiag;
         }
     }
@@ -92,4 +90,26 @@ pub fn get_now_even() -> DateTime<Local> {
         .unwrap()
         .with_nanosecond(0)
         .unwrap()
+}
+
+pub fn duration_fmt(duration: Duration) -> String {
+    if duration.num_seconds() < 60 {
+        format!("{}s", duration.num_seconds())
+    } else if duration.num_minutes() < 60 {
+        format!(
+            "{}m {}s",
+            duration.num_minutes(),
+            duration.num_seconds() - duration.num_minutes() * 60
+        )
+    } else if duration.num_hours() < 24 {
+        let num_h = duration.num_hours();
+        // remaining minutes after accounting for the whole hours (occurs further into the function as well)
+        let num_m = duration.num_minutes() - num_h * 60;
+        format!("{}h {}m", num_h, num_m)
+    } else {
+        let num_d = duration.num_days();
+        let num_h = duration.num_hours() - num_d * 24;
+        let num_m = duration.num_minutes() - num_h * 60 - num_d * 24 * 60;
+        format!("{}d {}h {}m", num_d, num_h, num_m)
+    }
 }

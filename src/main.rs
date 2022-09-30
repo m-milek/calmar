@@ -22,10 +22,12 @@ mod cli {
 mod test {
     pub mod test;
 }
-use crate::cli::config::{get_config, Config};
-use crate::cli::repl;
-use cli::functions::{check_calmar_dir, check_config};
-use cli::help::print_startup_message;
+use crate::cli::{
+    config::{get_config, Config},
+    functions::{check_calmar_dir, check_config},
+    help::print_startup_message,
+    repl,
+};
 use lazy_static::lazy_static;
 
 lazy_static! {

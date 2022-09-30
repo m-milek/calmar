@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use crate::cli::validator::get_home_dir;
 use colored::Colorize;
 use serde_derive::{Deserialize, Serialize};

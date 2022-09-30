@@ -1,14 +1,9 @@
 use crate::{
-    cal::{
-        calendar::Calendar,
-        calendar_ref::CalendarReference,
-        calmar_error::CalmarError,
-    },
-    cli::validator::get_home_dir
+    cal::{calendar::Calendar, calendar_ref::CalendarReference, calmar_error::CalmarError},
+    cli::validator::get_home_dir,
 };
 use serde_derive::{Deserialize, Serialize};
-use std::io::Write;
-use std::{fmt::Display, fs::read_to_string};
+use std::{fmt::Display, fs::read_to_string, io::Write};
 
 /// Holds a vector of `CalendarReference` structs.
 #[derive(Debug, Serialize, Deserialize)]
@@ -53,13 +48,12 @@ impl CalendarIndex {
     pub fn calendars(&self) -> &Vec<CalendarReference> {
         &self.calendars
     }
-    #[allow(dead_code)]
     pub fn calendars_mut(&mut self) -> &mut Vec<CalendarReference> {
         &mut self.calendars
     }
 
     pub fn num_named(&self, name: &String) -> usize {
-	self.calendars.iter().filter(|r| r.name() == *name).count()
+        self.calendars.iter().filter(|r| r.name() == *name).count()
     }
 
     /// Returns `Calendar` struct parsed from the file pointed at by a `CalendarReference`

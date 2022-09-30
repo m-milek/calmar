@@ -1,16 +1,13 @@
-use super::{
-    commands::{date, mkindex, raw, time, update, write, update_index},
-    display::print_stuff,
-    functions::handle_unknown_command,
-    help::print_version,
-    messages::error,
-};
-use crate::cli::commands::mkconfig;
 use crate::cli::{
     commands::{
-        add, cal, clear, duration, edit, list, listcal, remove, removecal, set, sort, until,
+        add, cal, clear, date, duration, edit, list, listcal, mkconfig, mkindex, raw, remove,
+        removecal, set, sort, time, until, update, update_index, write,
     },
+    display::print_stuff,
+    functions::handle_unknown_command,
     help::print_help,
+    help::print_version,
+    messages::error,
 };
 use std::ops::Range;
 
@@ -45,7 +42,7 @@ pub fn parse(input: String) {
         "time" | "T" => time(),
         "until" | "u" => until(&split_input),
         "update" | "U" => update(),
-	"update-index" | "Ui" => update_index(),
+        "update-index" | "Ui" => update_index(),
         "quit" | "q" => std::process::exit(0),
         "version" | "v" => print_version(),
         "write" | "w" => write(&split_input),

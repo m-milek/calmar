@@ -1,7 +1,5 @@
-#![allow(dead_code)]
-use colored::Colorize;
-
 use crate::{cal::calmar_error::CalmarError, CONFIG};
+use colored::Colorize;
 
 pub fn success(s: String) {
     if CONFIG.print_success_messages {

@@ -1,9 +1,7 @@
-#![allow(dead_code)]
-use std::fmt::{self, Display, Formatter};
-
 use chrono::{DateTime, Duration, Local};
 use serde_derive::{Deserialize, Serialize};
 use serde_with::serde_as;
+use std::fmt::{self, Display, Formatter};
 use struct_field_names_as_array::FieldNamesAsArray;
 
 #[serde_with::serde_as]
@@ -93,13 +91,9 @@ impl Event {
     pub fn set_name(&mut self, name: &String) {
         self.name = name.to_string()
     }
-    pub fn set_start_date() {}
-    pub fn set_start_time() {}
     pub fn set_start(&mut self, new_start: &DateTime<Local>) {
         self.start = *new_start
     }
-    pub fn set_end_date() {}
-    pub fn set_end_time() {}
     pub fn set_end(&mut self, new_end: &DateTime<Local>) {
         self.end = *new_end
     }
@@ -112,7 +106,6 @@ impl Event {
     pub fn set_difficulty(&mut self, d: u8) {
         self.difficulty = d
     }
-
     pub fn duration(&self) -> Duration {
         self.end - self.start
     }

@@ -1,7 +1,5 @@
-use crate::cli::{messages::warning, repl::get_input, validator::*};
+use crate::cli::{messages::warning, repl::get_input, util::get_now_even, validator::*};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone};
-
-use super::util::get_now_even;
 
 /*
 Return a valid date
@@ -186,27 +184,22 @@ pub fn parse_into_duration(input: &str) -> Duration {
 
     let input_lower = &input.to_lowercase();
 
-    match (
-        input_lower.contains('d'),
-        input_lower.contains('h'),
-        input_lower.contains('m'),
-    ) {
-        (true, false, false) => {
-            Duration::days(
-                input_lower.split('d').collect::<Vec<&str>>()[0].trim()
-                    .parse()
-                    .expect("Valid duration was given"),
-            )
-        }
-        (false, true, false) => {
-            Duration::hours(
-                input_lower.split('h').collect::<Vec<&str>>()[0].trim()
-                    .parse()
-                    .expect("Valid duration was given"),
-            )
-        }
+    match (input_lower.contains('d'), input_lower.contains('h'), input_lower.contains('m')) {
+        (true, false, false) => Duration::days(
+            input_lower.split('d').collect::<Vec<&str>>()[0]
+                .trim()
+                .parse()
+                .expect("Valid duration was given"),
+        ),
+        (false, true, false) => Duration::hours(
+            input_lower.split('h').collect::<Vec<&str>>()[0]
+                .trim()
+                .parse()
+                .expect("Valid duration was given"),
+        ),
         (false, false, true) => Duration::minutes(
-            input_lower.split('m').collect::<Vec<&str>>()[0].trim()
+            input_lower.split('m').collect::<Vec<&str>>()[0]
+                .trim()
                 .parse()
                 .expect("Valid duration was given"),
         ),

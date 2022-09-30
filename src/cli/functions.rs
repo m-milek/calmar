@@ -1,8 +1,9 @@
-use crate::cal::calendar_index::CalendarIndex;
-use crate::cal::calmar_error::CalmarError;
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::{calendar::Calendar, calendar_ref::CalendarReference, event::Event},
+    cal::{
+        calendar::Calendar, calendar_index::CalendarIndex, calendar_ref::CalendarReference,
+        calmar_error::CalmarError, event::Event,
+    },
     calendar_index,
     cli::{
         getdata::{
@@ -11,21 +12,21 @@ use crate::{
         },
         messages::{error, print_err_msg, warning},
         repl::get_input,
-        util::default_or_custom_save_path,
-        util::{select_in_range, uppercase_first_letter},
+        util::{
+            default_or_custom_save_path, levenshtein_distance, select_in_range,
+            uppercase_first_letter,
+        },
+        validator::{get_home_dir, validate_duration},
     },
     CONFIG,
 };
-use chrono::{DateTime, Duration, Local};
+use chrono::{DateTime, Local};
 use std::path::PathBuf;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
     thread,
 };
-
-use super::validator::validate_duration;
-use super::{util::levenshtein_distance, validator::get_home_dir};
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -174,11 +175,8 @@ pub fn edit_event(event_name: &str) {
             if num == 2 || num == 3 {
                 current_end = edited_event.end();
                 print!("End time: ");
-                let mut new_end_time = get_end_time(
-                    &current_start.date(),
-                    &current_start.time(),
-                    &current_end.date(),
-                );
+                let mut new_end_time =
+                    get_end_time(&current_start.date(), &current_start.time(), &current_end.date());
                 while current_end.date().and_time(new_end_time).unwrap() < current_start {
                     println!("End timedate cannot be before start timedate");
                     print!("End date: ");
@@ -228,36 +226,11 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let path_to_calendar_string = match path_to_calendar.to_str() {
         Some(string) => string,
         None => {
-            error(format!(
-                "Failed to convert {} to string.",
-                path_to_calendar.display()
-            ));
+            error(format!("Failed to convert {} to string.", path_to_calendar.display()));
             std::process::exit(1);
         }
     };
     CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
-}
-
-pub fn duration_fmt(duration: Duration) -> String {
-    if duration.num_seconds() < 60 {
-        format!("{}s", duration.num_seconds())
-    } else if duration.num_minutes() < 60 {
-        format!(
-            "{}m {}s",
-            duration.num_minutes(),
-            duration.num_seconds() - duration.num_minutes() * 60
-        )
-    } else if duration.num_hours() < 24 {
-        let num_h = duration.num_hours();
-        // remaining minutes after accounting for the whole hours (occurs further into the function as well)
-        let num_m = duration.num_minutes() - num_h * 60;
-        format!("{}h {}m", num_h, num_m)
-    } else {
-        let num_d = duration.num_days();
-        let num_h = duration.num_hours() - num_d * 24;
-        let num_m = duration.num_minutes() - num_h * 60 - num_d * 24 * 60;
-        format!("{}d {}h {}m", num_d, num_h, num_m)
-    }
 }
 
 pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
@@ -346,11 +319,7 @@ pub fn handle_unknown_command(s: &str) {
     // If the match would be somewhat helpful
     // (distance has to be small, hence 0.8 multiplier) print the suggestion
     if (min_distance as f32) < (s.len() as f32) {
-        warning(format!(
-            "Unknown command: {}. Did you mean '{}'?",
-            s.trim(),
-            best_match
-        ));
+        warning(format!("Unknown command: {}. Did you mean '{}'?", s.trim(), best_match));
         return;
     }
     warning(format!("Unknown command: {}", s.trim()))
@@ -381,10 +350,7 @@ pub fn check_calmar_dir() {
     if path.exists() {
         return;
     }
-    error(format!(
-        "{} doesn't exist. Do you want to create it?",
-        path.display()
-    ));
+    error(format!("{} doesn't exist. Do you want to create it?", path.display()));
     match get_input("[Y/n]: ").to_lowercase().trim() {
         "yes" | "y" => warning(
             "Use the \"mkindex\" command to generate an empty index.json in the created directory."
@@ -401,26 +367,39 @@ pub fn check_calmar_dir() {
 pub fn check_config() {
     let permitted_date_formats = ["DD/MM/YYYY"];
     let permitted_time_formats = ["HH:MM"];
-    let mut permitted_colors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"].map(|s| s.to_string()).to_vec();
-    let mut brights: Vec<String> = permitted_colors.iter().map(|s| "bright_".to_owned() + &s).collect();
+    let mut permitted_colors = [
+        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+    ]
+    .map(|s| s.to_string())
+    .to_vec();
+    let mut brights: Vec<String> = permitted_colors
+        .iter()
+        .map(|s| "bright_".to_owned() + &s)
+        .collect();
     permitted_colors.append(&mut brights);
     let warning = "Invalid config.json values.\n";
-    
+
     if !permitted_date_formats.contains(&CONFIG.date_format.as_str()) {
-	error(format!("{warning}{} is not a valid date format.\nSupported formats: {permitted_date_formats:?}", &CONFIG.date_format));
-	std::process::exit(1);
+        error(format!("{warning}{} is not a valid date format.\nSupported formats: {permitted_date_formats:?}", &CONFIG.date_format));
+        std::process::exit(1);
     }
     if !permitted_time_formats.contains(&CONFIG.time_format.as_str()) {
-	error(format!("{warning}{} is not a valid time format.\nSupported formats: {permitted_time_formats:?}", &CONFIG.time_format));
-	std::process::exit(1);
+        error(format!("{warning}{} is not a valid time format.\nSupported formats: {permitted_time_formats:?}", &CONFIG.time_format));
+        std::process::exit(1);
     }
     if !validate_duration(&CONFIG.default_calendar_span) {
-	error(format!("{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'", CONFIG.default_calendar_span));
-	std::process::exit(1);
+        error(format!(
+            "{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'",
+            CONFIG.default_calendar_span
+        ));
+        std::process::exit(1);
     }
     if !permitted_colors.contains(&CONFIG.prompt_color) {
-	error(format!("{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}", CONFIG.prompt_color));
-	std::process::exit(1);
+        error(format!(
+            "{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}",
+            CONFIG.prompt_color
+        ));
+        std::process::exit(1);
     }
 }
 
@@ -434,22 +413,30 @@ pub fn check_config() {
 /// Remove those entries and associated files if the user agrees.
 ///
 /// * Push the new `CalendarReference` to the `self.calendars`.
-pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference,) {
-    
+pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
     let saved_names: Vec<String> = i.calendars().iter().map(|r| r.name()).collect();
 
     if saved_names.contains(&new_calendar.name()) {
-        match get_input(format!("Calendar named {} already exists. Do you want to overwrite it? [y/N]: ", new_calendar.name()).as_str()).to_lowercase().as_str() {
-	    "y" | "yes" => {},
-	    _ => return,
-	}
-	
+        match get_input(
+            format!(
+                "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
+                new_calendar.name()
+            )
+            .as_str(),
+        )
+        .to_lowercase()
+        .as_str()
+        {
+            "y" | "yes" => {}
+            _ => return,
+        }
+
         // Remove all calendar files with the same name
         for reference in i.calendars() {
             if reference.name() == new_calendar.name() {
                 if let Err(e) = std::fs::remove_file(&reference.path()) {
-                        error(format!("Failed to delete file {}.\n{}",reference.path(), e));
-                        std::process::exit(1);
+                    error(format!("Failed to delete file {}.\n{}", reference.path(), e));
+                    std::process::exit(1);
                 }
             }
         }
@@ -461,24 +448,32 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference,) {
     let saved_paths: Vec<String> = i.calendars().iter().map(|r| r.path()).collect();
 
     if saved_paths.contains(&new_calendar.path()) {
-        match get_input(format!("Calendar with path {} already exists. Do you want to overwrite it?", new_calendar.path()).as_str()).as_str() {
-	    "y" | "yes" => {},
-	    _ => return
-	}
+        match get_input(
+            format!(
+                "Calendar with path {} already exists. Do you want to overwrite it?",
+                new_calendar.path()
+            )
+            .as_str(),
+        )
+        .as_str()
+        {
+            "y" | "yes" => {}
+            _ => return,
+        }
         // Remove all calendar files with the same path
         for reference in i.calendars() {
-	    if reference.path() == new_calendar.path() {
-		if let Err(e) = std::fs::remove_file(&reference.path()) {
-                    error(format!("Failed to delete file {}.\n{}",reference.path(),e));
+            if reference.path() == new_calendar.path() {
+                if let Err(e) = std::fs::remove_file(&reference.path()) {
+                    error(format!("Failed to delete file {}.\n{}", reference.path(), e));
                     std::process::exit(1);
-		}
-	    }
+                }
+            }
         }
         // Remove all references with the same path
         i.calendars_mut()
             .retain(|calendar| calendar.path() != new_calendar.path());
     }
-// Now the index is cleaned of any calendars named like the new one and the files are deleted.
+    // Now the index is cleaned of any calendars named like the new one and the files are deleted.
     i.calendars_mut().push(new_calendar.clone());
 }
 
@@ -492,16 +487,12 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
     match tmp_reference_vec.len() {
         0 => {
             warning(format!("No calendar named {} found.", name));
-	    return;
+            return;
         }
         1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
             Ok(_) => (),
             Err(e) => {
-                error(format!(
-                    "Failed to remove file {}.\n{}",
-                    tmp_reference_vec[0].path(),
-                    e
-                ));
+                error(format!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path(), e));
                 return;
             }
         },

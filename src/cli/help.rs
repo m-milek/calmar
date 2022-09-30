@@ -385,7 +385,7 @@ If a recurring event is currently happening, its start and end timedates are set
     );
 
     let update_index_doc = format!(
-	"
+        "
 {}
 
 Update the calendar index.
@@ -396,8 +396,8 @@ Remove all calendar references where their path no longer points to an existing 
 > update-index
 > Ui
 ",
-	"update-index, Ui".bold(),
-	"Syntax".bold()
+        "update-index, Ui".bold(),
+        "Syntax".bold()
     );
 
     let quit_doc = format!(
@@ -547,14 +547,11 @@ Keyboard shortcut lists:
             "time" | "T" => println!("{time_doc}"),
             "until" | "u" => println!("{until_doc}"),
             "update" | "U" => println!("{update_doc}"),
-	    "update-index" | "Ui" => println!("{update_index_doc}"),
+            "update-index" | "Ui" => println!("{update_index_doc}"),
             "quit" | "q" => println!("{quit_doc}"),
             "version" | "v" => println!("{version_doc}"),
             "write" | "w" => println!("{write_doc}"),
-            _ => warning(format!(
-                "help: No documentation for command \"{}\"",
-                split_input[1]
-            )),
+            _ => warning(format!("help: No documentation for command \"{}\"", split_input[1])),
         },
         _ => warning(format!(
             "help: Too many arguments provided. Expected: 0 or 1. Got: {}",
