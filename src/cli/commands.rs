@@ -1,10 +1,10 @@
 use super::{
     config::Config,
-    functions::generate_until,
+    functions::{generate_until, add_entry, delete_entry},
     getdata::parse_into_duration,
     repl::get_input,
     util::{get_now_even, round_to_full_day},
-    validator::{get_home_dir, validate_duration},
+    validator::{get_home_dir, validate_duration}, messages::success,
 };
 use crate::cal::calmar_error::CalmarError;
 use crate::{
@@ -32,37 +32,24 @@ If file named 'name' already exists, it asks the user for confirmation.
  */
 /// Create a new calendar and save it to the calendar index.
 pub fn cal(split_input: &Vec<&str>) {
-    let mut new_reference = match split_input.len() {
-        1 => get_new_calendar_reference(None),
-        2 => get_new_calendar_reference(Some(split_input[1].to_owned())),
-        _ => {
-            warning(format!(
-                "cal: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1
-            )); // do not count "cal" as an argument
-            return;
-        }
-    };
 
     let mut index = calendar_index!();
-
-    if index.calendars().is_empty() {
-        new_reference.set_active()
-    }
-
-    match index.add_entry(&new_reference) {
-        Ok(_) => {}
-        Err(_) => {
-            error("Failed to add new calendar reference to calendar index.".to_string());
-            return;
-        }
-    }
-    if let Err(e) = index.save() {
-        print_err_msg(e, &CONFIG.index_path);
-        return;
-    };
-    if let Err(e) = new_reference.create_file() {
-        print_err_msg(e, new_reference.path())
+    
+    if split_input.len() == 1 {
+	add_entry(&mut index, &get_new_calendar_reference(None))
+    } else {
+	split_input[1..].iter().for_each(|n| {
+	    let mut new_ref = get_new_calendar_reference(Some(n.to_string()));
+	    if index.calendars().is_empty() {new_ref.set_active()}
+	    add_entry(&mut index, &new_ref);
+	    if let Err(e) = index.save() {
+		print_err_msg(e, &CONFIG.index_path);
+		return;
+	    };
+	    if let Err(e) = new_ref.create_file() {
+		print_err_msg(e, new_ref.path())
+	    }
+	})
     }
 }
 
@@ -70,50 +57,26 @@ pub fn cal(split_input: &Vec<&str>) {
 pub fn removecal(split_input: &Vec<&str>) {
     let mut index = calendar_index!();
 
-    let name = match split_input.len() {
-        1 => get_valid_calendar_name(),
-        2 => split_input[1].to_string(),
-        _ => {
-            warning(format!(
-                "removecal: Too many arguments provided. Expected: 0 or 1. Got: {}",
-                split_input.len() - 1
-            ));
-            return;
-        }
-    };
-
-    match index.delete_entry(name) {
-        Ok(_) => (),
-        Err(_) => return,
+    if split_input.len() == 1 {
+	delete_entry(&mut index, get_valid_calendar_name());
+    } else {
+	split_input[1..].iter().for_each(|n| delete_entry(&mut index, n.to_string()));
     }
-
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
-        return;
-    };
+    }
 }
 
-/// Delete an event from the active calendar
+/// Delete events from the active calendar
 pub fn remove(split_input: &Vec<&str>) {
-    let name = match split_input.len() {
-        1 => get_valid_event_name(),
-        2 => split_input[1].to_owned(),
-        _ => {
-            warning(format!(
-                "remove: Too many arguments provided. Expected: 1 or 2. Got: {}",
-                split_input.len() - 1
-            ));
-            return;
-        }
-    };
-
     let mut active_calendar = active_calendar!();
-    let path = active_calendar_reference!().path().clone();
+    let path = active_calendar_reference!().path();
 
-    active_calendar
-        .events_mut()
-        .retain(|event| event.name().ne(&name));
-
+    if split_input.len() == 1 {
+	active_calendar.events_mut().retain(|e| e.name() != get_valid_event_name());
+    } else {
+	active_calendar.events_mut().retain(|e| !split_input[1..].contains(&e.name().as_str()));
+    }    
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
     }
@@ -124,7 +87,6 @@ pub fn set(split_input: &Vec<&str>) {
     let mut index = calendar_index!();
     let name = match split_input.len() {
         1 => {
-            print!("Name: ");
             get_valid_event_name()
         }
         2 => split_input[1].to_string(),
@@ -137,8 +99,16 @@ pub fn set(split_input: &Vec<&str>) {
         }
     };
 
-    if !index.contains_one_named(&name) {
-        return;
+    match index.num_named(&name) {
+	0 => {
+	    warning(format!("No calendars named {name}"));
+	    return;
+	},
+	1 => {},
+	x => {
+	    warning(format!("{x} calendars named {name}. There must be only one"));
+	    return;
+	}
     }
 
     match index.number_of_active_calendars() {
@@ -175,9 +145,17 @@ pub fn add(split_input: &Vec<&str>) {
         }
     };
 
-    let path = active_calendar_reference!().path().clone();
     let mut active_calendar = active_calendar!();
-    active_calendar.add_event(new_event);
+    if split_input.len() == 1 {
+	active_calendar.add_event(get_new_event(None));
+    } else {
+	split_input[1..].iter().for_each(|n| {
+	    if CONFIG.print_success_messages {success(format!("Adding {n}"))}
+	    active_calendar.add_event(get_new_event(Some(n.to_string())));
+	})
+    }
+
+    let path = active_calendar_reference!().path().clone();
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
     }
@@ -202,7 +180,7 @@ pub fn raw(split_input: &[&str]) {
                 true
             }
         })
-        .for_each(|e| println!("{:#?}", e))
+        .for_each(|e| println!("{e}"))
 }
 
 /// Clear the screen
@@ -232,7 +210,7 @@ pub fn listcal(split_input: &Vec<&str>) {
                 true
             }
         })
-        .for_each(|r| println!("{:#?}", r))
+        .for_each(|r| println!("{r}"))
 }
 
 pub fn sort(split_input: &Vec<&str>) {
@@ -286,17 +264,16 @@ pub fn sort(split_input: &Vec<&str>) {
     }
 
     active_calendar.set_events(events_std);
-    if let Err(e) = active_calendar.save(active_calendar_reference.path()) {
+    if let Err(e) = active_calendar.save(&active_calendar_reference.path()) {
         print_err_msg(e, active_calendar_reference.path());
     }
 }
 
 pub fn duration(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
-
+    
     let name_arr = match split_input.len() {
         1 => {
-            print!("Name: ");
             vec![get_valid_event_name()]
         }
         _ => split_input[1..].iter().map(|a| a.to_string()).collect(),
@@ -314,7 +291,6 @@ pub fn until(split_input: &Vec<&str>) {
 
     let name_arr = match split_input.len() {
         1 => {
-            print!("Name: ");
             vec![get_valid_event_name()]
         }
         _ => split_input[1..].iter().map(|a| a.to_string()).collect(),
@@ -342,7 +318,7 @@ pub fn until(split_input: &Vec<&str>) {
             .map(|e| e.name())
             .any(|x| x == *name)
         {
-            warning(format!("until: No event named {}", name))
+            warning(format!("No event named {}", name))
         }
     }
 }
@@ -536,6 +512,7 @@ pub fn mkconfig() {
 
     let new_config = Config::default();
     let path = get_home_dir().join(".config/calmar/config.json");
+    
     let mut file = match OpenOptions::new()
         .truncate(true)
         .create(true)
@@ -551,6 +528,7 @@ pub fn mkconfig() {
             return;
         }
     };
+    
     let new_config_json = match serde_json::to_string_pretty(&new_config) {
         Ok(s) => s,
         Err(e) => {
@@ -565,3 +543,5 @@ pub fn mkconfig() {
         )
     }
 }
+
+//update index

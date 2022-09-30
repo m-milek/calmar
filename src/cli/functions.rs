@@ -1,3 +1,4 @@
+use crate::cal::calendar_index::CalendarIndex;
 use crate::cal::calmar_error::CalmarError;
 use crate::{
     active_calendar, active_calendar_reference,
@@ -310,6 +311,7 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
 }
 
 pub fn handle_unknown_command(s: &str) {
+    // command shortcuts such as `ls` might be added here later
     let command_list = [
         "add",
         "cal",
@@ -343,7 +345,7 @@ pub fn handle_unknown_command(s: &str) {
 
     // If the match would be somewhat helpful
     // (distance has to be small, hence 0.8 multiplier) print the suggestion
-    if (min_distance as f32) < (s.len() as f32 * 0.8) {
+    if (min_distance as f32) < (s.len() as f32) {
         warning(format!(
             "Unknown command: {}. Did you mean '{}'?",
             s.trim(),
@@ -420,4 +422,93 @@ pub fn check_config() {
 	error(format!("{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}", CONFIG.prompt_color));
 	std::process::exit(1);
     }
+}
+
+/// Adds a new `CalendarReference` to `self.calendars`.
+///
+/// # Executed steps
+/// * Check for `CalendarReference`s with calendars named like the new one.
+/// Remove those entries and associated files if the user agrees.
+///
+/// * Check for `CalendarReference`s with a path like the new one.
+/// Remove those entries and associated files if the user agrees.
+///
+/// * Push the new `CalendarReference` to the `self.calendars`.
+pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference,) {
+    
+    let saved_names: Vec<String> = i.calendars().iter().map(|r| r.name()).collect();
+
+    if saved_names.contains(&new_calendar.name()) {
+        match get_input(format!("Calendar named {} already exists. Do you want to overwrite it? [y/N]: ", new_calendar.name()).as_str()).to_lowercase().as_str() {
+	    "y" | "yes" => {},
+	    _ => return,
+	}
+	
+        // Remove all calendar files with the same name
+        for reference in i.calendars() {
+            if reference.name() == new_calendar.name() {
+                if let Err(e) = std::fs::remove_file(&reference.path()) {
+                        error(format!("Failed to delete file {}.\n{}",reference.path(), e));
+                        std::process::exit(1);
+                }
+            }
+        }
+        // Remove all references with the same name
+        i.calendars_mut()
+            .retain(|calendar| calendar.name() != new_calendar.name());
+    }
+
+    let saved_paths: Vec<String> = i.calendars().iter().map(|r| r.path()).collect();
+
+    if saved_paths.contains(&new_calendar.path()) {
+        match get_input(format!("Calendar with path {} already exists. Do you want to overwrite it?", new_calendar.path()).as_str()).as_str() {
+	    "y" | "yes" => {},
+	    _ => return
+	}
+        // Remove all calendar files with the same path
+        for reference in i.calendars() {
+	    if reference.path() == new_calendar.path() {
+		if let Err(e) = std::fs::remove_file(&reference.path()) {
+                    error(format!("Failed to delete file {}.\n{}",reference.path(),e));
+                    std::process::exit(1);
+		}
+	    }
+        }
+        // Remove all references with the same path
+        i.calendars_mut()
+            .retain(|calendar| calendar.path() != new_calendar.path());
+    }
+// Now the index is cleaned of any calendars named like the new one and the files are deleted.
+    i.calendars_mut().push(new_calendar.clone());
+}
+
+/// Deletes an entry from index by name.
+/// Disallows unambigous situations where the number of `CalendarReference`s
+/// named `name` is not equal to one
+pub fn delete_entry(i: &mut CalendarIndex, name: String) {
+    let mut tmp_reference_vec = i.calendars().clone();
+    tmp_reference_vec.retain(|r| r.name() == name);
+
+    match tmp_reference_vec.len() {
+        0 => {
+            warning(format!("No calendar named {} found.", name));
+	    return;
+        }
+        1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
+            Ok(_) => (),
+            Err(e) => {
+                error(format!(
+                    "Failed to remove file {}.\n{}",
+                    tmp_reference_vec[0].path(),
+                    e
+                ));
+                return;
+            }
+        },
+        _ => {
+            error(format!("Multiple calendars named {} found. Please fix index.json before proceeding. Calendars must have unique names.", name));
+            return;
+        }
+    }
+    i.calendars_mut().retain(|r| r.name() != name);
 }

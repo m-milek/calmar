@@ -31,11 +31,11 @@ impl CalendarReference {
     }
 
     // Getters
-    pub fn name(&self) -> &String {
-        &self.name
+    pub fn name(&self) -> String {
+        self.name.clone()
     }
-    pub fn path(&self) -> &String {
-        &self.path
+    pub fn path(&self) -> String {
+        self.path.clone()
     }
     pub fn active(&self) -> bool {
         self.active

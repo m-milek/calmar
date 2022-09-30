@@ -28,14 +28,6 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
     }
 }
 
-pub fn yesno(prompt: &str) -> bool {
-    print!("{}", prompt);
-    matches!(
-        get_input(prompt).trim().to_lowercase().as_str(),
-        "yes" | "y"
-    )
-}
-
 pub fn default_or_custom_save_path(input: String) -> String {
     if input.trim().is_empty() {
         return CONFIG.default_path.clone();
@@ -50,7 +42,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     if v1.is_empty() {
         return v2.len();
     }
-    if !v2.is_empty() {
+    if v2.is_empty() {
         return v1.len();
     }
 
