@@ -192,23 +192,21 @@ pub fn parse_into_duration(input: &str) -> Duration {
         input_lower.contains('m'),
     ) {
         (true, false, false) => {
-            // Duration has to be 'days'
             Duration::days(
-                input_lower.split('d').collect::<Vec<&str>>()[0]
+                input_lower.split('d').collect::<Vec<&str>>()[0].trim()
                     .parse()
                     .expect("Valid duration was given"),
             )
         }
         (false, true, false) => {
-            // Duration has to be 'hours'
             Duration::hours(
-                input_lower.split('h').collect::<Vec<&str>>()[0]
+                input_lower.split('h').collect::<Vec<&str>>()[0].trim()
                     .parse()
                     .expect("Valid duration was given"),
             )
         }
         (false, false, true) => Duration::minutes(
-            input_lower.split('m').collect::<Vec<&str>>()[0]
+            input_lower.split('m').collect::<Vec<&str>>()[0].trim()
                 .parse()
                 .expect("Valid duration was given"),
         ),

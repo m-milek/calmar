@@ -1,8 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use crate::validator::{
+    use chrono::Duration;
+
+    use crate::cli::{validator::{
         validate_date, validate_difficulty, validate_duration, validate_priority, validate_time,
-    };
+    }, getdata::parse_into_duration};
 
     // DATE TESTS
     #[test]
@@ -94,20 +96,14 @@ mod tests {
     // DURATION TESTS
     #[test]
     fn duration_format_validation() {
-        assert_eq!(true, validate_duration("123days"));
-        assert_eq!(true, validate_duration("123 days"));
         assert_eq!(true, validate_duration("123d"));
         assert_eq!(true, validate_duration("123 d"));
         assert_eq!(true, validate_duration("12min"));
         assert_eq!(true, validate_duration("12 min"));
         assert_eq!(true, validate_duration("12m"));
         assert_eq!(true, validate_duration("12 m"));
-        assert_eq!(true, validate_duration("12minutes"));
-        assert_eq!(true, validate_duration("12 minutes"));
         assert_eq!(true, validate_duration("12h"));
         assert_eq!(true, validate_duration("12 h"));
-        assert_eq!(true, validate_duration("12hours"));
-        assert_eq!(true, validate_duration("12 hours"));
         assert_eq!(false, validate_duration("-123d"));
         assert_eq!(false, validate_duration("-123 d"));
         assert_eq!(false, validate_duration("-123 min"));
@@ -133,13 +129,22 @@ mod tests {
     #[test]
     fn invalid_priority_format() {
         assert_eq!(true, validate_priority("2"));
-        assert_eq!(true, validate_priority("8"));
         assert_eq!(true, validate_priority("0"));
-        assert_eq!(false, validate_priority("11"));
         assert_eq!(false, validate_priority("-1"));
         assert_eq!(false, validate_priority("-10"));
         assert_eq!(false, validate_priority("d10"));
         assert_eq!(false, validate_priority("1g0"));
         assert_eq!(false, validate_priority(""));
+    }
+    #[test]
+    fn parse_duration() {
+	assert_eq!(Duration::minutes(15), parse_into_duration("15m"));
+	assert_eq!(Duration::minutes(15), parse_into_duration("15min"));
+	assert_eq!(Duration::minutes(15), parse_into_duration("15 m"));
+	assert_eq!(Duration::minutes(15), parse_into_duration("15 min"));
+	assert_eq!(Duration::hours(4), parse_into_duration("4h"));
+	assert_eq!(Duration::hours(4), parse_into_duration("4 h"));
+	assert_eq!(Duration::days(2), parse_into_duration("2d"));
+	assert_eq!(Duration::days(2), parse_into_duration("2 d"));
     }
 }
