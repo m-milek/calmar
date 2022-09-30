@@ -4,7 +4,7 @@ use super::{
     getdata::parse_into_duration,
     repl::get_input,
     util::{get_now_even, round_to_full_day},
-    validator::get_home_dir,
+    validator::{get_home_dir, validate_duration},
 };
 use crate::cal::calmar_error::CalmarError;
 use crate::{
@@ -356,7 +356,12 @@ pub fn list(split_input: &Vec<&str>) {
     match split_input.len() {
         1 => {}
         2 => {
-            span = parse_into_duration(split_input[1]);
+	    if validate_duration(split_input[1]){
+		span = parse_into_duration(split_input[1]);
+	    } else {
+		warning(format!("{} is not a valid duration input.", split_input[1]));
+		return;
+	    }
         }
         _ => warning(format!(
             "list: Invalid number of arguments. Expected: 0 or 1. Got: {}",

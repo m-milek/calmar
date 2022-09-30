@@ -23,6 +23,7 @@ use std::{
     thread,
 };
 
+use super::validator::validate_duration;
 use super::{util::levenshtein_distance, validator::get_home_dir};
 
 /// Create a new event and return it.
@@ -395,4 +396,28 @@ pub fn check_calmar_dir() {
 }
 
 // Verify config values
-pub fn check_config() {}
+pub fn check_config() {
+    let permitted_date_formats = ["DD/MM/YYYY"];
+    let permitted_time_formats = ["HH:MM"];
+    let mut permitted_colors = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"].map(|s| s.to_string()).to_vec();
+    let mut brights: Vec<String> = permitted_colors.iter().map(|s| "bright_".to_owned() + &s).collect();
+    permitted_colors.append(&mut brights);
+    let warning = "Invalid config.json values.\n";
+    
+    if !permitted_date_formats.contains(&CONFIG.date_format.as_str()) {
+	error(format!("{warning}{} is not a valid date format.\nSupported formats: {permitted_date_formats:?}", &CONFIG.date_format));
+	std::process::exit(1);
+    }
+    if !permitted_time_formats.contains(&CONFIG.time_format.as_str()) {
+	error(format!("{warning}{} is not a valid time format.\nSupported formats: {permitted_time_formats:?}", &CONFIG.time_format));
+	std::process::exit(1);
+    }
+    if !validate_duration(&CONFIG.default_calendar_span) {
+	error(format!("{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'", CONFIG.default_calendar_span));
+	std::process::exit(1);
+    }
+    if !permitted_colors.contains(&CONFIG.prompt_color) {
+	error(format!("{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}", CONFIG.prompt_color));
+	std::process::exit(1);
+    }
+}
