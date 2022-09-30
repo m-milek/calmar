@@ -36,21 +36,26 @@ pub fn cal(split_input: &Vec<&str>) {
     let mut index = calendar_index!();
     
     if split_input.len() == 1 {
-	add_entry(&mut index, &get_new_calendar_reference(None))
+	let mut new_ref = get_new_calendar_reference(None);
+	add_entry(&mut index, &new_ref);
+	if index.calendars().is_empty() {new_ref.set_active()}
+	if let Err(e) = new_ref.create_file() {
+	    print_err_msg(e, new_ref.path())
+	}
     } else {
 	split_input[1..].iter().for_each(|n| {
 	    let mut new_ref = get_new_calendar_reference(Some(n.to_string()));
 	    if index.calendars().is_empty() {new_ref.set_active()}
 	    add_entry(&mut index, &new_ref);
-	    if let Err(e) = index.save() {
-		print_err_msg(e, &CONFIG.index_path);
-		return;
-	    };
 	    if let Err(e) = new_ref.create_file() {
 		print_err_msg(e, new_ref.path())
 	    }
 	})
     }
+    if let Err(e) = index.save() {
+	print_err_msg(e, &CONFIG.index_path);
+	return;
+    };
 }
 
 /// Delete a calendar
@@ -132,19 +137,6 @@ Call event creation with name given optionally
  */
 /// Create a new event and save it to the active calednar.
 pub fn add(split_input: &Vec<&str>) {
-    let new_event: Event = match split_input.len() {
-        1 => get_new_event(None),
-        2 => get_new_event(Some(split_input[1].to_owned())),
-        _ => {
-            warning(format!(
-                "add: Too many arguments provided. Expected: 0 or 1, Got: {}",
-                split_input.len() - 1
-            ));
-            // do not count "add" as an argument
-            return;
-        }
-    };
-
     let mut active_calendar = active_calendar!();
     if split_input.len() == 1 {
 	active_calendar.add_event(get_new_event(None));

@@ -4,10 +4,7 @@ use crate::{
         calendar_ref::CalendarReference,
         calmar_error::CalmarError,
     },
-    cli::{
-        messages::warning,
-        validator::get_home_dir, util::select_in_range,
-    },
+    cli::validator::get_home_dir
 };
 use serde_derive::{Deserialize, Serialize};
 use std::io::Write;
