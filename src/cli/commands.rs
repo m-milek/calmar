@@ -22,7 +22,7 @@ use crate::{
     CONFIG,
 };
 use chrono::{Duration, Local};
-use std::{fs::OpenOptions, io::Write, ops::Neg, path::PathBuf, str::FromStr};
+use std::{fs::OpenOptions, io::Write, ops::Neg, path::{PathBuf, Path}, str::FromStr};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -536,4 +536,10 @@ pub fn mkconfig() {
     }
 }
 
-//update index
+pub fn update_index() {
+    let mut index = calendar_index!();
+    index.calendars_mut().retain(|r| Path::new(&r.path()).exists());
+    if let Err(e) = index.save() {
+	print_err_msg(e, &CONFIG.index_path);
+    }
+}

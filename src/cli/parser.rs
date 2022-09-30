@@ -1,5 +1,5 @@
 use super::{
-    commands::{date, mkindex, raw, time, update, write},
+    commands::{date, mkindex, raw, time, update, write, update_index},
     display::print_stuff,
     functions::handle_unknown_command,
     help::print_version,
@@ -45,6 +45,7 @@ pub fn parse(input: String) {
         "time" | "T" => time(),
         "until" | "u" => until(&split_input),
         "update" | "U" => update(),
+	"update-index" | "Ui" => update_index(),
         "quit" | "q" => std::process::exit(0),
         "version" | "v" => print_version(),
         "write" | "w" => write(&split_input),

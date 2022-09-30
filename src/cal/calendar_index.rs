@@ -135,9 +135,4 @@ impl CalendarIndex {
             }
         }
     }
-
-    #[allow(dead_code)]
-    pub fn list(&self) {
-        self.calendars.iter().for_each(|c| println!("{}", c.name()))
-    }
 }
