@@ -543,23 +543,25 @@ pub fn update_index() {
     }
 }
 
-pub fn backup() {
+pub fn backup(split_input: &Vec<&str>) {
     let index = calendar_index!();
     for reference in index.calendars() {
-	if Path::new(&reference.path()).exists() {
-	    let backup_path = Path::new(&reference.path()).with_extension("bak");
-	    match OpenOptions::new().create(true).truncate(true).write(true).open(&backup_path) {
-		Ok(_) => {
-		    if let Err(e) = std::fs::copy(reference.path(), &backup_path) {
-			error(format!("Failed to copy from {} to {}.\n{e}", reference.path(), backup_path.display()));
+	if split_input.len() == 1 && split_input[1..].contains(&reference.name().as_str()) || split_input.len() > 1 {
+	    if Path::new(&reference.path()).exists() {
+		let backup_path = reference.path() + ".bak";
+		match OpenOptions::new().create(true).truncate(true).write(true).open(&backup_path) {
+		    Ok(_) => {
+			if let Err(e) = std::fs::copy(reference.path(), &backup_path) {
+			    error(format!("Failed to copy from {} to {}.\n{e}", reference.path(), backup_path));
+			}
+		    },
+		    Err(e) => {
+			error(format!("Cannot backup {}. Failed to open/create {}.\n{e}", reference.name(), backup_path));
 		    }
-		},
-		Err(e) => {
-		    error(format!("Cannot backup {}. Failed to open/create {}.\n{e}", reference.name(), backup_path.display()));
 		}
+	    } else {
+		error(format!("Cannot backup {}. File {} does not exist.", reference.name(), reference.path()));
 	    }
-	} else {
-	    error(format!("Cannot backup {}. File {} does not exist.", reference.name(), reference.path()));
 	}
     }
 }

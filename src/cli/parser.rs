@@ -26,7 +26,7 @@ pub fn parse(input: String) {
 
     match split_input[0].trim() {
         "add" | "a" => add(&split_input),
-	"backup" | "b" => backup(),
+	"backup" | "b" => backup(&split_input),
         "cal" | "c" => cal(&split_input),
         "clear" => clear(&split_input),
         "date" | "D" => date(),
