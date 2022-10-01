@@ -37,24 +37,29 @@ pub fn cal(split_input: &Vec<&str>) {
 
     if split_input.len() == 1 {
         let mut new_ref = get_new_calendar_reference(None);
-        add_entry(&mut index, &new_ref);
         if index.calendars().is_empty() {
             new_ref.set_active()
         }
         if let Err(e) = new_ref.create_file() {
-            print_err_msg(e, new_ref.path())
+            print_err_msg(e, new_ref.path());
         }
+        add_entry(&mut index, &new_ref);
     } else {
-        split_input[1..].iter().for_each(|n| {
+	for n in &split_input[1..] {
+	    if n.trim().is_empty() {
+		warning("Calendar name cannot be empty.".to_string());
+		continue;
+	    }
             let mut new_ref = get_new_calendar_reference(Some(n.to_string()));
             if index.calendars().is_empty() {
                 new_ref.set_active()
             }
-            add_entry(&mut index, &new_ref);
             if let Err(e) = new_ref.create_file() {
-                print_err_msg(e, new_ref.path())
+                print_err_msg(e, new_ref.path());
+		continue;
             }
-        })
+            add_entry(&mut index, &new_ref);
+        }
     }
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
@@ -535,5 +540,26 @@ pub fn update_index() {
         .retain(|r| Path::new(&r.path()).exists());
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
+    }
+}
+
+pub fn backup() {
+    let index = calendar_index!();
+    for reference in index.calendars() {
+	if Path::new(&reference.path()).exists() {
+	    let backup_path = Path::new(&reference.path()).with_extension("bak");
+	    match OpenOptions::new().create(true).truncate(true).write(true).open(&backup_path) {
+		Ok(_) => {
+		    if let Err(e) = std::fs::copy(reference.path(), &backup_path) {
+			error(format!("Failed to copy from {} to {}.\n{e}", reference.path(), backup_path.display()));
+		    }
+		},
+		Err(e) => {
+		    error(format!("Cannot backup {}. Failed to open/create {}.\n{e}", reference.name(), backup_path.display()));
+		}
+	    }
+	} else {
+	    error(format!("Cannot backup {}. File {} does not exist.", reference.name(), reference.path()));
+	}
     }
 }

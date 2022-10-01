@@ -11,6 +11,8 @@ use crate::cli::{
 };
 use std::ops::Range;
 
+use super::commands::backup;
+
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
     let quote_parsed: Vec<String>;
@@ -24,6 +26,7 @@ pub fn parse(input: String) {
 
     match split_input[0].trim() {
         "add" | "a" => add(&split_input),
+	"backup" | "b" => backup(),
         "cal" | "c" => cal(&split_input),
         "clear" => clear(&split_input),
         "date" | "D" => date(),
