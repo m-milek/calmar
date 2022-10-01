@@ -21,12 +21,14 @@ use crate::{
     CONFIG,
 };
 use chrono::{DateTime, Local};
-use std::path::PathBuf;
+use std::{path::PathBuf, fs::{read_to_string, OpenOptions}, str::FromStr, fmt::format};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
     thread,
 };
+
+use super::getdata::get_valid_calendar_name;
 
 /// Create a new event and return it.
 pub fn get_new_event(name: Option<String>) -> Event {
@@ -499,4 +501,91 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
         }
     }
     i.calendars_mut().retain(|r| r.name() != name);
+}
+
+pub fn edit_calendar(name: &str) {
+    let mut index = calendar_index!();
+    let calendars_named_like_arg: Vec<&CalendarReference> = index.calendars().iter().filter(|r| r.name() == name).collect();
+    match calendars_named_like_arg.len() {
+	0 => {
+	    warning(format!("No calendar named {name}"));
+	    return;
+	},
+	1 => {},
+	x => {
+	    warning(format!("{x} calendars named {name}. There should be only one. Please fix index.json and retry."));
+	    return;
+	}
+    }
+
+    let mut edited_ref = &mut CalendarReference::new("".to_string(),"".to_string(),false);
+    for r in index.calendars_mut() {
+	if r.name() == name {
+	    edited_ref = r;
+	}
+    }
+    println!("{edited_ref}");
+
+    let fields = CalendarReference::FIELD_NAMES_AS_ARRAY.to_vec();
+    let fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
+    fields_list.iter().enumerate().for_each(|(i,f)| println!("{}. {f}", i+1));
+    let num: usize = select_in_range("Select what to edit", fields_list.len());
+    
+    match num {
+	1 => {
+	    let new_name = get_valid_calendar_name();
+	    edited_ref.set_name(new_name.clone());
+	    let cal_str = match read_to_string(edited_ref.path()) {
+		Ok(s) => s,
+		Err(e) => {
+		    error(format!("Failed to read {}.\n{}", edited_ref.path(), e));
+		    return;
+		}
+	    };
+	    let mut cal: Calendar = match serde_json::from_str(&cal_str) {
+		Ok(c) => c,
+		Err(e) => {
+		    print_err_msg(CalmarError::ParseJSON { e }, &"".to_string());
+		    return;
+		}
+	    };
+	    
+	    let mut new_filename = PathBuf::from_str(&edited_ref.path()).unwrap();
+	    new_filename.pop();
+	    let new_filename = new_filename.join(new_name.clone() + ".json");
+	    cal.set_name(new_name);
+	    if let Err(e) = std::fs::rename(edited_ref.path(), &new_filename) {
+		error(format!("Failed to rename {} to {}.\n{e}", edited_ref.path(), new_filename.display()));
+		return;
+	    }
+	    edited_ref.set_path(new_filename.to_str().unwrap().to_string());
+	    if let Err(e) = cal.save(&new_filename.to_str().unwrap().to_string()) {
+		print_err_msg(e, edited_ref.path());
+	    }
+	}
+	2 => {
+	    let new_path = get_dir_path() + "/" + &edited_ref.name() + ".json";
+	    
+	    if let Err(e) = std::fs::copy(edited_ref.path(), &new_path) {
+		error(format!("Failed to copy from {} to {new_path}.\n{e}", edited_ref.path()));
+		return;
+	    }
+	    if let Err(e) = std::fs::remove_file(edited_ref.path()) {
+		error(format!("Failed to remove {}.\n{e}", edited_ref.path()));
+		return;
+	    }
+	    edited_ref.set_path(new_path.clone());
+	}
+	3 => {
+	    if !edited_ref.active() {
+		edited_ref.set_active()
+	    } else {
+		edited_ref.set_inactive()
+	    }
+	}
+	_ => {println!("Impossible")}
+    }
+    if let Err(e) = index.save() {
+	print_err_msg(e, &CONFIG.index_path);
+    }
 }

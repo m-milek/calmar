@@ -1,5 +1,6 @@
 use crate::cal::{calendar::Calendar, calmar_error::CalmarError};
 use serde_derive::{Deserialize, Serialize};
+use struct_field_names_as_array::FieldNamesAsArray;
 use std::{fmt::Display, io::Write};
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
@@ -7,7 +8,7 @@ use std::{fmt::Display, io::Write};
 /// `name`: name of the calendar in file under `path`
 /// `path`: path to the file containing a `Calendar` struct
 /// `active`: determines if the `Calendar` under `path` is currently selected.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, FieldNamesAsArray)]
 pub struct CalendarReference {
     name: String,
     path: String,

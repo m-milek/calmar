@@ -11,7 +11,7 @@ use crate::cli::{
 };
 use std::ops::Range;
 
-use super::commands::backup;
+use super::commands::{backup, edit_cal};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -30,6 +30,7 @@ pub fn parse(input: String) {
         "date" | "D" => date(),
         "duration" | "d" => duration(&split_input),
         "edit" | "e" => edit(&split_input),
+	"edit-calendar" | "edit-cal" | "ec" => edit_cal(&split_input),
         "help" | "h" => print_help(&split_input),
         "list" | "l" | "ls" => list(&split_input),
         "listcal" | "lc" => listcal(&split_input),

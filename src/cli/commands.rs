@@ -25,6 +25,8 @@ use std::{
     str::FromStr,
 };
 
+use super::functions::edit_calendar;
+
 /*
 Given 'name' of a new calendar, the function gets the home directory,
 verifies the existence of a $HOME/.calmar directory,
@@ -592,4 +594,8 @@ pub fn backup(split_input: &Vec<&str>) {
 	    }
 	}
     }
+}
+
+pub fn edit_cal(split_input: &Vec<&str>) {
+    split_input[1..].iter().for_each(|e| edit_calendar(e))
 }
