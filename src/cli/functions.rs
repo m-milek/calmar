@@ -91,7 +91,7 @@ pub fn edit_event(event_name: &str) {
         .collect();
 
     if events_named_like_arg.is_empty() {
-        warning(format!("No event named {} found.", event_name));
+        warning(format!("No event named {}", event_name));
         return;
     }
     println!("{:#?}", events_named_like_arg);

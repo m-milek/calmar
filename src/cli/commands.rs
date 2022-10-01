@@ -70,13 +70,20 @@ pub fn cal(split_input: &Vec<&str>) {
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
     let mut index = calendar_index!();
+    let names = index.calendars().iter().map(|r| r.name()).collect::<Vec<String>>();
 
     if split_input.len() == 1 {
         delete_entry(&mut index, get_valid_calendar_name());
     } else {
         split_input[1..]
             .iter()
-            .for_each(|n| delete_entry(&mut index, n.to_string()));
+            .for_each(|n| {
+		if names.contains(&n.to_string()) {
+		    delete_entry(&mut index, n.to_string());
+		} else {
+		    warning(format!("No calendard named {n} found"));
+		}
+	    })
     }
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
@@ -87,12 +94,15 @@ pub fn removecal(split_input: &Vec<&str>) {
 pub fn remove(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!();
     let path = active_calendar_reference!().path();
+    let names = active_calendar.events().iter().map(|e| e.name()).collect::<Vec<String>>();
 
+    
     if split_input.len() == 1 {
         active_calendar
             .events_mut()
             .retain(|e| e.name() != get_valid_event_name());
     } else {
+	split_input[1..].iter().for_each(|n| if !names.contains(&n.to_string()) {warning(format!("No event named {n}"))});
         active_calendar
             .events_mut()
             .retain(|e| !split_input[1..].contains(&e.name().as_str()));
@@ -155,7 +165,8 @@ pub fn add(split_input: &Vec<&str>) {
         active_calendar.add_event(get_new_event(None));
     } else {
         split_input[1..].iter().for_each(|n| {
-            if CONFIG.print_success_messages {
+	    // inform about what is being currently added when there are at least 2 event names passed
+            if CONFIG.print_success_messages && split_input.len() > 2 {
                 success(format!("Adding {n}"))
             }
             active_calendar.add_event(get_new_event(Some(n.to_string())));
@@ -177,12 +188,21 @@ pub fn edit(split_input: &[&str]) {
 
 /// Display events in the active calendar
 pub fn raw(split_input: &[&str]) {
-    active_calendar!()
+    let active_calendar = active_calendar!();
+    let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
+    split_input[1..].iter().for_each(|a| if !names.contains(&a.to_string()) {
+	warning(format!("No event named {a}"))
+    });
+    active_calendar
         .events()
         .iter()
         .filter(|e| {
-            if split_input.len().ne(&1) {
-                split_input[1..].contains(&e.name().as_str())
+            if split_input.len() != 1 {
+                if split_input[1..].contains(&e.name().as_str()) {
+		    true
+		} else {
+		    false
+		}
             } else {
                 true
             }
@@ -194,7 +214,7 @@ pub fn raw(split_input: &[&str]) {
 pub fn clear(split_input: &Vec<&str>) {
     match split_input.len() {
         1 => {
-            println!("\u{001b}c");
+            println!("\x1b[H\x1b[J");
         }
         _ => {
             warning(format!(
@@ -207,7 +227,13 @@ pub fn clear(split_input: &Vec<&str>) {
 
 // List calendars and their properties
 pub fn listcal(split_input: &Vec<&str>) {
-    calendar_index!()
+    let index = calendar_index!();
+    let names: Vec<String> = index.calendars().iter().map(|r| r.name()).collect();
+    split_input[1..].iter().for_each(|a| if !names.contains(&a.to_string()){
+	warning(format!("No calendar named {a}"));
+    });
+    
+    index
         .calendars()
         .iter()
         .filter(|r| {
@@ -217,7 +243,7 @@ pub fn listcal(split_input: &Vec<&str>) {
                 true
             }
         })
-        .for_each(|r| println!("{r}"))
+        .for_each(|r| println!("{r}"));
 }
 
 pub fn sort(split_input: &Vec<&str>) {
@@ -273,7 +299,10 @@ pub fn sort(split_input: &Vec<&str>) {
 
 pub fn duration(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
-
+    let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
+    split_input[1..].iter().for_each(|a| if ! names.contains(&a.to_string()) {
+	warning(format!("No event named {a}"))
+    });
     let name_arr = match split_input.len() {
         1 => {
             vec![get_valid_event_name()]
@@ -290,6 +319,10 @@ pub fn duration(split_input: &Vec<&str>) {
 
 pub fn until(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
+    let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
+    split_input[1..].iter().for_each(|a| if ! names.contains(&a.to_string()) {
+	warning(format!("No event named {a}"))
+    });
 
     let name_arr = match split_input.len() {
         1 => {
