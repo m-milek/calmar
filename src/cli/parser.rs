@@ -15,13 +15,11 @@ use super::commands::backup;
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
-    let quote_parsed: Vec<String>;
-    if check_quotes(&input) {
-        quote_parsed = handle_quotes(input);
-    } else {
+    if !check_quotes(&input) {
         error("Mismatched quotes".to_string());
-        return;
+	return;
     }
+    let quote_parsed = handle_quotes(input);
     let split_input: Vec<&str> = quote_parsed.iter().map(|s| &**s).collect();
 
     match split_input[0].trim() {
@@ -54,7 +52,7 @@ pub fn parse(input: String) {
     }
 }
 
-fn check_quotes(input: &String) -> bool {
+fn check_quotes(input: &str) -> bool {
     let chars: Vec<char> = input.chars().collect();
     if chars.iter().filter(|c| **c == '\"').count() % 2 != 0 {
         return false;
@@ -87,12 +85,10 @@ fn handle_quotes(input: String) -> Vec<String> {
                 && !quoted_ranges.iter().any(|r| r.contains(&i))
             {
                 tmp.push(chars[i]);
-            } else {
-                if !tmp.is_empty() {
-                    out.push(tmp.to_string());
-                    tmp.clear();
-                }
-            }
+            } else if !tmp.is_empty() {
+                out.push(tmp.to_string());
+                tmp.clear();
+	    }
         }
         // fix an issue where if the last arg isn't in quotes, it doesn't get added.
         // if the second condition wasn't there, if the last arg was quoted, an empty

@@ -19,9 +19,7 @@ mod cli {
     pub mod util;
     pub mod validator;
 }
-mod test {
-    pub mod test;
-}
+mod test;
 use crate::cli::{
     config::{get_config, Config},
     functions::{check_calmar_dir, check_config},

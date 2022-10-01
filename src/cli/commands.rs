@@ -63,7 +63,6 @@ pub fn cal(split_input: &Vec<&str>) {
     }
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
-        return;
     };
 }
 
@@ -173,7 +172,7 @@ pub fn add(split_input: &Vec<&str>) {
         })
     }
 
-    let path = active_calendar_reference!().path().clone();
+    let path = active_calendar_reference!().path();
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path)
     }
@@ -198,12 +197,8 @@ pub fn raw(split_input: &[&str]) {
         .iter()
         .filter(|e| {
             if split_input.len() != 1 {
-                if split_input[1..].contains(&e.name().as_str()) {
-		    true
-		} else {
-		    false
-		}
-            } else {
+                split_input[1..].contains(&e.name().as_str())
+	    } else {
                 true
             }
         })
@@ -469,7 +464,7 @@ pub fn time() {
 pub fn update() {
     let index = calendar_index!();
     let mut active_calendar = active_calendar!(index);
-    let path = active_calendar_reference!(index).path().clone();
+    let path = active_calendar_reference!(index).path();
     let now = get_now_even();
 
     // Set time of recurring events to their nearest occurence
@@ -494,7 +489,7 @@ pub fn update() {
 }
 
 pub fn mkindex() {
-    if PathBuf::from_str(&&CONFIG.index_path).unwrap().exists() {
+    if PathBuf::from_str(&CONFIG.index_path).unwrap().exists() {
         warning("This will revert your index.json to its default contents. Proceed?".to_string());
         match get_input("[y/N]: ").to_lowercase().trim() {
             "yes" | "y" => {}

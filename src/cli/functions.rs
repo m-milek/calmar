@@ -70,7 +70,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
 }
 
 pub fn edit_event(event_name: &str) {
-    let path = active_calendar_reference!().path().clone();
+    let path = active_calendar_reference!().path();
     let mut active_calendar = active_calendar!();
     let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());
 
@@ -374,7 +374,7 @@ pub fn check_config() {
     .to_vec();
     let mut brights: Vec<String> = permitted_colors
         .iter()
-        .map(|s| "bright_".to_owned() + &s)
+        .map(|s| "bright_".to_owned() + s)
         .collect();
     permitted_colors.append(&mut brights);
     let warning = "Invalid config.json values.\n";
@@ -414,9 +414,8 @@ pub fn check_config() {
 ///
 /// * Push the new `CalendarReference` to the `self.calendars`.
 pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
-    let saved_names: Vec<String> = i.calendars().iter().map(|r| r.name()).collect();
 
-    if saved_names.contains(&new_calendar.name()) {
+    if i.calendars().iter().map(|r| r.name()).any(|x| x == new_calendar.name()) {
         match get_input(
             format!(
                 "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
@@ -445,9 +444,7 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
             .retain(|calendar| calendar.name() != new_calendar.name());
     }
 
-    let saved_paths: Vec<String> = i.calendars().iter().map(|r| r.path()).collect();
-
-    if saved_paths.contains(&new_calendar.path()) {
+    if i.calendars().iter().map(|r| r.path()).any(|x| x == new_calendar.path()) {
         match get_input(
             format!(
                 "Calendar with path {} already exists. Do you want to overwrite it?",

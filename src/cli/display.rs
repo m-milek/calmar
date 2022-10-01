@@ -55,8 +55,8 @@ pub struct DisplayedCalendarReference {
 impl From<CalendarReference> for DisplayedCalendarReference {
     fn from(r: CalendarReference) -> DisplayedCalendarReference {
         DisplayedCalendarReference {
-            name: r.name().to_owned(),
-            path: r.path().to_owned(),
+            name: r.name(),
+            path: r.path(),
             active: r.active(),
         }
     }
@@ -66,7 +66,7 @@ pub fn print_stuff() {
     let events = active_calendar!().events().clone();
     let displayed_events: Vec<DisplayedEvent> = events
         .iter()
-        .map(|e| DisplayedEvent::from_event(e))
+        .map(DisplayedEvent::from_event)
         .collect();
     // skip kolumn
     let t = Table::new(displayed_events)

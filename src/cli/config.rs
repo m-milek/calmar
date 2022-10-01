@@ -81,7 +81,7 @@ pub fn get_config() -> Config {
                     .bold()
             );
             eprintln!("{}","Using default configuration. Use the \"mkconfig\" command to generate a configuration file.".yellow().bold());
-            return Config::default();
+            Config::default()
         }
     }
 }
