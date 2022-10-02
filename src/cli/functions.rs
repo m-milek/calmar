@@ -10,7 +10,7 @@ use crate::{
             get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
             get_repeat, get_start_date, get_start_time, get_valid_event_name,
         },
-        messages::{error, print_err_msg, warning},
+        messages::print_err_msg,
         repl::get_input,
         util::{
             default_or_custom_save_path, levenshtein_distance, select_in_range,
@@ -18,10 +18,10 @@ use crate::{
         },
         validator::{get_home_dir, validate_duration},
     },
-    CONFIG,
+    CONFIG, warning, error,
 };
 use chrono::{DateTime, Local};
-use std::{path::PathBuf, fs::{read_to_string, OpenOptions}, str::FromStr, fmt::format};
+use std::{path::PathBuf, fs::read_to_string, str::FromStr};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -93,7 +93,7 @@ pub fn edit_event(event_name: &str) {
         .collect();
 
     if events_named_like_arg.is_empty() {
-        warning(format!("No event named {}", event_name));
+        warning!("No event named {}", event_name);
         return;
     }
     println!("{:#?}", events_named_like_arg);
@@ -228,7 +228,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let path_to_calendar_string = match path_to_calendar.to_str() {
         Some(string) => string,
         None => {
-            error(format!("Failed to convert {} to string.", path_to_calendar.display()));
+            error!("Failed to convert {} to string.", path_to_calendar.display());
             std::process::exit(1);
         }
     };
@@ -321,10 +321,10 @@ pub fn handle_unknown_command(s: &str) {
     // If the match would be somewhat helpful
     // (distance has to be small, hence 0.8 multiplier) print the suggestion
     if (min_distance as f32) < (s.len() as f32) {
-        warning(format!("Unknown command: {}. Did you mean '{}'?", s.trim(), best_match));
+        warning!("Unknown command: {}. Did you mean '{}'?", s.trim(), best_match);
         return;
     }
-    warning(format!("Unknown command: {}", s.trim()))
+    warning!("Unknown command: {}", s.trim())
 }
 
 pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
@@ -352,12 +352,10 @@ pub fn check_calmar_dir() {
     if path.exists() {
         return;
     }
-    error(format!("{} doesn't exist. Do you want to create it?", path.display()));
+    error!("{} doesn't exist. Do you want to create it?", path.display());
     match get_input("[Y/n]: ").to_lowercase().trim() {
-        "yes" | "y" => warning(
-            "Use the \"mkindex\" command to generate an empty index.json in the created directory."
-                .to_string(),
-        ),
+        "yes" | "y" => warning!(
+            "Use the \"mkindex\" command to generate an empty index.json in the created directory."),
         _ => return,
     }
     if let Err(e) = std::fs::create_dir(&path) {
@@ -382,25 +380,19 @@ pub fn check_config() {
     let warning = "Invalid config.json values.\n";
 
     if !permitted_date_formats.contains(&CONFIG.date_format.as_str()) {
-        error(format!("{warning}{} is not a valid date format.\nSupported formats: {permitted_date_formats:?}", &CONFIG.date_format));
+        error!("{warning}{} is not a valid date format.\nSupported formats: {permitted_date_formats:?}", &CONFIG.date_format);
         std::process::exit(1);
     }
     if !permitted_time_formats.contains(&CONFIG.time_format.as_str()) {
-        error(format!("{warning}{} is not a valid time format.\nSupported formats: {permitted_time_formats:?}", &CONFIG.time_format));
+        error!("{warning}{} is not a valid time format.\nSupported formats: {permitted_time_formats:?}", &CONFIG.time_format);
         std::process::exit(1);
     }
     if !validate_duration(&CONFIG.default_calendar_span) {
-        error(format!(
-            "{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'",
-            CONFIG.default_calendar_span
-        ));
+        error!("{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'",CONFIG.default_calendar_span);
         std::process::exit(1);
     }
     if !permitted_colors.contains(&CONFIG.prompt_color) {
-        error(format!(
-            "{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}",
-            CONFIG.prompt_color
-        ));
+        error!("{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}",CONFIG.prompt_color);
         std::process::exit(1);
     }
 }
@@ -436,7 +428,7 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
         for reference in i.calendars() {
             if reference.name() == new_calendar.name() {
                 if let Err(e) = std::fs::remove_file(&reference.path()) {
-                    error(format!("Failed to delete file {}.\n{}", reference.path(), e));
+                    error!("Failed to delete file {}.\n{}", reference.path(), e);
                     std::process::exit(1);
                 }
             }
@@ -463,7 +455,7 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
         for reference in i.calendars() {
             if reference.path() == new_calendar.path() {
                 if let Err(e) = std::fs::remove_file(&reference.path()) {
-                    error(format!("Failed to delete file {}.\n{}", reference.path(), e));
+                    error!("Failed to delete file {}.\n{}", reference.path(), e);
                     std::process::exit(1);
                 }
             }
@@ -485,18 +477,18 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
 
     match tmp_reference_vec.len() {
         0 => {
-            warning(format!("No calendar named {} found.", name));
+            warning!("No calendar named {} found.", name);
             return;
         }
         1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
             Ok(_) => (),
             Err(e) => {
-                error(format!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path(), e));
+                error!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path(), e);
                 return;
             }
         },
         _ => {
-            error(format!("Multiple calendars named {} found. Please fix index.json before proceeding. Calendars must have unique names.", name));
+            error!("Multiple calendars named {} found. Please fix index.json before proceeding. Calendars must have unique names.", name);
             return;
         }
     }
@@ -508,12 +500,12 @@ pub fn edit_calendar(name: &str) {
     let calendars_named_like_arg: Vec<&CalendarReference> = index.calendars().iter().filter(|r| r.name() == name).collect();
     match calendars_named_like_arg.len() {
 	0 => {
-	    warning(format!("No calendar named {name}"));
+	    warning!("No calendar named {name}");
 	    return;
 	},
 	1 => {},
 	x => {
-	    warning(format!("{x} calendars named {name}. There should be only one. Please fix index.json and retry."));
+	    warning!("{x} calendars named {name}. There should be only one. Please fix index.json and retry.");
 	    return;
 	}
     }
@@ -538,7 +530,7 @@ pub fn edit_calendar(name: &str) {
 	    let cal_str = match read_to_string(edited_ref.path()) {
 		Ok(s) => s,
 		Err(e) => {
-		    error(format!("Failed to read {}.\n{}", edited_ref.path(), e));
+		    error!("Failed to read {}.\n{}", edited_ref.path(), e);
 		    return;
 		}
 	    };
@@ -555,7 +547,7 @@ pub fn edit_calendar(name: &str) {
 	    let new_filename = new_filename.join(new_name.clone() + ".json");
 	    cal.set_name(new_name);
 	    if let Err(e) = std::fs::rename(edited_ref.path(), &new_filename) {
-		error(format!("Failed to rename {} to {}.\n{e}", edited_ref.path(), new_filename.display()));
+		error!("Failed to rename {} to {}.\n{e}", edited_ref.path(), new_filename.display());
 		return;
 	    }
 	    edited_ref.set_path(new_filename.to_str().unwrap().to_string());
@@ -567,11 +559,11 @@ pub fn edit_calendar(name: &str) {
 	    let new_path = get_dir_path() + "/" + &edited_ref.name() + ".json";
 	    
 	    if let Err(e) = std::fs::copy(edited_ref.path(), &new_path) {
-		error(format!("Failed to copy from {} to {new_path}.\n{e}", edited_ref.path()));
+		error!("Failed to copy from {} to {new_path}.\n{e}", edited_ref.path());
 		return;
 	    }
 	    if let Err(e) = std::fs::remove_file(edited_ref.path()) {
-		error(format!("Failed to remove {}.\n{e}", edited_ref.path()));
+		error!("Failed to remove {}.\n{e}", edited_ref.path());
 		return;
 	    }
 	    edited_ref.set_path(new_path.clone());

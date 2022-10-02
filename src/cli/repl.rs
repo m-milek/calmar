@@ -1,4 +1,4 @@
-use crate::{CONFIG, EDITOR_CONFIG};
+use crate::{CONFIG, EDITOR_CONFIG, error};
 use colored::{ColoredString, Colorize};
 
 /*
@@ -71,8 +71,6 @@ fn get_prompt() -> ColoredString {
 
     prompt
 }
-
-use super::messages::error;
 use rustyline::{error::ReadlineError, Editor};
 
 /*
@@ -87,7 +85,7 @@ pub fn run() {
     let mut rl = match Editor::<()>::with_config(config) {
         Ok(editor) => editor,
         Err(err) => {
-            error(format!("Failed to construct rustyline::Editor with given config. Should be unreachable and checked beforehand.\n{}", err));
+            error!("Failed to construct rustyline::Editor with given config. Should be unreachable and checked beforehand.\n{}", err);
             return;
         }
     };
@@ -103,8 +101,8 @@ pub fn run() {
                 "" => {}
                 _ => {
                     rl.add_history_entry(line.as_str());
-                    if let Err(_e) = rl.save_history("history.txt") {
-                        error("Failed to save command to history.\n{e}".to_string());
+                    if let Err(e) = rl.save_history("history.txt") {
+                        error!("Failed to save command to history.\n{e}");
                         break;
                     };
                     crate::cli::parser::parse(line);

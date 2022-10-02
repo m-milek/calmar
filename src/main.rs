@@ -13,6 +13,7 @@ mod cli {
     pub mod functions;
     pub mod getdata;
     pub mod help;
+    pub mod macros;
     pub mod messages;
     pub mod parser;
     pub mod repl;

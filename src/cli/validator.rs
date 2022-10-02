@@ -1,4 +1,4 @@
-use crate::cli::messages::{error, warning};
+use crate::{warning, error, CONFIG};
 use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
 use regex::Regex;
@@ -8,7 +8,7 @@ pub fn get_home_dir() -> PathBuf {
     match home_dir() {
         Some(dir) => dir,
         None => {
-            error("Failed to get HOME directory.".to_string());
+            error!("Failed to get HOME directory.");
             std::process::exit(1);
         }
     }
@@ -30,7 +30,7 @@ fn str_to_num(string: &str) -> Result<i32, core::num::ParseIntError> {
     match string.trim().parse::<i32>() {
         Ok(num) => Ok(num),
         Err(err) => {
-            error(format!("Failed to parse {string} to i32.\n{err}"));
+            error!("Failed to parse {string} to i32.\n{err}");
             Err(err)
         }
     }
@@ -43,8 +43,8 @@ pub fn validate_dir_path(path: &str) -> bool {
 
     let path = match PathBuf::from_str(path) {
         Ok(path) => path,
-        Err(_e) => {
-            warning("Failed to parse {path} as path.\n{e}".to_string());
+        Err(e) => {
+            warning!("Failed to parse {path} as path.\n{e}");
             return false;
         }
     };
@@ -62,7 +62,7 @@ pub fn validate_time(time_string: &str) -> bool {
 
     let re = Regex::new("^[0-9]{2}:[0-9]{2}$").unwrap();
     if !re.is_match(time_string.trim()) {
-        warning("Input does not conform to specified time format".to_string());
+        warning!("Input does not conform to specified time format");
         return false;
     }
     let split_input: Vec<&str> = time_string.split(':').collect();
@@ -82,7 +82,7 @@ pub fn validate_date(date_string: &str) -> bool {
     }
     let re = Regex::new(r"^[0-9]{2}/[0-9]{2}/[0-9]{4}$").unwrap();
     if !re.is_match(date_string.trim()) {
-        warning("Input does not conform to specified format".to_string());
+        warning!("Input does not conform to specified format");
         return false;
     }
 

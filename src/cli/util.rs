@@ -1,6 +1,6 @@
 use crate::{
-    cli::{messages::warning, repl::get_input},
-    CONFIG,
+    cli::repl::get_input,
+    CONFIG, warning,
 };
 use chrono::{DateTime, Duration, Local, Timelike};
 
@@ -20,10 +20,10 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
                 true => {
                     return num;
                 }
-                false => warning("Number not in range".to_string()),
+                false => warning!("Number not in range"),
             },
             Err(_) => {
-                warning("Invalid input. Enter a non-negative number".to_string());
+                warning!("Invalid input. Enter a non-negative number");
             }
         }
     }

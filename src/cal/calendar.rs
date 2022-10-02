@@ -39,11 +39,6 @@ impl Calendar {
         }
     }
 
-    // Getters
-    pub fn name(&self) -> &String {
-        &self.name
-    }
-
     pub fn events(&self) -> &Vec<Event> {
         &self.events
     }

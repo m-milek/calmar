@@ -1,4 +1,4 @@
-use crate::{cli::messages::warning, CONFIG, EDITOR_CONFIG};
+use crate::{CONFIG, EDITOR_CONFIG, warning};
 use colored::*;
 
 pub fn print_startup_message() {
@@ -551,11 +551,11 @@ Keyboard shortcut lists:
             "quit" | "q" => println!("{quit_doc}"),
             "version" | "v" => println!("{version_doc}"),
             "write" | "w" => println!("{write_doc}"),
-            _ => warning(format!("help: No documentation for command \"{}\"", split_input[1])),
+            _ => warning!("help: No documentation for command \"{}\"", split_input[1]),
         },
-        _ => warning(format!(
+        _ => warning!(
             "help: Too many arguments provided. Expected: 0 or 1. Got: {}",
             split_input.len()
-        )),
+        ),
     }
 }

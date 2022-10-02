@@ -5,16 +5,16 @@ use crate::{
     cli::{
         config::Config,
         functions::{
-            add_entry, closest_occurence_start, delete_entry, edit_event, generate_until,
-            get_new_calendar_reference, get_new_event,
+            add_entry, closest_occurence_start, delete_entry, edit_calendar, edit_event,
+            generate_until, get_new_calendar_reference, get_new_event,
         },
         getdata::{get_valid_calendar_name, get_valid_event_name, parse_into_duration},
-        messages::{error, print_err_msg, success, warning},
+        messages::print_err_msg,
         repl::get_input,
         util::{duration_fmt, get_now_even, round_to_full_day},
         validator::{get_home_dir, validate_duration},
     },
-    CONFIG,
+    error, success, warning, CONFIG,
 };
 use chrono::{Duration, Local};
 use std::{
@@ -24,8 +24,6 @@ use std::{
     path::{Path, PathBuf},
     str::FromStr,
 };
-
-use super::functions::edit_calendar;
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -46,21 +44,23 @@ pub fn cal(split_input: &Vec<&str>) {
             print_err_msg(e, new_ref.path());
         }
         add_entry(&mut index, &new_ref);
+        success!("Added {}", new_ref.name());
     } else {
-	for n in &split_input[1..] {
-	    if n.trim().is_empty() {
-		warning("Calendar name cannot be empty.".to_string());
-		continue;
-	    }
+        for n in &split_input[1..] {
+            if n.trim().is_empty() {
+                warning!("Calendar name cannot be empty.");
+                continue;
+            }
             let mut new_ref = get_new_calendar_reference(Some(n.to_string()));
             if index.calendars().is_empty() {
                 new_ref.set_active()
             }
             if let Err(e) = new_ref.create_file() {
                 print_err_msg(e, new_ref.path());
-		continue;
+                continue;
             }
             add_entry(&mut index, &new_ref);
+            success!("Added {}", new_ref.name());
         }
     }
     if let Err(e) = index.save() {
@@ -71,20 +71,25 @@ pub fn cal(split_input: &Vec<&str>) {
 /// Delete a calendar
 pub fn removecal(split_input: &Vec<&str>) {
     let mut index = calendar_index!();
-    let names = index.calendars().iter().map(|r| r.name()).collect::<Vec<String>>();
+    let names = index
+        .calendars()
+        .iter()
+        .map(|r| r.name())
+        .collect::<Vec<String>>();
 
     if split_input.len() == 1 {
-        delete_entry(&mut index, get_valid_calendar_name());
+        let name = get_valid_calendar_name();
+        delete_entry(&mut index, name.clone());
+        success!("Removed {name}");
     } else {
-        split_input[1..]
-            .iter()
-            .for_each(|n| {
-		if names.contains(&n.to_string()) {
-		    delete_entry(&mut index, n.to_string());
-		} else {
-		    warning(format!("No calendard named {n} found"));
-		}
-	    })
+        split_input[1..].iter().for_each(|n| {
+            if names.contains(&n.to_string()) {
+                delete_entry(&mut index, n.to_string());
+                success!("Removed {n}");
+            } else {
+                warning!("No calendard named {n} found");
+            }
+        })
     }
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
@@ -95,15 +100,24 @@ pub fn removecal(split_input: &Vec<&str>) {
 pub fn remove(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!();
     let path = active_calendar_reference!().path();
-    let names = active_calendar.events().iter().map(|e| e.name()).collect::<Vec<String>>();
+    let names = active_calendar
+        .events()
+        .iter()
+        .map(|e| e.name())
+        .collect::<Vec<String>>();
 
-    
     if split_input.len() == 1 {
-        active_calendar
-            .events_mut()
-            .retain(|e| e.name() != get_valid_event_name());
+        let name = get_valid_event_name();
+        active_calendar.events_mut().retain(|e| e.name() != name);
+        success!("Removed {name}");
     } else {
-	split_input[1..].iter().for_each(|n| if !names.contains(&n.to_string()) {warning(format!("No event named {n}"))});
+        split_input[1..].iter().for_each(|n| {
+            if !names.contains(&n.to_string()) {
+                warning!("No event named {n}")
+            } else {
+                success!("Removed {n}");
+            }
+        });
         active_calendar
             .events_mut()
             .retain(|e| !split_input[1..].contains(&e.name().as_str()));
@@ -120,38 +134,36 @@ pub fn set(split_input: &Vec<&str>) {
         1 => get_valid_event_name(),
         2 => split_input[1].to_string(),
         _ => {
-            warning(format!(
+            warning!(
                 "set: Too many arguments provided. Expected: 1 or 2. Got: {}",
                 split_input.len() - 1
-            ));
+            );
             return;
         }
     };
 
     match index.num_named(&name) {
         0 => {
-            warning(format!("No calendars named {name}"));
+            warning!("No calendars named {name}");
             return;
         }
         1 => {}
         x => {
-            warning(format!("{x} calendars named {name}. There must be only one"));
+            warning!("{x} calendars named {name}. There must be only one");
             return;
         }
     }
 
     match index.number_of_active_calendars() {
         0 | 1 => {
-            index.set_active(name);
+            index.set_active(name.clone());
+            success!("Set {name} as active");
             if let Err(e) = index.save() {
                 print_err_msg(e, &CONFIG.index_path);
             };
         }
         _ => {
-            warning(
-                "More than one calendar is set as active. Please correct this and retry."
-                    .to_string(),
-            );
+            warning!("More than one calendar is set as active. Please correct this and retry.");
         }
     }
 }
@@ -163,14 +175,18 @@ Call event creation with name given optionally
 pub fn add(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!();
     if split_input.len() == 1 {
-        active_calendar.add_event(get_new_event(None));
+        let new_event = get_new_event(None);
+        active_calendar.add_event(new_event.clone());
+        success!("Added {}", new_event.name());
     } else {
         split_input[1..].iter().for_each(|n| {
-	    // inform about what is being currently added when there are at least 2 event names passed
-            if CONFIG.print_success_messages && split_input.len() > 2 {
-                success(format!("Adding {n}"))
+            // inform about what is being currently added when there are at least 2 event names passed
+            if split_input.len() > 2 {
+                success!("Adding {n}");
             }
-            active_calendar.add_event(get_new_event(Some(n.to_string())));
+            let new_event = get_new_event(Some(n.to_string()));
+            active_calendar.add_event(new_event.clone());
+            success!("Added {}", new_event.name());
         })
     }
 
@@ -184,15 +200,20 @@ pub fn add(split_input: &Vec<&str>) {
 Edit attributes of a given event and save it
 */
 pub fn edit(split_input: &[&str]) {
-    split_input[1..].iter().for_each(|e| edit_event(e))
+    split_input[1..].iter().for_each(|e| {
+        success!("Editing {e}");
+        edit_event(e)
+    })
 }
 
 /// Display events in the active calendar
 pub fn raw(split_input: &[&str]) {
     let active_calendar = active_calendar!();
     let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
-    split_input[1..].iter().for_each(|a| if !names.contains(&a.to_string()) {
-	warning(format!("No event named {a}"))
+    split_input[1..].iter().for_each(|a| {
+        if !names.contains(&a.to_string()) {
+            warning!("No event named {a}")
+        }
     });
     active_calendar
         .events()
@@ -200,7 +221,7 @@ pub fn raw(split_input: &[&str]) {
         .filter(|e| {
             if split_input.len() != 1 {
                 split_input[1..].contains(&e.name().as_str())
-	    } else {
+            } else {
                 true
             }
         })
@@ -214,10 +235,10 @@ pub fn clear(split_input: &Vec<&str>) {
             println!("\x1b[H\x1b[J");
         }
         _ => {
-            warning(format!(
+            warning!(
                 "clear: Invalid number of arguments. Expected: 0. Got: {}",
                 split_input.len() - 1
-            ));
+            );
         }
     }
 }
@@ -226,10 +247,12 @@ pub fn clear(split_input: &Vec<&str>) {
 pub fn listcal(split_input: &Vec<&str>) {
     let index = calendar_index!();
     let names: Vec<String> = index.calendars().iter().map(|r| r.name()).collect();
-    split_input[1..].iter().for_each(|a| if !names.contains(&a.to_string()){
-	warning(format!("No calendar named {a}"));
+    split_input[1..].iter().for_each(|a| {
+        if !names.contains(&a.to_string()) {
+            warning!("No calendar named {a}");
+        }
     });
-    
+
     index
         .calendars()
         .iter()
@@ -249,10 +272,10 @@ pub fn sort(split_input: &Vec<&str>) {
     let active_calendar_reference = active_calendar_reference!(index);
 
     if !(1..=3).contains(&split_input.len()) {
-        warning(format!(
+        warning!(
             "sort: Invalid number of arguments. Expected: 0 or 1. Got: {}",
             split_input.len() - 1
-        ));
+        );
         return;
     }
 
@@ -261,19 +284,22 @@ pub fn sort(split_input: &Vec<&str>) {
     match split_input.len() {
         1 => {
             events_std.sort();
-            println!("Sorted normally");
+            success!("Sorted by standard key");
         }
-        _ => match split_input[1].trim() {
-            "name" => events_std.sort_by_key(|e| e.name()),
-            "start" => events_std.sort_by_key(|e| e.start()),
-            "end" => events_std.sort_by_key(|e| e.end()),
-            "priority" => events_std.sort_by_key(|e| e.priority()),
-            "difficulty" => events_std.sort_by_key(|e| e.difficulty()),
-            _ => {
-                warning(format!("sort: {} is not a valid key.", { split_input[1].trim() }));
-                return;
+        _ => {
+            match split_input[1].trim() {
+                "name" => events_std.sort_by_key(|e| e.name()),
+                "start" => events_std.sort_by_key(|e| e.start()),
+                "end" => events_std.sort_by_key(|e| e.end()),
+                "priority" => events_std.sort_by_key(|e| e.priority()),
+                "difficulty" => events_std.sort_by_key(|e| e.difficulty()),
+                _ => {
+                    warning!("sort: {} is not a valid key.", { split_input[1].trim() });
+                    return;
+                }
             }
-        },
+            success!("Sorted by non-standard key");
+        }
     }
 
     match split_input.get(2) {
@@ -281,7 +307,7 @@ pub fn sort(split_input: &Vec<&str>) {
             "ascending" | "asc" | "a" => {}
             "descending" | "desc" | "d" | "rev" | "reverse" => events_std.reverse(),
             _ => {
-                warning(format!("sort: {} is not a valid ordering argument", split_input[2]));
+                warning!("sort: {} is not a valid ordering argument", split_input[2]);
                 return;
             }
         },
@@ -297,8 +323,10 @@ pub fn sort(split_input: &Vec<&str>) {
 pub fn duration(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
     let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
-    split_input[1..].iter().for_each(|a| if ! names.contains(&a.to_string()) {
-	warning(format!("No event named {a}"))
+    split_input[1..].iter().for_each(|a| {
+        if !names.contains(&a.to_string()) {
+            warning!("No event named {a}")
+        }
     });
     let name_arr = match split_input.len() {
         1 => {
@@ -317,8 +345,10 @@ pub fn duration(split_input: &Vec<&str>) {
 pub fn until(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
     let names: Vec<String> = active_calendar.events().iter().map(|e| e.name()).collect();
-    split_input[1..].iter().for_each(|a| if ! names.contains(&a.to_string()) {
-	warning(format!("No event named {a}"))
+    split_input[1..].iter().for_each(|a| {
+        if !names.contains(&a.to_string()) {
+            warning!("No event named {a}")
+        }
     });
 
     let name_arr = match split_input.len() {
@@ -346,7 +376,7 @@ pub fn until(split_input: &Vec<&str>) {
             .map(|e| e.name())
             .any(|x| x == *name)
         {
-            warning(format!("No event named {}", name))
+            warning!("No event named {}", name)
         }
     }
 }
@@ -363,14 +393,14 @@ pub fn list(split_input: &Vec<&str>) {
             if validate_duration(split_input[1]) {
                 span = parse_into_duration(split_input[1]);
             } else {
-                warning(format!("{} is not a valid duration input.", split_input[1]));
+                warning!("{} is not a valid duration input.", split_input[1]);
                 return;
             }
         }
-        _ => warning(format!(
+        _ => warning!(
             "list: Invalid number of arguments. Expected: 0 or 1. Got: {}",
             split_input.len() - 1
-        )),
+        ),
     }
 
     let re_days = regex::Regex::new("^[0-9]+(d| +d|days| +days)$").unwrap();
@@ -405,10 +435,10 @@ pub fn write(split_input: &Vec<&str>) {
             filename = split_input[2].to_string();
         }
         _ => {
-            warning(format!(
+            warning!(
                 "write: Invalid number of arguments. Expected: 1 or 2. Got: {}",
                 split_input.len() - 1
-            ));
+            );
             return;
         }
     }
@@ -416,7 +446,7 @@ pub fn write(split_input: &Vec<&str>) {
     let current_dir = match std::env::current_dir() {
         Ok(d) => d,
         Err(e) => {
-            error(format!("Failed to get current directory.\n{e}"));
+            error!("Failed to get current directory.\n{e}");
             return;
         }
     };
@@ -430,7 +460,7 @@ pub fn write(split_input: &Vec<&str>) {
     {
         Ok(f) => f,
         Err(e) => {
-            error(format!("Failed to create file {}.\n{e}", current_dir.join(filename).display()));
+            error!("Failed to create file {}.\n{e}", current_dir.join(filename).display());
             return;
         }
     };
@@ -450,9 +480,10 @@ pub fn write(split_input: &Vec<&str>) {
 
     gen_events.iter().for_each(|e| {
         if let Err(e) = writeln!(&mut file, "{e}") {
-            error(format!("Failed to write to file {filename}.\n{e}"));
+            error!("Failed to write to file {filename}.\n{e}");
         }
-    })
+    });
+    success!("Wrote calendar until {end_date} to {filename}");
 }
 
 pub fn date() {
@@ -468,6 +499,8 @@ pub fn update() {
     let mut active_calendar = active_calendar!(index);
     let path = active_calendar_reference!(index).path();
     let now = get_now_even();
+
+    let before = active_calendar.events().len();
 
     // Set time of recurring events to their nearest occurence
     for event in active_calendar.events_mut() {
@@ -485,6 +518,10 @@ pub fn update() {
         .events_mut()
         .retain(|e| !e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero()));
 
+    let after = active_calendar.events().len();
+
+    success!("Removed {} old event/s", after - before);
+    success!("Brought nearest event occurences up to date");
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path);
     }
@@ -492,7 +529,7 @@ pub fn update() {
 
 pub fn mkindex() {
     if PathBuf::from_str(&CONFIG.index_path).unwrap().exists() {
-        warning("This will revert your index.json to its default contents. Proceed?".to_string());
+        warning!("This will revert your index.json to its default contents. Proceed?");
         match get_input("[y/N]: ").to_lowercase().trim() {
             "yes" | "y" => {}
             _ => return,
@@ -521,6 +558,8 @@ pub fn mkindex() {
         }
     };
 
+    success!("Wrote new index.json to {}", CONFIG.index_path);
+
     if let Err(e) = file.write(new_index_json.as_bytes()) {
         print_err_msg(CalmarError::WriteFile { e }, path_str);
     }
@@ -528,7 +567,7 @@ pub fn mkindex() {
 
 pub fn mkconfig() {
     if get_home_dir().join(".config/calmar/config.json").exists() {
-        warning("This will revert your config.json to its default contents. Proceed?".to_string());
+        warning!("This will revert your config.json to its default contents. Proceed?");
         match get_input("[y/N]: ").to_lowercase().trim() {
             "yes" | "y" => {}
             _ => return,
@@ -558,6 +597,9 @@ pub fn mkconfig() {
             return;
         }
     };
+
+    success!("Wrote default config to {}", path.display());
+
     if let Err(e) = file.write(new_config_json.as_bytes()) {
         print_err_msg(CalmarError::WriteFile { e }, &path.to_str().unwrap().to_string())
     }
@@ -565,9 +607,12 @@ pub fn mkconfig() {
 
 pub fn update_index() {
     let mut index = calendar_index!();
+    let before = index.calendars().len();
     index
         .calendars_mut()
         .retain(|r| Path::new(&r.path()).exists());
+    let after = index.calendars().len();
+    success!("Removed {} where the file didn't exist", after - before);
     if let Err(e) = index.save() {
         print_err_msg(e, &CONFIG.index_path);
     }
@@ -575,27 +620,53 @@ pub fn update_index() {
 
 pub fn backup(split_input: &Vec<&str>) {
     let index = calendar_index!();
+    let mut i = 0;
     for reference in index.calendars() {
-	if split_input.len() == 1 && split_input[1..].contains(&reference.name().as_str()) || split_input.len() > 1 {
-	    if Path::new(&reference.path()).exists() {
-		let backup_path = reference.path() + ".bak";
-		match OpenOptions::new().create(true).truncate(true).write(true).open(&backup_path) {
-		    Ok(_) => {
-			if let Err(e) = std::fs::copy(reference.path(), &backup_path) {
-			    error(format!("Failed to copy from {} to {}.\n{e}", reference.path(), backup_path));
-			}
-		    },
-		    Err(e) => {
-			error(format!("Cannot backup {}. Failed to open/create {}.\n{e}", reference.name(), backup_path));
-		    }
-		}
-	    } else {
-		error(format!("Cannot backup {}. File {} does not exist.", reference.name(), reference.path()));
-	    }
-	}
+        if split_input.len() == 1 && split_input[1..].contains(&reference.name().as_str())
+            || split_input.len() > 1
+        {
+            if Path::new(&reference.path()).exists() {
+                let backup_path = reference.path() + ".bak";
+                match OpenOptions::new()
+                    .create(true)
+                    .truncate(true)
+                    .write(true)
+                    .open(&backup_path)
+                {
+                    Ok(_) => {
+                        if let Err(e) = std::fs::copy(reference.path(), &backup_path) {
+                            error!(
+                                "Failed to copy from {} to {}.\n{e}",
+                                reference.path(),
+                                backup_path
+                            );
+                        } else {
+                            i += 1
+                        }
+                    }
+                    Err(e) => {
+                        error!(
+                            "Cannot backup {}. Failed to open/create {}.\n{e}",
+                            reference.name(),
+                            backup_path
+                        );
+                    }
+                }
+            } else {
+                error!(
+                    "Cannot backup {}. File {} does not exist.",
+                    reference.name(),
+                    reference.path()
+                );
+            }
+        }
     }
+    success!("Backed up {i} calendars");
 }
 
 pub fn edit_cal(split_input: &Vec<&str>) {
-    split_input[1..].iter().for_each(|e| edit_calendar(e))
+    split_input[1..].iter().for_each(|e| {
+        success!("Editing {e}");
+        edit_calendar(e)
+    })
 }

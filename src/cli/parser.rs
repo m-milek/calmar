@@ -1,4 +1,4 @@
-use crate::cli::{
+use crate::{cli::{
     commands::{
         add, cal, clear, date, duration, edit, list, listcal, mkconfig, mkindex, raw, remove,
         removecal, set, sort, time, until, update, update_index, write,
@@ -7,8 +7,7 @@ use crate::cli::{
     functions::handle_unknown_command,
     help::print_help,
     help::print_version,
-    messages::error,
-};
+}, error, CONFIG};
 use std::ops::Range;
 
 use super::commands::{backup, edit_cal};
@@ -16,7 +15,7 @@ use super::commands::{backup, edit_cal};
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
     if !check_quotes(&input) {
-        error("Mismatched quotes".to_string());
+        error!("Mismatched quotes");
 	return;
     }
     let quote_parsed = handle_quotes(input);
