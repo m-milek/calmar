@@ -1,7 +1,6 @@
-use std::path::{Path, PathBuf};
-
-use crate::{CONFIG, EDITOR_CONFIG, error};
+use crate::{cli::validator::get_home_dir, error, CONFIG, EDITOR_CONFIG};
 use colored::{ColoredString, Colorize};
+use rustyline::{error::ReadlineError, Editor};
 
 /*
 Perfom everything necessary to get clean input from stdin:
@@ -18,11 +17,9 @@ pub fn get_input(prompt: &str) -> String {
     match readline {
         Ok(line) => line,
         Err(ReadlineError::Interrupted) => {
-            println!("CTRL-C");
-	    std::process::exit(1);
+            std::process::exit(1);
         }
         Err(ReadlineError::Eof) => {
-            println!("EOF");
             std::process::exit(1);
         }
         Err(err) => {
@@ -73,9 +70,6 @@ fn get_prompt() -> ColoredString {
 
     prompt
 }
-use rustyline::{error::ReadlineError, Editor};
-
-use super::validator::get_home_dir;
 
 /*
 Continously get input and handle it until the process ends
@@ -93,7 +87,7 @@ pub fn run() {
             return;
         }
     };
-    let history_path = PathBuf::from(get_home_dir().join(".config/calmar/.history"));
+    let history_path = get_home_dir().join(".config/calmar/.history");
     if rl.load_history(&history_path).is_err() {
         println!("No previous history");
     }

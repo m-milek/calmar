@@ -664,7 +664,7 @@ pub fn backup(split_input: &Vec<&str>) {
     success!("Backed up {i} calendars");
 }
 
-pub fn edit_cal(split_input: &Vec<&str>) {
+pub fn edit_cal(split_input: &[&str]) {
     split_input[1..].iter().for_each(|e| {
         success!("Editing {e}");
         edit_calendar(e)

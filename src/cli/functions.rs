@@ -497,8 +497,7 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
 
 pub fn edit_calendar(name: &str) {
     let mut index = calendar_index!();
-    let calendars_named_like_arg: Vec<&CalendarReference> = index.calendars().iter().filter(|r| r.name() == name).collect();
-    match calendars_named_like_arg.len() {
+    match index.calendars().iter().filter(|r| r.name() == name).count() {
 	0 => {
 	    warning!("No calendar named {name}");
 	    return;
@@ -566,7 +565,7 @@ pub fn edit_calendar(name: &str) {
 		error!("Failed to remove {}.\n{e}", edited_ref.path());
 		return;
 	    }
-	    edited_ref.set_path(new_path.clone());
+	    edited_ref.set_path(new_path);
 	}
 	3 => {
 	    if !edited_ref.active() {
