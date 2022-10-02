@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use crate::{CONFIG, EDITOR_CONFIG, error};
 use colored::{ColoredString, Colorize};
 
@@ -17,7 +19,7 @@ pub fn get_input(prompt: &str) -> String {
         Ok(line) => line,
         Err(ReadlineError::Interrupted) => {
             println!("CTRL-C");
-            std::process::exit(1);
+	    std::process::exit(1);
         }
         Err(ReadlineError::Eof) => {
             println!("EOF");
@@ -73,6 +75,8 @@ fn get_prompt() -> ColoredString {
 }
 use rustyline::{error::ReadlineError, Editor};
 
+use super::validator::get_home_dir;
+
 /*
 Continously get input and handle it until the process ends
  */
@@ -89,7 +93,8 @@ pub fn run() {
             return;
         }
     };
-    if rl.load_history("history.txt").is_err() {
+    let history_path = PathBuf::from(get_home_dir().join(".config/calmar/.history"));
+    if rl.load_history(&history_path).is_err() {
         println!("No previous history");
     }
 
@@ -101,7 +106,7 @@ pub fn run() {
                 "" => {}
                 _ => {
                     rl.add_history_entry(line.as_str());
-                    if let Err(e) = rl.save_history("history.txt") {
+                    if let Err(e) = rl.save_history(&history_path) {
                         error!("Failed to save command to history.\n{e}");
                         break;
                     };
