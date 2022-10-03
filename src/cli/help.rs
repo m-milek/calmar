@@ -2,6 +2,7 @@ use crate::{CONFIG, EDITOR_CONFIG, warning};
 use colored::*;
 
 pub fn print_startup_message() {
+    let ver = env!("CARGO_PKG_VERSION");
     let str = format!(
         "{}
 Copyright (C) 2022 Michał Miłek & Artur Gulik.
@@ -14,19 +15,20 @@ Find the Calmar documentation and other helpful resources at:
     <https://gitlab.com/calmar-team/calmar/-/wikis/home>
 
 For help, type \"help\".",
-        "Calmar v0.9.0".purple().bold()
+        format!("Calmar v{ver}").purple().bold()
     );
     println!("{str}");
 }
 
 pub fn print_version() {
+    let ver = env!("CARGO_PKG_VERSION");
     let str = format!(
         "{}
 Copyright (C) 2022 Michał Miłek & Artur Gulik.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.",
-        "Calmar v0.9.0".purple().bold()
+        format!("Calmar v{ver}").purple().bold()
     );
     println!("{str}");
 }
