@@ -530,7 +530,7 @@ pub fn update() {
 pub fn mkindex() {
     if PathBuf::from_str(&CONFIG.index_path).unwrap().exists() {
         warning!("This will revert your index.json to its default contents. Proceed?");
-        match get_input("[y/N]: ").to_lowercase().trim() {
+        match get_input("[y/N]: ", None).to_lowercase().trim() {
             "yes" | "y" => {}
             _ => return,
         }
@@ -568,7 +568,7 @@ pub fn mkindex() {
 pub fn mkconfig() {
     if get_home_dir().join(".config/calmar/config.json").exists() {
         warning!("This will revert your config.json to its default contents. Proceed?");
-        match get_input("[y/N]: ").to_lowercase().trim() {
+        match get_input("[y/N]: ", None).to_lowercase().trim() {
             "yes" | "y" => {}
             _ => return,
         }

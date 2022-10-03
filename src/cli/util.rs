@@ -15,7 +15,7 @@ pub fn select_in_range(prompt: &str, max: usize) -> usize {
     };
 
     loop {
-        match get_input(format!("{} [{}]: ", prompt, displayed_range).as_str()).parse::<usize>() {
+        match get_input(format!("{} [{}]: ", prompt, displayed_range).as_str(), None).parse::<usize>() {
             Ok(num) => match (1..=max).contains(&num) {
                 true => {
                     return num;

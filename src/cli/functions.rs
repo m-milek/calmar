@@ -218,7 +218,7 @@ pub fn edit_event(event_name: &str) {
 pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     let name = match name {
         Some(name) => name,
-        None => get_input("Calendar Name: "),
+        None => get_input("Calendar Name: ", None),
     };
 
     //    print!("Path: ");
@@ -353,7 +353,7 @@ pub fn check_calmar_dir() {
         return;
     }
     error!("{} doesn't exist. Do you want to create it?", path.display());
-    match get_input("[Y/n]: ").to_lowercase().trim() {
+    match get_input("[Y/n]: ", None).to_lowercase().trim() {
         "yes" | "y" => warning!(
             "Use the \"mkindex\" command to generate an empty index.json in the created directory."),
         _ => return,
@@ -415,7 +415,7 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
                 "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
                 new_calendar.name()
             )
-            .as_str(),
+            .as_str(), None
         )
         .to_lowercase()
         .as_str()
@@ -444,7 +444,7 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
                 "Calendar with path {} already exists. Do you want to overwrite it?",
                 new_calendar.path()
             )
-            .as_str(),
+            .as_str(), None
         )
         .as_str()
         {
@@ -483,8 +483,7 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
         1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
             Ok(_) => (),
             Err(e) => {
-                error!("Failed to remove file {}.\n{}", tmp_reference_vec[0].path(), e);
-                return;
+                error!("Failed to remove file {}. Removing reference from index.\n{}", tmp_reference_vec[0].path(), e);
             }
         },
         _ => {

@@ -10,9 +10,10 @@ Perfom everything necessary to get clean input from stdin:
 - trim trailing whitespace
  */
 /// Get clean stdin input without trailing spaces and newline
-pub fn get_input(prompt: &str) -> String {
+pub fn get_input(prompt: &str, initial: Option<&str>) -> String {
     let mut rl = Editor::<()>::with_config(*EDITOR_CONFIG).unwrap();
-    let readline = rl.readline(prompt);
+    
+    let readline = rl.readline_with_initial(prompt, (initial.unwrap_or(""), ""));
 
     match readline {
         Ok(line) => line,
