@@ -13,6 +13,7 @@ use crate::{
         repl::get_input,
         util::{duration_fmt, get_now_even, round_to_full_day},
         validator::{get_home_dir, validate_duration},
+	display::display_events
     },
     error, success, warning, CONFIG,
 };
@@ -412,9 +413,8 @@ pub fn list(split_input: &Vec<&str>) {
         end_date = round_to_full_day(end_date);
     }
 
-    generate_until(active_calendar, end_date)
-        .iter()
-        .for_each(|e| println!("{e}"))
+    let events = generate_until(active_calendar, end_date);
+    display_events(events);
 }
 
 /// Generate, output to a file
