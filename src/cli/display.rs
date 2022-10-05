@@ -1,13 +1,8 @@
 use crate::{
-    active_calendar, active_calendar_reference,
     cal::{calendar_ref::CalendarReference, event::Event},
-    calendar_index,
-    cli::util::duration_fmt,
-    CONFIG,
-    
+    cli::util::duration_fmt
 };
 use tabled::{Disable, Style, Table, Tabled};
-use chrono::{NaiveTime, Timelike, Datelike};
 
 #[derive(Tabled, Debug, Clone)]
 pub struct DetailedEvent {
@@ -25,16 +20,18 @@ pub struct DetailedEvent {
     difficulty: u8,
 }
 
-impl DetailedEvent {
-    pub fn from(event: &Event) -> DetailedEvent {
-	
+impl From<&Event> for DetailedEvent {
+    fn from(event: &Event) -> DetailedEvent {
         DetailedEvent {
             name: event.name(),
             start_time: format!("{} {}", event.start().date_naive(),
 				event.start().time().format("%H:%M")),
             end_time: format!("{} {}", event.end().date_naive(),
 			      event.end().time().format("%H:%M")),
-            repeat: duration_fmt(event.repeat()),
+            repeat: match event.repeat().is_zero() {
+		true => "None".to_string(),
+		false => duration_fmt(event.repeat())
+	    },
             priority: event.priority(),
             difficulty: event.difficulty(),
         }
@@ -53,8 +50,8 @@ pub struct SimpleEvent {
     difficulty: u8,
 }
 
-impl SimpleEvent {
-    pub fn from(event: &Event) -> SimpleEvent {
+impl From<&Event> for SimpleEvent {
+    fn from(event: &Event) -> SimpleEvent {
         SimpleEvent {
             name: event.name(),
             time: format!("{} - {}", event.start().format("%H:%M"),
@@ -75,8 +72,8 @@ pub struct DisplayedCalendarReference {
     active: bool,
 }
 
-impl From<CalendarReference> for DisplayedCalendarReference {
-    fn from(r: CalendarReference) -> DisplayedCalendarReference {
+impl From<&CalendarReference> for DisplayedCalendarReference {
+    fn from(r: &CalendarReference) -> DisplayedCalendarReference {
         DisplayedCalendarReference {
             name: r.name(),
             path: r.path(),
@@ -85,22 +82,9 @@ impl From<CalendarReference> for DisplayedCalendarReference {
     }
 }
 
-pub fn print_stuff() {
-    let events = active_calendar!().events().clone();
-    let displayed_events: Vec<DetailedEvent> = events
-        .iter()
-        .map(DetailedEvent::from)
-        .collect();
-    // skip kolumn
-    let t = Table::new(displayed_events)
-        .with(Disable::Column(0..2))
-        .with(Style::modern());
-    println!("{t}");
-}
-
 pub fn display_simple_events(events: Vec<Event>) {
     let displayed_events: Vec<SimpleEvent> =
-	events.iter().map(SimpleEvent::from).collect();
+	events.iter().map(|e| SimpleEvent::from(e)).collect();
     let table = Table::new(displayed_events).with(Style::modern());
 	//.with(Disable::Column(1..1));
     println!("{table}");
@@ -108,8 +92,7 @@ pub fn display_simple_events(events: Vec<Event>) {
 
 pub fn display_detailed_events(events: Vec<Event>) {
     let displayed_events: Vec<DetailedEvent> =
-	events.iter().map(DetailedEvent::from).collect();
-    
+	events.iter().map(|e| DetailedEvent::from(e)).collect();
 
     let mut hide_repeat = true;
     let repeat = "0s";
@@ -127,14 +110,11 @@ pub fn display_detailed_events(events: Vec<Event>) {
 }
 
 pub fn display_events(events: Vec<Event>) {
-    let mut there_are_multiple_dates = false;
-    let date = events[0].start();
-    events.iter().for_each(|event| {
-	if event.start() != date {
-	    there_are_multiple_dates = true;
-	}
-    });
-    if there_are_multiple_dates {
+    let date = match events.get(0) {
+	Some(e) => e,
+	None => return
+    }.start();
+    if events.iter().any(|e| e.start() != date) {
 	display_detailed_events(events);
 	return;
     }

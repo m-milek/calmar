@@ -5,7 +5,6 @@ use crate::{cli::{
         add, cal, clear, date, duration, edit, list, listcal, mkconfig, mkindex, raw, remove,
         removecal, set, sort, time, until, update, update_index, write,
     },
-    display::print_stuff,
     functions::handle_unknown_command,
     help::print_help,
     help::print_version,
@@ -48,7 +47,6 @@ pub fn parse(input: String) {
         "quit" | "q" => std::process::exit(0),
         "version" | "v" => print_version(),
         "write" | "w" => write(&split_input),
-        "t" => print_stuff(),
         _ => handle_unknown_command(split_input[0]),
     }
 }
@@ -88,12 +86,12 @@ fn handle_quotes(input: String) -> Vec<String> {
 	    // we want to add a non-quoted string
 	    for j in i..chars.len() {
 		// if we find a space
-		if chars[j] == " " || j == chars.len()-1 {
+		if chars[j] == " " || j == chars.len()-1 || chars[j] == quotation_symbol {
 		    let mut x = String::new();
 		    // i..j since we don't skip a quote here
 		    non_quoted_ranges.push(i..j);
 		    for p in i..=j {x.push_str(chars[p])}
-		    if x.ends_with(" ") {
+		    if x.ends_with(" ") || chars[j] == quotation_symbol {
 			x.pop();
 		    }
 		    out.push(x.clone());
