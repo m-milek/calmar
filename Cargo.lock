@@ -101,6 +101,7 @@ dependencies = [
  "serde_with",
  "struct-field-names-as-array",
  "tabled",
+ "unicode-segmentation",
 ]
 
 [[package]]

@@ -1,3 +1,5 @@
+use unicode_segmentation::UnicodeSegmentation;
+
 use crate::{cli::{
     commands::{
         add, cal, clear, date, duration, edit, list, listcal, mkconfig, mkindex, raw, remove,
@@ -20,7 +22,6 @@ pub fn parse(input: String) {
     }
     let quote_parsed = handle_quotes(input);
     let split_input: Vec<&str> = quote_parsed.iter().map(|s| &**s).collect();
-
     match split_input[0].trim() {
         "add" | "a" => add(&split_input),
 	"backup" | "b" => backup(&split_input),
@@ -62,40 +63,48 @@ fn check_quotes(input: &str) -> bool {
 
 fn handle_quotes(input: String) -> Vec<String> {
     let mut out: Vec<String> = vec![];
-    let chars: Vec<char> = input.chars().collect();
-    let mut processed = vec![false; chars.len()];
-
     let mut quoted_ranges: Vec<Range<usize>> = vec![];
-    let mut tmp = String::new();
-    let quotation_symbol = '\"';
+    let mut non_quoted_ranges: Vec<Range<usize>> = vec![];
+    let chars = input.graphemes(true).collect::<Vec<&str>>();
+    let mut known_quote = vec![false; chars.len()];
+    let quotation_symbol = "\"";
 
-    // Determine ranges where quoted strings are
-    for i in 0..chars.len() {
-        if !processed[i] {
-            if chars[i] == quotation_symbol {
-                for j in i + 1..chars.len() {
-                    if chars[j] == quotation_symbol && !processed[j] {
-                        quoted_ranges.push(i + 1..j);
-                        out.push(input[i + 1..j].to_string());
-                        processed[j] = true;
-                        break;
-                    }
-                }
-            } else if !chars[i].is_ascii_whitespace()
-                && !quoted_ranges.iter().any(|r| r.contains(&i))
-            {
-                tmp.push(chars[i]);
-            } else if !tmp.is_empty() {
-                out.push(tmp.to_string());
-                tmp.clear();
+    for (i, c) in chars.iter().enumerate() {
+	if c == &quotation_symbol && !known_quote[i] {
+	    // now we're in a quoted part
+	    known_quote[i] = true;
+	    for j in i..chars.len() {
+		// if we find the closing quote
+		if chars[j] == quotation_symbol && i!=j && !known_quote[j] {
+		    known_quote[j] = true;
+		    // i+1 to skip the opening quote
+		    quoted_ranges.push(i+1 .. j);
+		    let mut x = String::new();
+		    for i in i+1..j {x.push_str(chars[i])} out.push(x.clone());
+		    break;
+		}
 	    }
-        }
-        // fix an issue where if the last arg isn't in quotes, it doesn't get added.
-        // if the second condition wasn't there, if the last arg was quoted, an empty
-        // string would be added at the end of output
-        if i == chars.len() - 1 && chars[i] != quotation_symbol {
-            out.push(tmp.clone());
-        }
+	} else if !quoted_ranges.iter().any(|r| r.contains(&i)) && !non_quoted_ranges.iter().any(|r| r.contains(&i)) && chars[i] != quotation_symbol && chars[i] != " " {
+	    // we want to add a non-quoted string
+	    for j in i..chars.len() {
+		// if we find a space
+		if chars[j] == " " || j == chars.len()-1 {
+		    let mut x = String::new();
+		    // i..j since we don't skip a quote here
+		    non_quoted_ranges.push(i..j);
+		    for p in i..=j {x.push_str(chars[p])}
+		    if x.ends_with(" ") {
+			x.pop();
+		    }
+		    out.push(x.clone());
+		    break;
+		}
+	    }
+	}
+	// last iteration
+	if i == chars.len()-1 && chars[i] != quotation_symbol {
+	    out.pop();
+	}
     }
     out
 }
