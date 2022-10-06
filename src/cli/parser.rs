@@ -100,7 +100,7 @@ fn handle_quotes(input: String) -> Vec<String> {
 	    }
 	}
 	// last iteration
-	if i == chars.len()-1 && chars[i] != quotation_symbol {
+	if i == chars.len()-1 && chars[i] != quotation_symbol && chars.len() != 1 {
 	    out.pop();
 	}
     }
