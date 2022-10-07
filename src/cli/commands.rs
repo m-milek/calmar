@@ -26,6 +26,8 @@ use std::{
     str::FromStr,
 };
 
+use super::{functions::choose_event_idx, util::select_in_range, getdata::{get_date, get_time}};
+
 /*
 Given 'name' of a new calendar, the function gets the home directory,
 verifies the existence of a $HOME/.calmar directory,
@@ -519,8 +521,8 @@ pub fn update() {
         .retain(|e| !e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero()));
 
     let after = active_calendar.events().len();
-
-    success!("Removed {} old event/s", after - before);
+    println!("{after} {before}");
+    success!("Removed {} old event/s", before - after);
     success!("Brought nearest event occurences up to date");
     if let Err(e) = active_calendar.save(&path) {
         print_err_msg(e, &path);
@@ -669,4 +671,49 @@ pub fn edit_cal(split_input: &[&str]) {
         success!("Editing {e}");
         edit_calendar(e)
     })
+}
+
+/// Add an exception to a recurring event, for example when it is cancelled on a given day
+pub fn except(split_input: &Vec<&str>) {
+    let index = calendar_index!();
+    let mut active_calendar = active_calendar!(index);
+    let path = active_calendar_reference!().path();
+    let options = ["Add exception", "Remove exception"];
+    
+    split_input[1..].iter().for_each(|n| if active_calendar.events().iter().all(|e| e.name() != **n) {
+	warning!("No event named {n}");
+    } else {
+	let idx = choose_event_idx(&active_calendar, n);
+	let edited_event = &mut active_calendar.events_mut()[idx];
+	options.iter().enumerate().for_each(|(i,o)| println!("{}. {o}", i+1));
+	let num = select_in_range("Select an option", options.len());
+	match num {
+	    // add an exception
+	    1 => {
+		edited_event.exceptions_mut()
+		    .push(
+			get_date("Date: ")
+			    .and_time(
+				get_time("Time: "))
+			    .unwrap())
+	    },
+	    // remove an exception
+	    2 => {
+		if edited_event.exceptions().is_empty() {
+		    warning!("No exceptions");
+		    return;
+		}
+		edited_event.exceptions()
+		    .iter()
+		    .enumerate()
+		    .for_each(|(i,e)| println!("{}. {e}", i+1));
+		let len = edited_event.exceptions().len();
+		edited_event.exceptions_mut().remove(select_in_range("Select an exception: ", len) -1);
+	    },
+	    _ => panic!("Impossible, this should be checked in select_in_range")
+	}
+    });
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, path)
+    }
 }

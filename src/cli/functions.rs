@@ -8,7 +8,7 @@ use crate::{
     cli::{
         getdata::{
             get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
-            get_repeat, get_start_date, get_start_time, get_valid_event_name,
+            get_repeat, get_date, get_time, get_valid_event_name,
         },
         messages::print_err_msg,
         repl::get_input,
@@ -37,9 +37,9 @@ pub fn get_new_event(name: Option<String>) -> Event {
         None => get_valid_event_name(),
     };
 
-    let start_date = get_start_date();
+    let start_date = get_date("Start Date: ");
 
-    let start_time = get_start_time();
+    let start_time = get_time("Start Time: ");
 
     let duration = get_duration();
 
@@ -68,40 +68,16 @@ pub fn get_new_event(name: Option<String>) -> Event {
         repeat,
         priority,
         difficulty,
+	vec![]
     )
 }
 
 pub fn edit_event(event_name: &str) {
     let path = active_calendar_reference!().path();
     let mut active_calendar = active_calendar!();
-    let mut index_map = HashMap::<usize, usize>::with_capacity(active_calendar.events().len());
-
-    let mut i = 0;
-    for (num, event) in active_calendar.events().iter().enumerate() {
-        if event.name() == event_name {
-            index_map.insert(i, num);
-            i += 1;
-        }
-    }
-
-    // Choose an event to be edited
-    let events_named_like_arg: Vec<Event> = active_calendar
-        .events()
-        .clone()
-        .into_iter()
-        .filter(|event| event.name() == event_name)
-        .collect();
-
-    if events_named_like_arg.is_empty() {
-        warning!("No event named {}", event_name);
-        return;
-    }
-    println!("{:#?}", events_named_like_arg);
-    let index_to_select = match events_named_like_arg.len() {
-        1 => 0,
-        _ => select_in_range("Select an event to edit", events_named_like_arg.len()) - 1,
-    };
-
+    let idx = choose_event_idx(&active_calendar, event_name);
+    let edited_event = &mut active_calendar.events_mut()[idx];
+    
     // Choose a property to be edited
     let fields = Event::FIELD_NAMES_AS_ARRAY.to_vec();
     let mut fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
@@ -113,7 +89,6 @@ pub fn edit_event(event_name: &str) {
         .enumerate()
         .for_each(|(i, field)| println!("{}. {field}", i + 1));
 
-    let edited_event = &mut active_calendar.events_mut()[index_map[&index_to_select]];
     let num: usize = select_in_range("Select what to edit", fields_list.len());
 
     match num {
@@ -131,21 +106,21 @@ pub fn edit_event(event_name: &str) {
 
             if num == 1 || num == 3 {
                 print!("Start date: ");
-                let mut new_start_date = get_start_date();
+                let mut new_start_date = get_date("Start Date: ");
                 while new_start_date.and_time(current_start.time()).unwrap() > current_end {
                     println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
-                    new_start_date = get_start_date();
+                    new_start_date = get_date("Start Date: ");
                 }
                 edited_event.set_start(&new_start_date.and_time(current_start.time()).unwrap())
             }
             if num == 2 || num == 3 {
                 print!("Start time: ");
-                let mut new_start_time = get_start_time();
+                let mut new_start_time = get_time("Start Time: ");
                 while current_start.date().and_time(new_start_time).unwrap() > current_end {
                     println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
-                    new_start_time = get_start_time();
+                    new_start_time = get_time("Start Time: ");
                 }
                 edited_event.set_start(&current_start.date().and_time(new_start_time).unwrap())
             }
@@ -247,6 +222,9 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
                 // If the event is not recurring, just push its only occurrence and return
                 if event.repeat().is_zero() {
                     let mut v = clone.lock().unwrap();
+		    if event.exceptions().contains(&event.start()) {
+			return;
+		    }
                     v.push(event);
                     return;
                 }
@@ -258,7 +236,7 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
                 while new_start < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-                    if e.start() >= now || e.is_happening_on(now) {
+                    if (e.start() >= now || e.is_happening_on(now)) && !event.exceptions().contains(&e.start()) {
                         temp_vec.push(e);
                     }
                     new_start += e_to_push.repeat();
@@ -579,3 +557,35 @@ pub fn edit_calendar(name: &str) {
 	print_err_msg(e, &CONFIG.index_path);
     }
 }
+
+pub fn choose_event_idx(cal: &Calendar, name: &str) -> usize {
+    let mut index_map = HashMap::<usize, usize>::with_capacity(cal.events().len());
+
+    let mut i = 0;
+    for (num, event) in cal.events().iter().enumerate() {
+        if event.name() == name {
+            index_map.insert(i, num);
+            i += 1;
+        }
+    }
+
+    // Choose an event to be edited
+    let events_named_like_arg: Vec<Event> = cal
+        .events()
+        .clone()
+        .into_iter()
+        .filter(|event| event.name() == name)
+        .collect();
+
+    if events_named_like_arg.is_empty() {
+        warning!("No event named {}", name);
+	std::process::exit(1);
+    }
+    println!("{:#?}", events_named_like_arg);
+    let index_to_select = match events_named_like_arg.len() {
+        1 => 0,
+        _ => select_in_range("Select an event to edit", events_named_like_arg.len()) - 1,
+    };
+    return index_map[&index_to_select];
+}
+

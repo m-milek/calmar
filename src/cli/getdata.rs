@@ -4,12 +4,11 @@ use chrono::{Date, Duration, Local, NaiveTime, TimeZone};
 /*
 Return a valid date
 */
-pub fn get_start_date() -> Date<Local> {
-    let prompt: &str = "Start Date: ";
-    let mut input = get_input(prompt, None);
+pub fn get_date<T: ToString>(prompt: T) -> Date<Local> {
+    let mut input = get_input(&prompt.to_string(), None);
     while !validate_date(&input) {
         warning!("{input} is not a valid date.");
-        input = get_input(prompt, None);
+        input = get_input(&prompt.to_string(), None);
     }
     parse_into_date(input.as_str())
 }
@@ -17,12 +16,11 @@ pub fn get_start_date() -> Date<Local> {
 /*
 Return a valid time
 */
-pub fn get_start_time() -> NaiveTime {
-    let prompt: &str = "Start Time: ";
-    let mut input = get_input(prompt, None);
+pub fn get_time<T: ToString>(prompt: T) -> NaiveTime {
+    let mut input = get_input(&prompt.to_string(), None);
     while !validate_time(&input) {
         warning!("{input} is not a valid time input.");
-        input = get_input(prompt, None);
+        input = get_input(&prompt.to_string(), None);
     }
     parse_into_time(input.as_str())
 }

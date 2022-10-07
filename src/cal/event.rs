@@ -14,6 +14,7 @@ pub struct Event {
     repeat: Duration,
     priority: u8,
     difficulty: u8,
+    exceptions: Vec<DateTime<Local>>
 }
 
 impl PartialOrd for Event {
@@ -54,6 +55,7 @@ impl Event {
         repeat: Duration,
         priority: u8,
         difficulty: u8,
+	exceptions: Vec<DateTime<Local>>
     ) -> Self {
         Event {
             name,
@@ -62,6 +64,7 @@ impl Event {
             repeat,
             priority,
             difficulty,
+	    exceptions
         }
     }
 
@@ -86,6 +89,12 @@ impl Event {
     }
     pub fn difficulty(&self) -> u8 {
         self.difficulty
+    }
+    pub fn exceptions(&self) -> &Vec<DateTime<Local>> {
+	&self.exceptions
+    }
+    pub fn exceptions_mut(&mut self) -> &mut Vec<DateTime<Local>> {
+	&mut self.exceptions
     }
 
     pub fn set_name(&mut self, name: &String) {
