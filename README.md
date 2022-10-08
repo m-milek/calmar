@@ -5,9 +5,11 @@ Calmar's will receive updates introducing more features that we find useful.
 
 # Installation
 `cargo` will be needed for the install process. For instructions on installing the Rust toolchain, visit [this link](https://www.rust-lang.org/tools/install).
-`git clone https://gitlab.com/calmar-team/calmar.git`
-`cd calmar`
-`cargo build --release`
+```
+git clone https://gitlab.com/calmar-team/calmar.git
+cd calmar
+cargo build --release
+```
 Copy `target/release/calmar` to a directry in `PATH`.
 
 In the future, Calmar will be available in the [AUR](https://aur.archlinux.org/).
