@@ -1,6 +1,6 @@
 [package]
 name = "calmar"
-version = "0.11.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Michał Miłek <https://gitlab.com/mmilek>", "Artur Gulik <https://gitlab.com/ArturGulik>"]
 description = "A fast, easy to use calendar/scheduling program."
