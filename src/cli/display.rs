@@ -1,5 +1,5 @@
 use crate::{
-    cal::{calendar_ref::CalendarReference, event::Event},
+    cal::{calendar_ref::CalendarReference, event::Event, deadline::Deadline},
     cli::util::duration_fmt
 };
 use tabled::{Disable, Style, Table, Tabled};
@@ -119,4 +119,10 @@ pub fn display_events(events: Vec<Event>) {
 	return;
     }
     display_simple_events(events);
+}
+
+pub fn colorize_deadline(d: &Deadline) {
+    let s = d.to_string();
+    let split = s.split('\t').collect::<Vec<&str>>();
+    println!("{split:?}");
 }

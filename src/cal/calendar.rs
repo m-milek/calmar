@@ -6,6 +6,8 @@ use std::{
     io::Write,
 };
 
+use super::deadline::Deadline;
+
 /// Holds its own name and a vector of `Event` structs.
 /// # Use
 /// An empty `Calendar` may be created with `Calendar::new("foo")`
@@ -13,6 +15,7 @@ use std::{
 pub struct Calendar {
     name: String,
     events: Vec<Event>,
+    deadlines: Vec<Deadline>
 }
 
 impl Display for Calendar {
@@ -31,11 +34,11 @@ impl Display for Calendar {
 }
 
 impl Calendar {
-    /// Create an empty `Calendar` with a given `name`.
     pub fn new(name: &str) -> Self {
         Calendar {
             name: name.to_string(),
-            events: Vec::<Event>::new(),
+            events: vec![],
+	    deadlines: vec![]
         }
     }
 
@@ -44,6 +47,9 @@ impl Calendar {
     }
     pub fn events_mut(&mut self) -> &mut Vec<Event> {
         &mut self.events
+    }
+    pub fn deadlines(&self) -> &Vec<Deadline> {
+	&self.deadlines
     }
 
     pub fn set_name(&mut self, name: String) {
@@ -73,6 +79,9 @@ impl Calendar {
 
     pub fn add_event(&mut self, event: Event) {
         self.events.push(event)
+    }
+    pub fn add_deadline(&mut self, deadline: Deadline) {
+	self.deadlines.push(deadline)
     }
 
     pub fn set_events(&mut self, events: Vec<Event>) {

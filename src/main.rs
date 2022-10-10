@@ -3,6 +3,7 @@ mod cal {
     pub mod calendar_index;
     pub mod calendar_ref;
     pub mod calmar_error;
+    pub mod deadline;
     pub mod event;
     pub mod macros;
 }

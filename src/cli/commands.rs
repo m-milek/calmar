@@ -1,6 +1,6 @@
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::{calendar_index::CalendarIndex, calmar_error::CalmarError, event::Event},
+    cal::{calendar_index::CalendarIndex, calmar_error::CalmarError, event::Event, deadline::Deadline},
     calendar_index,
     cli::{
         config::Config,
@@ -26,7 +26,7 @@ use std::{
     str::FromStr,
 };
 
-use super::{functions::choose_event_idx, util::select_in_range, getdata::{get_date, get_time}};
+use super::{functions::choose_event_idx, util::select_in_range, getdata::{get_date, get_time, get_priority}, display::colorize_deadline};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -716,4 +716,35 @@ pub fn except(split_input: &Vec<&str>) {
     if let Err(e) = active_calendar.save(&path) {
 	print_err_msg(e, path)
     }
+}
+
+pub fn deadline(split_input: &Vec<&str>) {
+    let path = active_calendar_reference!().path();
+    let mut active_calendar = active_calendar!();
+    split_input[1..].iter().for_each(|n| {
+	success!("Adding {n} deadline");
+	active_calendar.add_deadline(
+	    Deadline::new(
+		n.to_string(),
+		get_date("Deadline date: ").and_time(get_time("Deadline time: ")).unwrap(),
+		get_priority())
+	)
+    });
+    if let Err(e) = active_calendar.save(&path) {
+	print_err_msg(e, path);
+    }
+}
+
+// temporary solution probably, unitl display improves
+pub fn ls_deadlines(split_input: &Vec<&str>) {
+    let active_calendar = active_calendar!();
+    let len = split_input.len();
+    active_calendar.deadlines().iter().filter(|a| {
+	if len == 1 {
+	    true
+	} else {
+	    split_input[1..].contains(&a.name().as_str())
+	}
+    }
+    ).for_each(|d| colorize_deadline(d));
 }
