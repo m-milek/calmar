@@ -739,12 +739,15 @@ pub fn deadline(split_input: &Vec<&str>) {
 pub fn ls_deadlines(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
     let len = split_input.len();
-    active_calendar.deadlines().iter().filter(|a| {
+    let mut x = active_calendar.deadlines().iter().filter(|a| {
 	if len == 1 {
 	    true
 	} else {
 	    split_input[1..].contains(&a.name().as_str())
 	}
     }
-    ).for_each(|d| colorize_deadline(d));
+    ).collect::<Vec<&Deadline>>();
+    x.sort_by(|d, o| d.date().cmp(&o.date()));
+    x.iter().for_each(|d| println!("{}", colorize_deadline(d)))
 }
+

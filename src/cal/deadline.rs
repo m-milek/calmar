@@ -16,10 +16,11 @@ impl Display for Deadline {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 	write!(
 	    f,
-	    "{}\t{}\t{}",
+	    "{}\t{}\t{}\t{}",
 	    self.name,
 	    self.date.date_naive(),
-	    self.date.time()
+	    self.date.time(),
+	    self.priority
 	)
     }
 }
@@ -30,5 +31,11 @@ impl Deadline {
     }
     pub fn name(&self) -> String {
 	self.name.clone()
+    }
+    pub fn date(&self) -> DateTime<Local> {
+	self.date
+    }
+    pub fn priority(&self) -> u8 {
+	self.priority
     }
 }
