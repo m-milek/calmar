@@ -3,8 +3,8 @@ use crate::{
     cli::util::duration_fmt,
     error, CONFIG,
 };
+use chrono::{DateTime, Local, Duration, Datelike};
 use colored::{ColoredString, Colorize};
-use lazy_static::__Deref;
 use tabled::{Disable, Style, Table, Tabled};
 
 #[derive(Tabled, Debug, Clone)]
@@ -97,27 +97,26 @@ impl From<&CalendarReference> for DisplayedCalendarReference {
 pub fn display_simple_events(events: Vec<Event>) {
     let displayed_events: Vec<SimpleEvent> = events.iter().map(|e| SimpleEvent::from(e)).collect();
     let table = Table::new(displayed_events).with(Style::modern());
-    //.with(Disable::Column(1..1));
     println!("{table}");
 }
 
 pub fn display_detailed_events(events: Vec<Event>) {
-    let displayed_events: Vec<DetailedEvent> =
-        events.iter().map(|e| DetailedEvent::from(e)).collect();
-
-    let mut hide_repeat = true;
-    let repeat = "0s";
-    displayed_events.iter().for_each(|event| {
-        if event.repeat != repeat {
-            hide_repeat = false;
-        }
-    });
-
-    let mut table = Table::new(displayed_events).with(Style::modern());
-    if hide_repeat {
-        table = table.with(Disable::Column(3..4));
+    // at this point, the events vector is guaranteed to not be empty.
+    let date_range = events[0].start().date() .. events.iter().last().unwrap().start().date();
+    let mut current_date = date_range.start;
+    loop {
+	current_date += Duration::days(1);
+	if current_date == date_range.end {
+	    break;
+	}
+	let displayed_events = events.iter().filter(|e| e.start().date() == current_date).map(DetailedEvent::from).collect::<Vec<DetailedEvent>>();
+	println!("{}, {}", current_date.naive_local().to_string().bold(), current_date.weekday().to_string().bold());
+	let mut table = Table::new(&displayed_events).with(Style::modern());
+	if displayed_events.iter().all(|e| e.repeat == "None") {
+            table = table.with(Disable::Column(3..4));
+	}
+	println!("{table}");
     }
-    println!("{table}");
 }
 
 pub fn display_events(events: Vec<Event>) {
@@ -137,7 +136,7 @@ pub fn colorize_deadline(d: &Deadline) -> String {
     let s = d.to_string();
     let split = s.split('\t').collect::<Vec<&str>>();
     // bold name, colorized everything
-    let out = vec![split[0].bold(), split[1].clear(), split[2].clear(), split[3].clear()]
+    let out = vec![split[0].bold(), split[1].clear(), split[2].clear(), split[3].clear(), split[4].clear()]
         .iter()
         .map(|s| s.to_string())
         .collect::<Vec<String>>();
