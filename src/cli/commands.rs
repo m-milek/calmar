@@ -1,6 +1,6 @@
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::{calendar_index::CalendarIndex, calmar_error::CalmarError, event::Event, deadline::Deadline},
+    cal::{calendar_index::CalendarIndex, calmar_error::CalmarError, event::Event, deadline::Deadline, calmar_trait::CalendarDataType},
     calendar_index,
     cli::{
         config::Config,
@@ -26,7 +26,7 @@ use std::{
     str::FromStr,
 };
 
-use super::{functions::choose_event_idx, util::select_in_range, getdata::{get_date, get_time, get_priority}, display::colorize_deadline};
+use super::{functions::choose_struct_idx, util::select_in_range, getdata::{get_date, get_time, get_priority}, display::colorize_deadline};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -683,7 +683,10 @@ pub fn except(split_input: &Vec<&str>) {
     split_input[1..].iter().for_each(|n| if active_calendar.events().iter().all(|e| e.name() != **n) {
 	warning!("No event named {n}");
     } else {
-	let idx = choose_event_idx(&active_calendar, n);
+	let idx = match choose_struct_idx(active_calendar.events().to_vec(), "Select an event to except", n) {
+	    Some(i) => i,
+	    None => return
+	};
 	let edited_event = &mut active_calendar.events_mut()[idx];
 	options.iter().enumerate().for_each(|(i,o)| println!("{}. {o}", i+1));
 	let num = select_in_range("Select an option", options.len());
@@ -751,3 +754,21 @@ pub fn ls_deadlines(split_input: &Vec<&str>) {
     x.iter().for_each(|d| println!("{}", colorize_deadline(d)))
 }
 
+
+pub fn remove_deadline(split_input: &Vec<&str>) {
+    let mut active_calendar = active_calendar!();
+    let path = &active_calendar_reference!().path();
+    for a in split_input[1..].iter() {
+	let idx = match choose_struct_idx(active_calendar.deadlines().to_vec(), "Select a deadline to remove", a) {
+	    Some(i) => i,
+	    None => {
+		warning!("No deadline named {a}");
+		continue;
+	    }
+	};
+	active_calendar.deadlines_mut().remove(idx);
+    }
+    if let Err(e) = active_calendar.save(path) {
+	print_err_msg(e, path)
+    }
+}

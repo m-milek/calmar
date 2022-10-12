@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     cli::repl::get_input,
     CONFIG, warning,
@@ -8,7 +10,7 @@ pub fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
 }
 
-pub fn select_in_range(prompt: &str, max: usize) -> usize {
+pub fn select_in_range<S: Display>(prompt: S, max: usize) -> usize {
     let displayed_range = match max {
         1 => 1.to_string(),
         _ => 1.to_string() + "-" + max.to_string().as_str(),

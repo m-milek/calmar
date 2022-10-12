@@ -6,6 +6,7 @@ mod cal {
     pub mod deadline;
     pub mod event;
     pub mod macros;
+    pub mod calmar_trait;
 }
 mod cli {
     pub mod commands;

@@ -4,6 +4,8 @@ use serde_with::serde_as;
 use std::fmt::{self, Display, Formatter};
 use struct_field_names_as_array::FieldNamesAsArray;
 
+use super::calmar_trait::CalendarDataType;
+
 #[serde_with::serde_as]
 #[derive(Debug, PartialEq, Eq, FieldNamesAsArray, Serialize, Deserialize, Clone)]
 pub struct Event {
@@ -47,6 +49,15 @@ impl Display for Event {
     }
 }
 
+impl CalendarDataType for Event {
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+    fn priority(&self) -> u8 {
+        self.priority
+    }
+}
+
 impl Event {
     pub fn new(
         name: String,
@@ -72,9 +83,6 @@ impl Event {
         self.start <= date && date < self.end
     }
 
-    pub fn name(&self) -> String {
-        self.name.clone()
-    }
     pub fn start(&self) -> DateTime<Local> {
         self.start
     }
@@ -83,9 +91,6 @@ impl Event {
     }
     pub fn repeat(&self) -> Duration {
         self.repeat
-    }
-    pub fn priority(&self) -> u8 {
-        self.priority
     }
     pub fn difficulty(&self) -> u8 {
         self.difficulty

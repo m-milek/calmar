@@ -1,3 +1,4 @@
+use crate::cal::calmar_trait::CalendarDataType;
 use crate::cal::{calmar_error::CalmarError, event::Event};
 use core::fmt;
 use serde_derive::{Deserialize, Serialize};
@@ -50,6 +51,9 @@ impl Calendar {
     }
     pub fn deadlines(&self) -> &Vec<Deadline> {
 	&self.deadlines
+    }
+    pub fn deadlines_mut(&mut self) -> &mut Vec<Deadline> {
+	&mut self.deadlines
     }
 
     pub fn set_name(&mut self, name: String) {

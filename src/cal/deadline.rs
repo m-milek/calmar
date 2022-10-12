@@ -1,8 +1,8 @@
-use core::fmt;
-use std::fmt::{Display, Formatter, write};
-
+use std::fmt::{Formatter, Display, Result};
 use chrono::{Local, DateTime};
 use serde_derive::{Serialize, Deserialize};
+
+use super::calmar_trait::CalendarDataType;
 
 #[serde_with::serde_as]
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -13,7 +13,7 @@ pub struct Deadline {
 }
 
 impl Display for Deadline {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter) -> Result {
 	write!(
 	    f,
 	    // name, date, time, priority, days left
@@ -36,17 +36,20 @@ impl Display for Deadline {
     }
 }
 
+impl CalendarDataType for Deadline {
+    fn name(&self) -> String {
+	self.name.clone()
+    }
+    fn priority(&self) -> u8 {
+	self.priority
+    }
+}
+
 impl Deadline {
     pub fn new(name: String, date: DateTime<Local>, priority: u8) -> Self {
 	Deadline { name, date, priority }
     }
-    pub fn name(&self) -> String {
-	self.name.clone()
-    }
     pub fn date(&self) -> DateTime<Local> {
 	self.date
-    }
-    pub fn priority(&self) -> u8 {
-	self.priority
     }
 }

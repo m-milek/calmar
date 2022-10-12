@@ -11,7 +11,7 @@ use crate::{cli::{
 }, error, CONFIG};
 use std::ops::Range;
 
-use super::commands::{backup, edit_cal, except, deadline, ls_deadlines};
+use super::commands::{backup, edit_cal, except, deadline, ls_deadlines, remove_deadline};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -41,6 +41,7 @@ pub fn parse(input: String) {
         "raw" | "R" => raw(&split_input),
         "remove" | "rm" | "r" => remove(&split_input),
         "removecal" | "rmcal" | "rc" => removecal(&split_input),
+	"remove-deadline" | "rmd" => remove_deadline(&split_input),
         "set" | "s" => set(&split_input),
         "sort" | "S" => sort(&split_input),
         "time" | "T" => time(),

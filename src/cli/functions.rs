@@ -2,7 +2,7 @@ use crate::{
     active_calendar, active_calendar_reference,
     cal::{
         calendar::Calendar, calendar_index::CalendarIndex, calendar_ref::CalendarReference,
-        calmar_error::CalmarError, event::Event,
+        calmar_error::CalmarError, event::Event, calmar_trait::CalendarDataType
     },
     calendar_index,
     cli::{
@@ -21,7 +21,7 @@ use crate::{
     CONFIG, warning, error,
 };
 use chrono::{DateTime, Local};
-use std::{path::PathBuf, fs::read_to_string, str::FromStr};
+use std::{path::PathBuf, fs::read_to_string, str::FromStr, fmt::Display};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -75,7 +75,10 @@ pub fn get_new_event(name: Option<String>) -> Event {
 pub fn edit_event(event_name: &str) {
     let path = active_calendar_reference!().path();
     let mut active_calendar = active_calendar!();
-    let idx = choose_event_idx(&active_calendar, event_name);
+    let idx = match choose_struct_idx(active_calendar.events().to_vec(), "Select an event to edit", event_name) {
+	Some(i) => i,
+	None => return
+    };
     let edited_event = &mut active_calendar.events_mut()[idx];
     
     // Choose a property to be edited
@@ -558,34 +561,32 @@ pub fn edit_calendar(name: &str) {
     }
 }
 
-pub fn choose_event_idx(cal: &Calendar, name: &str) -> usize {
-    let mut index_map = HashMap::<usize, usize>::with_capacity(cal.events().len());
-
+pub fn choose_struct_idx<T: CalendarDataType + Clone + Display, S: Display>(vec: Vec<T>, prompt: S, name: S) -> Option<usize> where String: PartialEq<S> {
+    let mut index_map = HashMap::<usize, usize>::with_capacity(vec.len());
+    
     let mut i = 0;
-    for (num, event) in cal.events().iter().enumerate() {
-        if event.name() == name {
-            index_map.insert(i, num);
-            i += 1;
-        }
-    }
+    vec.iter().enumerate().for_each(|(n,e)| {
+	if e.name() == name {
+	    index_map.insert(i, n);
+	    i += 1;
+	}
+    });
 
-    // Choose an event to be edited
-    let events_named_like_arg: Vec<Event> = cal
-        .events()
+    let structs_named_like_arg = vec
         .clone()
         .into_iter()
-        .filter(|event| event.name() == name)
-        .collect();
+        .filter(|s| s.name() == name)
+        .collect::<Vec<T>>();
 
-    if events_named_like_arg.is_empty() {
-        warning!("No event named {}", name);
-	std::process::exit(1);
+    if structs_named_like_arg.is_empty() {
+	return None;
     }
-    println!("{:#?}", events_named_like_arg);
-    let index_to_select = match events_named_like_arg.len() {
+    
+    structs_named_like_arg.iter().enumerate().for_each(|(i,s)| println!("{}. {s}", i+1));
+    let index_to_select = match structs_named_like_arg.len() {
         1 => 0,
-        _ => select_in_range("Select an event to edit", events_named_like_arg.len()) - 1,
+        _ => select_in_range(prompt, structs_named_like_arg.len()) - 1,
     };
-    return index_map[&index_to_select];
+    return Some(index_map[&index_to_select]);
 }
 

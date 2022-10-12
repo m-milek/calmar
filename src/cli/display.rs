@@ -1,10 +1,10 @@
 use crate::{
-    cal::{calendar_ref::CalendarReference, deadline::Deadline, event::Event},
+    cal::{calendar_ref::CalendarReference, deadline::Deadline, event::Event, calmar_trait::CalendarDataType},
     cli::util::duration_fmt,
     error, CONFIG,
 };
-use chrono::{DateTime, Local, Duration, Datelike};
-use colored::{ColoredString, Colorize};
+use chrono::{Datelike, Duration};
+use colored::Colorize;
 use tabled::{Disable, Style, Table, Tabled};
 
 #[derive(Tabled, Debug, Clone)]
@@ -102,20 +102,28 @@ pub fn display_simple_events(events: Vec<Event>) {
 
 pub fn display_detailed_events(events: Vec<Event>) {
     // at this point, the events vector is guaranteed to not be empty.
-    let date_range = events[0].start().date() .. events.iter().last().unwrap().start().date();
+    let date_range = events[0].start().date()..events.iter().last().unwrap().start().date();
     let mut current_date = date_range.start;
     loop {
-	current_date += Duration::days(1);
-	if current_date == date_range.end {
-	    break;
-	}
-	let displayed_events = events.iter().filter(|e| e.start().date() == current_date).map(DetailedEvent::from).collect::<Vec<DetailedEvent>>();
-	println!("{}, {}", current_date.naive_local().to_string().bold(), current_date.weekday().to_string().bold());
-	let mut table = Table::new(&displayed_events).with(Style::modern());
-	if displayed_events.iter().all(|e| e.repeat == "None") {
+        current_date += Duration::days(1);
+        if current_date == date_range.end {
+            break;
+        }
+        let displayed_events = events
+            .iter()
+            .filter(|e| e.start().date() == current_date)
+            .map(DetailedEvent::from)
+            .collect::<Vec<DetailedEvent>>();
+        println!(
+            "{}, {}",
+            current_date.naive_local().to_string().bold(),
+            current_date.weekday().to_string().bold()
+        );
+        let mut table = Table::new(&displayed_events).with(Style::modern());
+        if displayed_events.iter().all(|e| e.repeat == "None") {
             table = table.with(Disable::Column(3..4));
-	}
-	println!("{table}");
+        }
+        println!("{table}");
     }
 }
 
@@ -136,10 +144,16 @@ pub fn colorize_deadline(d: &Deadline) -> String {
     let s = d.to_string();
     let split = s.split('\t').collect::<Vec<&str>>();
     // bold name, colorized everything
-    let out = vec![split[0].bold(), split[1].clear(), split[2].clear(), split[3].clear(), split[4].clear()]
-        .iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>();
+    let out = vec![
+        split[0].bold(),
+        split[1].clear(),
+        split[2].clear(),
+        split[3].clear(),
+        split[4].clear(),
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect::<Vec<String>>();
     let x = out.join("\t");
     match d.priority() {
         0..=5 => x.green(),
