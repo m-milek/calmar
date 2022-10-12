@@ -1,4 +1,4 @@
-use crate::{CONFIG, EDITOR_CONFIG, warning};
+use crate::{warning, CONFIG, EDITOR_CONFIG};
 use colored::*;
 
 pub fn print_startup_message() {

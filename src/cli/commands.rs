@@ -1,9 +1,13 @@
 use crate::{
     active_calendar, active_calendar_reference,
-    cal::{calendar_index::CalendarIndex, calmar_error::CalmarError, event::Event, deadline::Deadline, calmar_trait::CalendarDataType},
+    cal::{
+        calendar_index::CalendarIndex, calmar_error::CalmarError, calmar_trait::CalendarDataType,
+        deadline::Deadline, event::Event,
+    },
     calendar_index,
     cli::{
         config::Config,
+        display::display_events,
         functions::{
             add_entry, closest_occurence_start, delete_entry, edit_calendar, edit_event,
             generate_until, get_new_calendar_reference, get_new_event,
@@ -13,7 +17,6 @@ use crate::{
         repl::get_input,
         util::{duration_fmt, get_now_even, round_to_full_day},
         validator::{get_home_dir, validate_duration},
-	display::display_events
     },
     error, success, warning, CONFIG,
 };
@@ -26,7 +29,12 @@ use std::{
     str::FromStr,
 };
 
-use super::{functions::choose_struct_idx, util::select_in_range, getdata::{get_date, get_time, get_priority}, display::colorize_deadline};
+use super::{
+    display::colorize_deadline,
+    functions::choose_struct_idx,
+    getdata::{get_date, get_priority, get_time},
+    util::select_in_range,
+};
 
 /*
 Given 'name' of a new calendar, the function gets the home directory,
@@ -679,45 +687,52 @@ pub fn except(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!(index);
     let path = active_calendar_reference!().path();
     let options = ["Add exception", "Remove exception"];
-    
-    split_input[1..].iter().for_each(|n| if active_calendar.events().iter().all(|e| e.name() != **n) {
-	warning!("No event named {n}");
-    } else {
-	let idx = match choose_struct_idx(active_calendar.events().to_vec(), "Select an event to except", n) {
-	    Some(i) => i,
-	    None => return
-	};
-	let edited_event = &mut active_calendar.events_mut()[idx];
-	options.iter().enumerate().for_each(|(i,o)| println!("{}. {o}", i+1));
-	let num = select_in_range("Select an option", options.len());
-	match num {
-	    // add an exception
-	    1 => {
-		edited_event.exceptions_mut()
-		    .push(
-			get_date("Date: ")
-			    .and_time(
-				get_time("Time: "))
-			    .unwrap())
-	    },
-	    // remove an exception
-	    2 => {
-		if edited_event.exceptions().is_empty() {
-		    warning!("No exceptions");
-		    return;
-		}
-		edited_event.exceptions()
-		    .iter()
-		    .enumerate()
-		    .for_each(|(i,e)| println!("{}. {e}", i+1));
-		let len = edited_event.exceptions().len();
-		edited_event.exceptions_mut().remove(select_in_range("Select an exception: ", len) -1);
-	    },
-	    _ => panic!("Impossible, this should be checked in select_in_range")
-	}
+
+    split_input[1..].iter().for_each(|n| {
+        if active_calendar.events().iter().all(|e| e.name() != **n) {
+            warning!("No event named {n}");
+        } else {
+            let idx = match choose_struct_idx(
+                active_calendar.events().to_vec(),
+                "Select an event to except",
+                n,
+            ) {
+                Some(i) => i,
+                None => return,
+            };
+            let edited_event = &mut active_calendar.events_mut()[idx];
+            options
+                .iter()
+                .enumerate()
+                .for_each(|(i, o)| println!("{}. {o}", i + 1));
+            let num = select_in_range("Select an option", options.len());
+            match num {
+                // add an exception
+                1 => edited_event
+                    .exceptions_mut()
+                    .push(get_date("Date: ").and_time(get_time("Time: ")).unwrap()),
+                // remove an exception
+                2 => {
+                    if edited_event.exceptions().is_empty() {
+                        warning!("No exceptions");
+                        return;
+                    }
+                    edited_event
+                        .exceptions()
+                        .iter()
+                        .enumerate()
+                        .for_each(|(i, e)| println!("{}. {e}", i + 1));
+                    let len = edited_event.exceptions().len();
+                    edited_event
+                        .exceptions_mut()
+                        .remove(select_in_range("Select an exception: ", len) - 1);
+                }
+                _ => panic!("Impossible, this should be checked in select_in_range"),
+            }
+        }
     });
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, path)
+        print_err_msg(e, path)
     }
 }
 
@@ -725,16 +740,17 @@ pub fn deadline(split_input: &Vec<&str>) {
     let path = active_calendar_reference!().path();
     let mut active_calendar = active_calendar!();
     split_input[1..].iter().for_each(|n| {
-	success!("Adding {n} deadline");
-	active_calendar.add_deadline(
-	    Deadline::new(
-		n.to_string(),
-		get_date("Deadline date: ").and_time(get_time("Deadline time: ")).unwrap(),
-		get_priority())
-	)
+        success!("Adding {n} deadline");
+        active_calendar.add_deadline(Deadline::new(
+            n.to_string(),
+            get_date("Deadline date: ")
+                .and_time(get_time("Deadline time: "))
+                .unwrap(),
+            get_priority(),
+        ))
     });
     if let Err(e) = active_calendar.save(&path) {
-	print_err_msg(e, path);
+        print_err_msg(e, path);
     }
 }
 
@@ -742,33 +758,39 @@ pub fn deadline(split_input: &Vec<&str>) {
 pub fn ls_deadlines(split_input: &Vec<&str>) {
     let active_calendar = active_calendar!();
     let len = split_input.len();
-    let mut x = active_calendar.deadlines().iter().filter(|a| {
-	if len == 1 {
-	    true
-	} else {
-	    split_input[1..].contains(&a.name().as_str())
-	}
-    }
-    ).collect::<Vec<&Deadline>>();
+    let mut x = active_calendar
+        .deadlines()
+        .iter()
+        .filter(|a| {
+            if len == 1 {
+                true
+            } else {
+                split_input[1..].contains(&a.name().as_str())
+            }
+        })
+        .collect::<Vec<&Deadline>>();
     x.sort_by(|d, o| d.date().cmp(&o.date()));
     x.iter().for_each(|d| println!("{}", colorize_deadline(d)))
 }
-
 
 pub fn remove_deadline(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!();
     let path = &active_calendar_reference!().path();
     for a in split_input[1..].iter() {
-	let idx = match choose_struct_idx(active_calendar.deadlines().to_vec(), "Select a deadline to remove", a) {
-	    Some(i) => i,
-	    None => {
-		warning!("No deadline named {a}");
-		continue;
-	    }
-	};
-	active_calendar.deadlines_mut().remove(idx);
+        let idx = match choose_struct_idx(
+            active_calendar.deadlines().to_vec(),
+            "Select a deadline to remove",
+            a,
+        ) {
+            Some(i) => i,
+            None => {
+                warning!("No deadline named {a}");
+                continue;
+            }
+        };
+        active_calendar.deadlines_mut().remove(idx);
     }
     if let Err(e) = active_calendar.save(path) {
-	print_err_msg(e, path)
+        print_err_msg(e, path)
     }
 }

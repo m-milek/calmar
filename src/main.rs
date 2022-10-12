@@ -3,10 +3,10 @@ mod cal {
     pub mod calendar_index;
     pub mod calendar_ref;
     pub mod calmar_error;
+    pub mod calmar_trait;
     pub mod deadline;
     pub mod event;
     pub mod macros;
-    pub mod calmar_trait;
 }
 mod cli {
     pub mod commands;

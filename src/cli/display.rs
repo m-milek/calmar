@@ -1,5 +1,8 @@
 use crate::{
-    cal::{calendar_ref::CalendarReference, deadline::Deadline, event::Event, calmar_trait::CalendarDataType},
+    cal::{
+        calendar_ref::CalendarReference, calmar_trait::CalendarDataType, deadline::Deadline,
+        event::Event,
+    },
     cli::util::duration_fmt,
     error, CONFIG,
 };

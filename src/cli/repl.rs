@@ -12,7 +12,7 @@ Perfom everything necessary to get clean input from stdin:
 /// Get clean stdin input without trailing spaces and newline
 pub fn get_input(prompt: &str, initial: Option<&str>) -> String {
     let mut rl = Editor::<()>::with_config(*EDITOR_CONFIG).unwrap();
-    
+
     let readline = rl.readline_with_initial(prompt, (initial.unwrap_or(""), ""));
 
     match readline {

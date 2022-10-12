@@ -1,4 +1,7 @@
-use crate::{cli::{repl::get_input, util::get_now_even, validator::*}, warning, CONFIG};
+use crate::{
+    cli::{repl::get_input, util::get_now_even, validator::*},
+    warning, CONFIG,
+};
 use chrono::{Date, Duration, Local, NaiveTime, TimeZone};
 
 /*

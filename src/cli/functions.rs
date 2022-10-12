@@ -2,13 +2,13 @@ use crate::{
     active_calendar, active_calendar_reference,
     cal::{
         calendar::Calendar, calendar_index::CalendarIndex, calendar_ref::CalendarReference,
-        calmar_error::CalmarError, event::Event, calmar_trait::CalendarDataType
+        calmar_error::CalmarError, calmar_trait::CalendarDataType, event::Event,
     },
     calendar_index,
     cli::{
         getdata::{
-            get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time, get_priority,
-            get_repeat, get_date, get_time, get_valid_event_name,
+            get_date, get_difficulty, get_dir_path, get_duration, get_end_date, get_end_time,
+            get_priority, get_repeat, get_time, get_valid_event_name,
         },
         messages::print_err_msg,
         repl::get_input,
@@ -18,15 +18,15 @@ use crate::{
         },
         validator::{get_home_dir, validate_duration},
     },
-    CONFIG, warning, error,
+    error, warning, CONFIG,
 };
 use chrono::{DateTime, Local};
-use std::{path::PathBuf, fs::read_to_string, str::FromStr, fmt::Display};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
     thread,
 };
+use std::{fmt::Display, fs::read_to_string, path::PathBuf, str::FromStr};
 
 use super::getdata::get_valid_calendar_name;
 
@@ -68,19 +68,23 @@ pub fn get_new_event(name: Option<String>) -> Event {
         repeat,
         priority,
         difficulty,
-	vec![]
+        vec![],
     )
 }
 
 pub fn edit_event(event_name: &str) {
     let path = active_calendar_reference!().path();
     let mut active_calendar = active_calendar!();
-    let idx = match choose_struct_idx(active_calendar.events().to_vec(), "Select an event to edit", event_name) {
-	Some(i) => i,
-	None => return
+    let idx = match choose_struct_idx(
+        active_calendar.events().to_vec(),
+        "Select an event to edit",
+        event_name,
+    ) {
+        Some(i) => i,
+        None => return,
     };
     let edited_event = &mut active_calendar.events_mut()[idx];
-    
+
     // Choose a property to be edited
     let fields = Event::FIELD_NAMES_AS_ARRAY.to_vec();
     let mut fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
@@ -225,9 +229,9 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
                 // If the event is not recurring, just push its only occurrence and return
                 if event.repeat().is_zero() {
                     let mut v = clone.lock().unwrap();
-		    if event.exceptions().contains(&event.start()) {
-			return;
-		    }
+                    if event.exceptions().contains(&event.start()) {
+                        return;
+                    }
                     v.push(event);
                     return;
                 }
@@ -239,7 +243,9 @@ pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
                 while new_start < end {
                     let mut e = e_to_push.clone();
                     e.set_end(&new_end);
-                    if (e.start() >= now || e.is_happening_on(now)) && !event.exceptions().contains(&e.start()) {
+                    if (e.start() >= now || e.is_happening_on(now))
+                        && !event.exceptions().contains(&e.start())
+                    {
                         temp_vec.push(e);
                     }
                     new_start += e_to_push.repeat();
@@ -336,7 +342,8 @@ pub fn check_calmar_dir() {
     error!("{} doesn't exist. Do you want to create it?", path.display());
     match get_input("[Y/n]: ", None).to_lowercase().trim() {
         "yes" | "y" => warning!(
-            "Use the \"mkindex\" command to generate an empty index.json in the created directory."),
+            "Use the \"mkindex\" command to generate an empty index.json in the created directory."
+        ),
         _ => return,
     }
     if let Err(e) = std::fs::create_dir(&path) {
@@ -369,11 +376,17 @@ pub fn check_config() {
         std::process::exit(1);
     }
     if !validate_duration(&CONFIG.default_calendar_span) {
-        error!("{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'",CONFIG.default_calendar_span);
+        error!(
+            "{warning}{} is not a valid duration.\nExamples of valid durations: '7d', '10h', '15m'",
+            CONFIG.default_calendar_span
+        );
         std::process::exit(1);
     }
     if !permitted_colors.contains(&CONFIG.prompt_color) {
-        error!("{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}",CONFIG.prompt_color);
+        error!(
+            "{warning}{} is not a valid color.\nValid colors: {permitted_colors:?}",
+            CONFIG.prompt_color
+        );
         std::process::exit(1);
     }
 }
@@ -389,14 +402,18 @@ pub fn check_config() {
 ///
 /// * Push the new `CalendarReference` to the `self.calendars`.
 pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
-
-    if i.calendars().iter().map(|r| r.name()).any(|x| x == new_calendar.name()) {
+    if i.calendars()
+        .iter()
+        .map(|r| r.name())
+        .any(|x| x == new_calendar.name())
+    {
         match get_input(
             format!(
                 "Calendar named {} already exists. Do you want to overwrite it? [y/N]: ",
                 new_calendar.name()
             )
-            .as_str(), None
+            .as_str(),
+            None,
         )
         .to_lowercase()
         .as_str()
@@ -419,13 +436,18 @@ pub fn add_entry(i: &mut CalendarIndex, new_calendar: &CalendarReference) {
             .retain(|calendar| calendar.name() != new_calendar.name());
     }
 
-    if i.calendars().iter().map(|r| r.path()).any(|x| x == new_calendar.path()) {
+    if i.calendars()
+        .iter()
+        .map(|r| r.path())
+        .any(|x| x == new_calendar.path())
+    {
         match get_input(
             format!(
                 "Calendar with path {} already exists. Do you want to overwrite it?",
                 new_calendar.path()
             )
-            .as_str(), None
+            .as_str(),
+            None,
         )
         .as_str()
         {
@@ -464,7 +486,11 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
         1 => match std::fs::remove_file(&tmp_reference_vec[0].path()) {
             Ok(_) => (),
             Err(e) => {
-                error!("Failed to remove file {}. Removing reference from index.\n{}", tmp_reference_vec[0].path(), e);
+                error!(
+                    "Failed to remove file {}. Removing reference from index.\n{}",
+                    tmp_reference_vec[0].path(),
+                    e
+                );
             }
         },
         _ => {
@@ -477,99 +503,120 @@ pub fn delete_entry(i: &mut CalendarIndex, name: String) {
 
 pub fn edit_calendar(name: &str) {
     let mut index = calendar_index!();
-    match index.calendars().iter().filter(|r| r.name() == name).count() {
-	0 => {
-	    warning!("No calendar named {name}");
-	    return;
-	},
-	1 => {},
-	x => {
-	    warning!("{x} calendars named {name}. There should be only one. Please fix index.json and retry.");
-	    return;
-	}
+    match index
+        .calendars()
+        .iter()
+        .filter(|r| r.name() == name)
+        .count()
+    {
+        0 => {
+            warning!("No calendar named {name}");
+            return;
+        }
+        1 => {}
+        x => {
+            warning!("{x} calendars named {name}. There should be only one. Please fix index.json and retry.");
+            return;
+        }
     }
 
-    let mut edited_ref = &mut CalendarReference::new("".to_string(),"".to_string(),false);
+    let mut edited_ref = &mut CalendarReference::new("".to_string(), "".to_string(), false);
     for r in index.calendars_mut() {
-	if r.name() == name {
-	    edited_ref = r;
-	}
+        if r.name() == name {
+            edited_ref = r;
+        }
     }
     println!("{edited_ref}");
 
     let fields = CalendarReference::FIELD_NAMES_AS_ARRAY.to_vec();
     let fields_list: Vec<String> = fields.into_iter().map(uppercase_first_letter).collect();
-    fields_list.iter().enumerate().for_each(|(i,f)| println!("{}. {f}", i+1));
+    fields_list
+        .iter()
+        .enumerate()
+        .for_each(|(i, f)| println!("{}. {f}", i + 1));
     let num: usize = select_in_range("Select what to edit", fields_list.len());
-    
+
     match num {
-	1 => {
-	    let new_name = get_valid_calendar_name();
-	    edited_ref.set_name(new_name.clone());
-	    let cal_str = match read_to_string(edited_ref.path()) {
-		Ok(s) => s,
-		Err(e) => {
-		    error!("Failed to read {}.\n{}", edited_ref.path(), e);
-		    return;
-		}
-	    };
-	    let mut cal: Calendar = match serde_json::from_str(&cal_str) {
-		Ok(c) => c,
-		Err(e) => {
-		    print_err_msg(CalmarError::ParseJSON { e }, &"".to_string());
-		    return;
-		}
-	    };
-	    
-	    let mut new_filename = PathBuf::from_str(&edited_ref.path()).unwrap();
-	    new_filename.pop();
-	    let new_filename = new_filename.join(new_name.clone() + ".json");
-	    cal.set_name(new_name);
-	    if let Err(e) = std::fs::rename(edited_ref.path(), &new_filename) {
-		error!("Failed to rename {} to {}.\n{e}", edited_ref.path(), new_filename.display());
-		return;
-	    }
-	    edited_ref.set_path(new_filename.to_str().unwrap().to_string());
-	    if let Err(e) = cal.save(&new_filename.to_str().unwrap().to_string()) {
-		print_err_msg(e, edited_ref.path());
-	    }
-	}
-	2 => {
-	    let new_path = get_dir_path() + "/" + &edited_ref.name() + ".json";
-	    
-	    if let Err(e) = std::fs::copy(edited_ref.path(), &new_path) {
-		error!("Failed to copy from {} to {new_path}.\n{e}", edited_ref.path());
-		return;
-	    }
-	    if let Err(e) = std::fs::remove_file(edited_ref.path()) {
-		error!("Failed to remove {}.\n{e}", edited_ref.path());
-		return;
-	    }
-	    edited_ref.set_path(new_path);
-	}
-	3 => {
-	    if !edited_ref.active() {
-		edited_ref.set_active()
-	    } else {
-		edited_ref.set_inactive()
-	    }
-	}
-	_ => {println!("Impossible")}
+        1 => {
+            let new_name = get_valid_calendar_name();
+            edited_ref.set_name(new_name.clone());
+            let cal_str = match read_to_string(edited_ref.path()) {
+                Ok(s) => s,
+                Err(e) => {
+                    error!("Failed to read {}.\n{}", edited_ref.path(), e);
+                    return;
+                }
+            };
+            let mut cal: Calendar = match serde_json::from_str(&cal_str) {
+                Ok(c) => c,
+                Err(e) => {
+                    print_err_msg(CalmarError::ParseJSON { e }, &"".to_string());
+                    return;
+                }
+            };
+
+            let mut new_filename = PathBuf::from_str(&edited_ref.path()).unwrap();
+            new_filename.pop();
+            let new_filename = new_filename.join(new_name.clone() + ".json");
+            cal.set_name(new_name);
+            if let Err(e) = std::fs::rename(edited_ref.path(), &new_filename) {
+                error!(
+                    "Failed to rename {} to {}.\n{e}",
+                    edited_ref.path(),
+                    new_filename.display()
+                );
+                return;
+            }
+            edited_ref.set_path(new_filename.to_str().unwrap().to_string());
+            if let Err(e) = cal.save(&new_filename.to_str().unwrap().to_string()) {
+                print_err_msg(e, edited_ref.path());
+            }
+        }
+        2 => {
+            let new_path = get_dir_path() + "/" + &edited_ref.name() + ".json";
+
+            if let Err(e) = std::fs::copy(edited_ref.path(), &new_path) {
+                error!("Failed to copy from {} to {new_path}.\n{e}", edited_ref.path());
+                return;
+            }
+            if let Err(e) = std::fs::remove_file(edited_ref.path()) {
+                error!("Failed to remove {}.\n{e}", edited_ref.path());
+                return;
+            }
+            edited_ref.set_path(new_path);
+        }
+        3 => {
+            if !edited_ref.active() {
+                edited_ref.set_active()
+            } else {
+                edited_ref.set_inactive()
+            }
+        }
+        _ => {
+            println!("Impossible")
+        }
     }
     if let Err(e) = index.save() {
-	print_err_msg(e, &CONFIG.index_path);
+        print_err_msg(e, &CONFIG.index_path);
     }
 }
 
-pub fn choose_struct_idx<T: CalendarDataType + Clone + Display, S: Display>(vec: Vec<T>, prompt: S, name: S) -> Option<usize> where String: PartialEq<S> {
+pub fn choose_struct_idx<T: CalendarDataType + Clone + Display, S: Display>(
+    vec: Vec<T>,
+    prompt: S,
+    name: S,
+) -> Option<usize>
+where
+    String: PartialEq<S>,
+{
     let mut index_map = HashMap::<usize, usize>::with_capacity(vec.len());
-    
+
     let mut i = 0;
-    vec.iter().enumerate().for_each(|(n,e)| {
-	if e.name() == name {
-	    index_map.insert(i, n);
-	    i += 1;
-	}
+    vec.iter().enumerate().for_each(|(n, e)| {
+        if e.name() == name {
+            index_map.insert(i, n);
+            i += 1;
+        }
     });
 
     let structs_named_like_arg = vec
@@ -579,14 +626,16 @@ pub fn choose_struct_idx<T: CalendarDataType + Clone + Display, S: Display>(vec:
         .collect::<Vec<T>>();
 
     if structs_named_like_arg.is_empty() {
-	return None;
+        return None;
     }
-    
-    structs_named_like_arg.iter().enumerate().for_each(|(i,s)| println!("{}. {s}", i+1));
+
+    structs_named_like_arg
+        .iter()
+        .enumerate()
+        .for_each(|(i, s)| println!("{}. {s}", i + 1));
     let index_to_select = match structs_named_like_arg.len() {
         1 => 0,
         _ => select_in_range(prompt, structs_named_like_arg.len()) - 1,
     };
     return Some(index_map[&index_to_select]);
 }
-

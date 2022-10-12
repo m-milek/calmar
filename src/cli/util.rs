@@ -1,9 +1,6 @@
 use std::fmt::Display;
 
-use crate::{
-    cli::repl::get_input,
-    CONFIG, warning,
-};
+use crate::{cli::repl::get_input, warning, CONFIG};
 use chrono::{DateTime, Duration, Local, Timelike};
 
 pub fn uppercase_first_letter(s: &str) -> String {
@@ -17,7 +14,9 @@ pub fn select_in_range<S: Display>(prompt: S, max: usize) -> usize {
     };
 
     loop {
-        match get_input(format!("{} [{}]: ", prompt, displayed_range).as_str(), None).parse::<usize>() {
+        match get_input(format!("{} [{}]: ", prompt, displayed_range).as_str(), None)
+            .parse::<usize>()
+        {
             Ok(num) => match (1..=max).contains(&num) {
                 true => {
                     return num;

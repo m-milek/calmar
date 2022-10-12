@@ -16,7 +16,7 @@ use super::deadline::Deadline;
 pub struct Calendar {
     name: String,
     events: Vec<Event>,
-    deadlines: Vec<Deadline>
+    deadlines: Vec<Deadline>,
 }
 
 impl Display for Calendar {
@@ -39,7 +39,7 @@ impl Calendar {
         Calendar {
             name: name.to_string(),
             events: vec![],
-	    deadlines: vec![]
+            deadlines: vec![],
         }
     }
 
@@ -50,10 +50,10 @@ impl Calendar {
         &mut self.events
     }
     pub fn deadlines(&self) -> &Vec<Deadline> {
-	&self.deadlines
+        &self.deadlines
     }
     pub fn deadlines_mut(&mut self) -> &mut Vec<Deadline> {
-	&mut self.deadlines
+        &mut self.deadlines
     }
 
     pub fn set_name(&mut self, name: String) {
@@ -85,7 +85,7 @@ impl Calendar {
         self.events.push(event)
     }
     pub fn add_deadline(&mut self, deadline: Deadline) {
-	self.deadlines.push(deadline)
+        self.deadlines.push(deadline)
     }
 
     pub fn set_events(&mut self, events: Vec<Event>) {

@@ -1,4 +1,4 @@
-use crate::{warning, error, CONFIG};
+use crate::{error, warning, CONFIG};
 use chrono::{LocalResult, TimeZone, Utc};
 use home::home_dir;
 use regex::Regex;

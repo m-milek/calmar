@@ -1,4 +1,4 @@
-use crate::{cal::calmar_error::CalmarError, CONFIG, error};
+use crate::{cal::calmar_error::CalmarError, error, CONFIG};
 
 pub fn print_err_msg<T: std::fmt::Display>(err: CalmarError, info: T) {
     match err {
@@ -9,10 +9,9 @@ pub fn print_err_msg<T: std::fmt::Display>(err: CalmarError, info: T) {
             error!("Failed to create file at {}.\n{}", info, e)
         }
         CalmarError::ToJSON { e } => error!("Failed to serialize struct to JSON.\n{}", e),
-        CalmarError::ActiveCalendarCount { e } => error!(
-            "There are {} calendars set as 'active'. There should be exactly one.",
-            e
-        ),
+        CalmarError::ActiveCalendarCount { e } => {
+            error!("There are {} calendars set as 'active'. There should be exactly one.", e)
+        }
         CalmarError::CreateDir { e } => {
             error!("Failed to create directory at {info}.\n{e}")
         }

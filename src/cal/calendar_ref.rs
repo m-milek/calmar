@@ -1,7 +1,7 @@
 use crate::cal::{calendar::Calendar, calmar_error::CalmarError};
 use serde_derive::{Deserialize, Serialize};
-use struct_field_names_as_array::FieldNamesAsArray;
 use std::{fmt::Display, io::Write};
+use struct_field_names_as_array::FieldNamesAsArray;
 
 /// Holds a "pointer" to a file containing a `Calendar` struct.
 /// # Fields
