@@ -26,7 +26,7 @@ Now you will be asked where to save the JSON file representing it.
 You can choose the default `$HOME/.calmar` directory by just pressing `Return`. Alternatively, you can type your path of choice.
 
 ## Adding data
-Calendar data can be divided into two categories: Events and Deadlines (Deadlines are yet to be added in v1.1.0).
+Calendar data can be divided into two categories: Events and Deadlines.
 
 To add events, use the `add` command:
 ```
@@ -36,6 +36,12 @@ The `add` command takes any number of arguments. Quotes are supported if you'd w
 ```
 add foo bar "Learning GNU Emacs"
 ```
+
+To add deadlines, use the `deadline` command, abbreviated as `de`.
+```
+deadline baz
+```
+Again, this command takes any number of arguments.
 ## Displaying calendars
 Calendars are just blueprints - the events they contain can have a set time after which they reoccur.
 
@@ -49,8 +55,7 @@ Information about other commands and their usage is available in Calmar. Use the
 Calmar's structure is easy to comprehend and modify. If you wish to add a feature, just visit `src/cli/parser.rs` and add a pattern to the `match` statement, bind a function to it.
 
 # Contributing
-While we doubt it, maybe you'd be interested in contributing to Calmar.
-All contributions are welcome!
+All contributions (even incredibly minor ones) are greatly appreciated.
 
 # Authors
 Michał Miłek
