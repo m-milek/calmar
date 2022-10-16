@@ -630,7 +630,7 @@ where
     }
 
     if structs_named_like_arg.len() != 1 {
-	structs_named_like_arg
+        structs_named_like_arg
             .iter()
             .enumerate()
             .for_each(|(i, s)| println!("{}. {s}", i + 1));

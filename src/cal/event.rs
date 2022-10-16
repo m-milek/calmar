@@ -83,8 +83,8 @@ impl Event {
         self.start <= t && t < self.end
     }
     pub fn will_happen_today(&self) -> bool {
-	let now = Local::now();
-	self.start.date() == now.date() && self.start.time() >= now.time()
+        let now = Local::now();
+        self.start.date() == now.date() && self.start.time() >= now.time()
     }
 
     pub fn start(&self) -> DateTime<Local> {

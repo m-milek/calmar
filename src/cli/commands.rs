@@ -633,7 +633,8 @@ pub fn backup(split_input: &Vec<&str>) {
     let index = calendar_index!();
     let mut i = 0;
     for reference in index.calendars() {
-        if split_input.len() == 1 || (split_input[1..].contains(&reference.name().as_str()) && split_input.len() > 1)
+        if split_input.len() == 1
+            || (split_input[1..].contains(&reference.name().as_str()) && split_input.len() > 1)
         {
             if Path::new(&reference.path()).exists() {
                 let backup_path = reference.path() + ".bak";
@@ -797,21 +798,43 @@ pub fn remove_deadline(split_input: &Vec<&str>) {
 
 pub fn briefing() {
     let cal = active_calendar!();
-    let gen = generate_until(&cal, round_to_full_day(Local::now()+Duration::days(7)));
-    println!("{}",
-	     format!("{} and {}. {} in the next 7 days and {} in the next 14.",
-		     format!("{:?} event(s) left today",
-			     gen.iter().filter(|e| e.is_happening_on(Local::now()) || e.will_happen_today()).count()
-		     ).bold(),
-		     format!("{} tomorrow",
-			     gen.iter().filter(|e| e.start().date() == (Local::now() + Duration::days(1)).date()).count()
-		     ).bold(),
-		     format!("{} deadline(s)",
-			     cal.deadlines().iter().filter(|d| d.date().date() < round_to_full_day(Local::now()+Duration::days(7)).date()).count()
-		     ).bold(),
-		     format!("{}",
-			     cal.deadlines().iter().filter(|d| d.date().date() < round_to_full_day(Local::now()+Duration::days(14)).date()).count()
-		     ).bold()
-	     )
+    let gen = generate_until(&cal, round_to_full_day(Local::now() + Duration::days(7)));
+    println!(
+        "{}",
+        format!(
+            "{} and {}. {} in the next 7 days and {} in the next 14.",
+            format!(
+                "{:?} event(s) left today",
+                gen.iter()
+                    .filter(|e| e.is_happening_on(Local::now()) || e.will_happen_today())
+                    .count()
+            )
+            .bold(),
+            format!(
+                "{} tomorrow",
+                gen.iter()
+                    .filter(|e| e.start().date() == (Local::now() + Duration::days(1)).date())
+                    .count()
+            )
+            .bold(),
+            format!(
+                "{} deadline(s)",
+                cal.deadlines()
+                    .iter()
+                    .filter(|d| d.date().date()
+                        < round_to_full_day(Local::now() + Duration::days(7)).date())
+                    .count()
+            )
+            .bold(),
+            format!(
+                "{}",
+                cal.deadlines()
+                    .iter()
+                    .filter(|d| d.date().date()
+                        < round_to_full_day(Local::now() + Duration::days(14)).date())
+                    .count()
+            )
+            .bold()
+        )
     )
 }

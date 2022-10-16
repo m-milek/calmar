@@ -14,7 +14,9 @@ use crate::{
 };
 use std::ops::Range;
 
-use super::commands::{backup, deadline, edit_cal, except, ls_deadlines, remove_deadline, briefing};
+use super::commands::{
+    backup, briefing, deadline, edit_cal, except, ls_deadlines, remove_deadline,
+};
 
 /// Handle input and call appropriate functions.
 pub fn parse(input: String) {
@@ -27,7 +29,7 @@ pub fn parse(input: String) {
     match split_input[0].trim() {
         "add" | "a" => add(&split_input),
         "backup" | "b" => backup(&split_input),
-	"briefing" | "br" => briefing(),
+        "briefing" | "br" => briefing(),
         "cal" | "c" => cal(&split_input),
         "clear" => clear(&split_input),
         "date" | "D" => date(),
@@ -74,7 +76,7 @@ fn handle_quotes(input: String) -> Vec<String> {
     let chars = input.graphemes(true).collect::<Vec<&str>>();
     let mut known_quote = vec![false; chars.len()];
     let quotation_symbol = "\"";
-    
+
     for (i, c) in chars.iter().enumerate() {
         if c == &quotation_symbol && !known_quote[i] {
             // now we're in a quoted part
@@ -106,7 +108,7 @@ fn handle_quotes(input: String) -> Vec<String> {
                     // i..j since we don't skip a quote here
                     non_quoted_ranges.push(i..j);
                     for p in i..=j {
-			x.push_str(chars[p])
+                        x.push_str(chars[p])
                     }
                     if x.ends_with(" ") || chars[j] == quotation_symbol {
                         x.pop();
@@ -118,9 +120,9 @@ fn handle_quotes(input: String) -> Vec<String> {
         }
         // last iteration
         if i == chars.len() - 1 && chars[i] != quotation_symbol && chars.len() != 1 {
-	    if input.split_ascii_whitespace().last().unwrap().len() != 1 {
-		out.pop();
-	    }
+            if input.split_ascii_whitespace().last().unwrap().len() != 1 {
+                out.pop();
+            }
         }
     }
     out
