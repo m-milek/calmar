@@ -21,6 +21,7 @@ use crate::{
     error, success, warning, CONFIG,
 };
 use chrono::{Duration, Local};
+use colored::Colorize;
 use std::{
     fs::OpenOptions,
     io::Write,
@@ -423,7 +424,7 @@ pub fn list(split_input: &Vec<&str>) {
         end_date = round_to_full_day(end_date);
     }
 
-    let events = generate_until(active_calendar, end_date);
+    let events = generate_until(&active_calendar, end_date);
     display_events(events);
 }
 
@@ -486,7 +487,7 @@ pub fn write(split_input: &Vec<&str>) {
 
     let calendar = active_calendar!();
 
-    let gen_events = generate_until(calendar, end_date);
+    let gen_events = generate_until(&calendar, end_date);
 
     gen_events.iter().for_each(|e| {
         if let Err(e) = writeln!(&mut file, "{e}") {
@@ -632,8 +633,7 @@ pub fn backup(split_input: &Vec<&str>) {
     let index = calendar_index!();
     let mut i = 0;
     for reference in index.calendars() {
-        if split_input.len() == 1 && split_input[1..].contains(&reference.name().as_str())
-            || split_input.len() > 1
+        if split_input.len() == 1 || (split_input[1..].contains(&reference.name().as_str()) && split_input.len() > 1)
         {
             if Path::new(&reference.path()).exists() {
                 let backup_path = reference.path() + ".bak";
@@ -671,14 +671,14 @@ pub fn backup(split_input: &Vec<&str>) {
             }
         }
     }
-    success!("Backed up {i} calendars");
+    success!("Backed up {i} calendar(s)");
 }
 
 pub fn edit_cal(split_input: &[&str]) {
     split_input[1..].iter().for_each(|e| {
         success!("Editing {e}");
         edit_calendar(e)
-    })
+    });
 }
 
 /// Add an exception to a recurring event, for example when it is cancelled on a given day
@@ -793,4 +793,25 @@ pub fn remove_deadline(split_input: &Vec<&str>) {
     if let Err(e) = active_calendar.save(path) {
         print_err_msg(e, path)
     }
+}
+
+pub fn briefing() {
+    let cal = active_calendar!();
+    let gen = generate_until(&cal, round_to_full_day(Local::now()+Duration::days(7)));
+    println!("{}",
+	     format!("{} and {}. {} in the next 7 days and {} in the next 14.",
+		     format!("{:?} event(s) left today",
+			     gen.iter().filter(|e| e.is_happening_on(Local::now()) || e.will_happen_today()).count()
+		     ).bold(),
+		     format!("{} tomorrow",
+			     gen.iter().filter(|e| e.start().date() == (Local::now() + Duration::days(1)).date()).count()
+		     ).bold(),
+		     format!("{} deadline(s)",
+			     cal.deadlines().iter().filter(|d| d.date().date() < round_to_full_day(Local::now()+Duration::days(7)).date()).count()
+		     ).bold(),
+		     format!("{}",
+			     cal.deadlines().iter().filter(|d| d.date().date() < round_to_full_day(Local::now()+Duration::days(14)).date()).count()
+		     ).bold()
+	     )
+    )
 }

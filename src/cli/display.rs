@@ -108,10 +108,6 @@ pub fn display_detailed_events(events: Vec<Event>) {
     let date_range = events[0].start().date()..events.iter().last().unwrap().start().date();
     let mut current_date = date_range.start;
     loop {
-        current_date += Duration::days(1);
-        if current_date == date_range.end {
-            break;
-        }
         let displayed_events = events
             .iter()
             .filter(|e| e.start().date() == current_date)
@@ -127,6 +123,10 @@ pub fn display_detailed_events(events: Vec<Event>) {
             table = table.with(Disable::Column(3..4));
         }
         println!("{table}");
+        current_date += Duration::days(1);
+        if current_date == date_range.end {
+            break;
+        }
     }
 }
 

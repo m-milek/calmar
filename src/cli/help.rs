@@ -56,6 +56,24 @@ Defined in {}
         "src/cli/commands.rs".italic()
     );
 
+    let backup_doc = format!(
+	"
+{}
+
+Create a backup file (.bak extension) for selected or all calendars.
+The backups are created in the same directory where the calendar file is.
+
+{}
+> backup
+> backup [{2}]...
+> b
+> b [{2}]...
+",
+	"backup, b".bold(),
+	"Syntax".bold(),
+	"calendar_name".italic()
+    );
+
     let cal_doc = format!(
         "
 {}
@@ -533,6 +551,7 @@ Keyboard shortcut lists:
         }
         2 => match split_input[1] {
             "add" | "a" => println!("{add_doc}"),
+	    "backup" | "b" => println!("{backup_doc}"),
             "cal" | "c" => println!("{cal_doc}"),
             "clear" => println!("{clear_doc}"),
             "date" | "D" => println!("{date_doc}"),

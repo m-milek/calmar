@@ -25,9 +25,9 @@ impl Display for Deadline {
             {
                 let days = (self.date - Local::now()).num_days();
                 if days > 0 {
-                    format!("In {days} days")
+                    format!("In {days} day(s)")
                 } else if days < 0 {
-                    format!("{} days ago", days.abs())
+                    format!("{} day(s) ago", days.abs())
                 } else {
                     "Today".to_string()
                 }

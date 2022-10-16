@@ -79,8 +79,12 @@ impl Event {
         }
     }
 
-    pub fn is_happening_on(&self, date: DateTime<Local>) -> bool {
-        self.start <= date && date < self.end
+    pub fn is_happening_on(&self, t: DateTime<Local>) -> bool {
+        self.start <= t && t < self.end
+    }
+    pub fn will_happen_today(&self) -> bool {
+	let now = Local::now();
+	self.start.date() == now.date() && self.start.time() >= now.time()
     }
 
     pub fn start(&self) -> DateTime<Local> {

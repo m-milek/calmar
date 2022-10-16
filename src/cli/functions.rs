@@ -217,7 +217,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
 }
 
-pub fn generate_until(calendar: Calendar, end: DateTime<Local>) -> Vec<Event> {
+pub fn generate_until(calendar: &Calendar, end: DateTime<Local>) -> Vec<Event> {
     let event_vec = Arc::new(Mutex::new(vec![]));
     let mut threads = vec![];
     let events = calendar.events().to_vec();
@@ -629,10 +629,12 @@ where
         return None;
     }
 
-    structs_named_like_arg
-        .iter()
-        .enumerate()
-        .for_each(|(i, s)| println!("{}. {s}", i + 1));
+    if structs_named_like_arg.len() != 1 {
+	structs_named_like_arg
+            .iter()
+            .enumerate()
+            .for_each(|(i, s)| println!("{}. {s}", i + 1));
+    }
     let index_to_select = match structs_named_like_arg.len() {
         1 => 0,
         _ => select_in_range(prompt, structs_named_like_arg.len()) - 1,
