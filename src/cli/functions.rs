@@ -20,7 +20,7 @@ use crate::{
     },
     error, warning, CONFIG,
 };
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, FixedOffset, NaiveDateTime};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -50,7 +50,7 @@ pub fn get_new_event(name: Option<String>) -> Event {
 
         end_time = get_end_time(&start_date, &start_time, &end_date);
     } else {
-        let end_timedate = start_date.and_time(start_time).unwrap() + duration;
+        let end_timedate = start_date.and_time(start_time) + duration;
         end_date = end_timedate.date();
         end_time = end_timedate.time();
     }
@@ -63,8 +63,8 @@ pub fn get_new_event(name: Option<String>) -> Event {
 
     Event::new(
         name,
-        start_date.and_time(start_time).unwrap(),
-        end_date.and_time(end_time).unwrap(),
+        start_date.and_time(start_time),
+        end_date.and_time(end_time),
         repeat,
         priority,
         difficulty,
@@ -114,22 +114,22 @@ pub fn edit_event(event_name: &str) {
             if num == 1 || num == 3 {
                 print!("Start date: ");
                 let mut new_start_date = get_date("Start Date: ");
-                while new_start_date.and_time(current_start.time()).unwrap() > current_end {
+                while new_start_date.and_time(current_start.time()) > current_end {
                     println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
                     new_start_date = get_date("Start Date: ");
                 }
-                edited_event.set_start(&new_start_date.and_time(current_start.time()).unwrap())
+                edited_event.set_start(&new_start_date.and_time(current_start.time()))
             }
             if num == 2 || num == 3 {
                 print!("Start time: ");
                 let mut new_start_time = get_time("Start Time: ");
-                while current_start.date().and_time(new_start_time).unwrap() > current_end {
+                while current_start.date().and_time(new_start_time) > current_end {
                     println!("Start timedate cannot be after end timedate");
                     print!("Start date: ");
                     new_start_time = get_time("Start Time: ");
                 }
-                edited_event.set_start(&current_start.date().and_time(new_start_time).unwrap())
+                edited_event.set_start(&current_start.date().and_time(new_start_time))
             }
         }
         // Edit duration
@@ -149,19 +149,19 @@ pub fn edit_event(event_name: &str) {
             if num == 1 || num == 3 {
                 print!("End date: ");
                 let mut new_end_date = get_end_date(&current_start.date());
-                while new_end_date.and_time(current_end.time()).unwrap() < current_start {
+                while new_end_date.and_time(current_end.time()) < current_start {
                     println!("End timedate cannot be before start timedate");
                     print!("End date: ");
                     new_end_date = get_end_date(&current_start.date());
                 }
-                edited_event.set_end(&new_end_date.and_time(current_end.time()).unwrap());
+                edited_event.set_end(&new_end_date.and_time(current_end.time()));
             }
             if num == 2 || num == 3 {
                 current_end = edited_event.end();
                 print!("End time: ");
                 let mut new_end_time =
                     get_end_time(&current_start.date(), &current_start.time(), &current_end.date());
-                while current_end.date().and_time(new_end_time).unwrap() < current_start {
+                while current_end.date().and_time(new_end_time) < current_start {
                     println!("End timedate cannot be before start timedate");
                     print!("End date: ");
                     new_end_time = get_end_time(
@@ -170,7 +170,7 @@ pub fn edit_event(event_name: &str) {
                         &edited_event.end().date(),
                     );
                 }
-                edited_event.set_end(&current_end.date().and_time(new_end_time).unwrap());
+                edited_event.set_end(&current_end.date().and_time(new_end_time));
             }
         }
         // Edit repeat
@@ -217,7 +217,7 @@ pub fn get_new_calendar_reference(name: Option<String>) -> CalendarReference {
     CalendarReference::new(name, path_to_calendar_string.to_owned(), false)
 }
 
-pub fn generate_until(calendar: &Calendar, end: DateTime<Local>) -> Vec<Event> {
+pub fn generate_until(calendar: &Calendar, end: NaiveDateTime) -> Vec<Event> {
     let event_vec = Arc::new(Mutex::new(vec![]));
     let mut threads = vec![];
     let events = calendar.events().to_vec();
@@ -236,7 +236,7 @@ pub fn generate_until(calendar: &Calendar, end: DateTime<Local>) -> Vec<Event> {
                     return;
                 }
                 let mut temp_vec = vec![];
-                let now = Local::now();
+                let now = Local::now().naive_local();
                 let mut e_to_push = event.to_owned();
                 let mut new_start = e_to_push.start();
                 let mut new_end = new_start + e_to_push.duration();
@@ -314,13 +314,13 @@ pub fn handle_unknown_command(s: &str) {
     warning!("Unknown command: {}", s.trim())
 }
 
-pub fn closest_occurence_start(event: &Event) -> DateTime<Local> {
+pub fn closest_occurence_start(event: &Event) -> NaiveDateTime {
     // Searches for the closest occurence of an event.
     // if the event is currently happening, return start datetime of the current occurence.
     // if it's not, return start datetime of the next occurence
 
     let mut start = event.start();
-    let now = Local::now();
+    let now = Local::now().naive_local();
 
     let is_happenning =
         |event: &Event| event.start() < now && event.start() + event.duration() > now;

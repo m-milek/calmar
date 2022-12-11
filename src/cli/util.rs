@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use crate::{cli::repl::get_input, warning, CONFIG};
-use chrono::{DateTime, Duration, Local, Timelike};
+use chrono::{DateTime, Duration, Local, Timelike, NaiveDateTime};
 
 pub fn uppercase_first_letter(s: &str) -> String {
     s[0..1].to_uppercase() + &s[1..]
@@ -75,7 +75,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     column[v1.len()]
 }
 
-pub fn round_to_full_day(d: DateTime<Local>) -> DateTime<Local> {
+pub fn round_to_full_day(d: NaiveDateTime) -> NaiveDateTime {
     d.with_hour(23)
         .unwrap()
         .with_minute(59)

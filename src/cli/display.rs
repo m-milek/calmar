@@ -32,12 +32,12 @@ impl From<&Event> for DetailedEvent {
             name: event.name(),
             start_time: format!(
                 "{} {}",
-                event.start().date_naive(),
+                event.start(),
                 event.start().time().format("%H:%M")
             ),
             end_time: format!(
                 "{} {}",
-                event.end().date_naive(),
+                event.end(),
                 event.end().time().format("%H:%M")
             ),
             repeat: match event.repeat().is_zero() {
@@ -115,7 +115,7 @@ pub fn display_detailed_events(events: Vec<Event>) {
             .collect::<Vec<DetailedEvent>>();
         println!(
             "{}, {}",
-            current_date.naive_local().to_string().bold(),
+            current_date.to_string().bold(),
             current_date.weekday().to_string().bold()
         );
         let mut table = Table::new(&displayed_events).with(Style::modern());

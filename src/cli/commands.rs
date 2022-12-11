@@ -23,9 +23,9 @@ use crate::{
 use chrono::{Duration, Local};
 use colored::Colorize;
 use std::{
+    ops::Neg,
     fs::OpenOptions,
     io::Write,
-    ops::Neg,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -372,7 +372,7 @@ pub fn until(split_input: &Vec<&str>) {
 
     active_calendar.events().iter().for_each(|e| {
         if name_arr.contains(&e.name()) {
-            let now = Local::now();
+            let now = Local::now().naive_local();
             if now < e.start() {
                 println!("Until {}: {}", e.name(), duration_fmt(e.start() - now))
             } else {
@@ -419,7 +419,7 @@ pub fn list(split_input: &Vec<&str>) {
 
     // if the user typed something like '3d', round the duration
     // to full days for convenience
-    let mut end_date = get_now_even() + span;
+    let mut end_date = (get_now_even() + span).naive_local();
     if split_input.len() == 2 && re_days.is_match(split_input[1]) {
         end_date = round_to_full_day(end_date);
     }
@@ -480,7 +480,7 @@ pub fn write(split_input: &Vec<&str>) {
 
     // if the user typed something like '3d', round the duration
     // to full days for convenience
-    let mut end_date = get_now_even() + span;
+    let mut end_date = (get_now_even() + span).naive_local();
     if re_days.is_match(split_input[1]) {
         end_date = round_to_full_day(end_date);
     }
@@ -527,10 +527,9 @@ pub fn update() {
     // this retains events currently happening
     active_calendar
         .events_mut()
-        .retain(|e| !e.repeat().is_zero() || (e.end() > now && e.repeat().is_zero()));
+        .retain(|e| !e.repeat().is_zero() || (e.end() > now.naive_local() && e.repeat().is_zero()));
 
     let after = active_calendar.events().len();
-    println!("{after} {before}");
     success!("Removed {} old event/s", before - after);
     success!("Brought nearest event occurences up to date");
     if let Err(e) = active_calendar.save(&path) {
@@ -711,7 +710,7 @@ pub fn except(split_input: &Vec<&str>) {
                 // add an exception
                 1 => edited_event
                     .exceptions_mut()
-                    .push(get_date("Date: ").and_time(get_time("Time: ")).unwrap()),
+                    .push(get_date("Date: ").and_time(get_time("Time: "))),
                 // remove an exception
                 2 => {
                     if edited_event.exceptions().is_empty() {
@@ -742,12 +741,12 @@ pub fn deadline(split_input: &Vec<&str>) {
     let mut active_calendar = active_calendar!();
     split_input[1..].iter().for_each(|n| {
         success!("Adding {n} deadline");
-        active_calendar.add_deadline(Deadline::new(
-            n.to_string(),
-            get_date("Deadline date: ")
-                .and_time(get_time("Deadline time: "))
-                .unwrap(),
-            get_priority(),
+        active_calendar.add_deadline(
+            Deadline::new(
+                n.to_string(),
+                get_date("Deadline date: ")
+                    .and_time(get_time("Deadline time: ")),
+                get_priority(),
         ))
     });
     if let Err(e) = active_calendar.save(&path) {
@@ -798,7 +797,7 @@ pub fn remove_deadline(split_input: &Vec<&str>) {
 
 pub fn briefing() {
     let cal = active_calendar!();
-    let gen = generate_until(&cal, round_to_full_day(Local::now() + Duration::days(7)));
+    let gen = generate_until(&cal, round_to_full_day(Local::now().naive_local() + Duration::days(7)));
     println!(
         "{}",
         format!(
@@ -806,14 +805,14 @@ pub fn briefing() {
             format!(
                 "{:?} event(s) left today",
                 gen.iter()
-                    .filter(|e| e.is_happening_on(Local::now()) || e.will_happen_today())
+                    .filter(|e| e.is_happening_on(Local::now().naive_local()) || e.will_happen_today())
                     .count()
             )
             .bold(),
             format!(
                 "{} tomorrow",
                 gen.iter()
-                    .filter(|e| e.start().date() == (Local::now() + Duration::days(1)).date())
+                    .filter(|e| e.start().date() == (Local::now() + Duration::days(1)).date().naive_local())
                     .count()
             )
             .bold(),
@@ -822,7 +821,7 @@ pub fn briefing() {
                 cal.deadlines()
                     .iter()
                     .filter(|d| d.date().date()
-                        < round_to_full_day(Local::now() + Duration::days(7)).date())
+                        < round_to_full_day(Local::now().naive_local() + Duration::days(7)).date())
                     .count()
             )
             .bold(),
@@ -831,7 +830,7 @@ pub fn briefing() {
                 cal.deadlines()
                     .iter()
                     .filter(|d| d.date().date()
-                        < round_to_full_day(Local::now() + Duration::days(14)).date())
+                        < round_to_full_day(Local::now().naive_local() + Duration::days(14)).date())
                     .count()
             )
             .bold()

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Local};
+use chrono::{DateTime, Duration, Local, FixedOffset, NaiveDateTime};
 use serde_derive::{Deserialize, Serialize};
 use serde_with::serde_as;
 use std::fmt::{self, Display, Formatter};
@@ -10,13 +10,13 @@ use super::calmar_trait::CalendarDataType;
 #[derive(Debug, PartialEq, Eq, FieldNamesAsArray, Serialize, Deserialize, Clone)]
 pub struct Event {
     name: String,
-    start: DateTime<Local>,
-    end: DateTime<Local>,
+    start: NaiveDateTime,
+    end: NaiveDateTime,
     #[serde_as(as = "serde_with::DurationSeconds<i64>")]
     repeat: Duration,
     priority: u8,
     difficulty: u8,
-    exceptions: Vec<DateTime<Local>>,
+    exceptions: Vec<NaiveDateTime>,
 }
 
 impl PartialOrd for Event {
@@ -61,12 +61,12 @@ impl CalendarDataType for Event {
 impl Event {
     pub fn new(
         name: String,
-        start: DateTime<Local>,
-        end: DateTime<Local>,
+        start: NaiveDateTime,
+        end: NaiveDateTime,
         repeat: Duration,
         priority: u8,
         difficulty: u8,
-        exceptions: Vec<DateTime<Local>>,
+        exceptions: Vec<NaiveDateTime>,
     ) -> Self {
         Event {
             name,
@@ -79,18 +79,18 @@ impl Event {
         }
     }
 
-    pub fn is_happening_on(&self, t: DateTime<Local>) -> bool {
+    pub fn is_happening_on(&self, t: NaiveDateTime) -> bool {
         self.start <= t && t < self.end
     }
     pub fn will_happen_today(&self) -> bool {
-        let now = Local::now();
+        let now = Local::now().naive_local();
         self.start.date() == now.date() && self.start.time() >= now.time()
     }
 
-    pub fn start(&self) -> DateTime<Local> {
+    pub fn start(&self) -> NaiveDateTime {
         self.start
     }
-    pub fn end(&self) -> DateTime<Local> {
+    pub fn end(&self) -> NaiveDateTime {
         self.end
     }
     pub fn repeat(&self) -> Duration {
@@ -99,20 +99,20 @@ impl Event {
     pub fn difficulty(&self) -> u8 {
         self.difficulty
     }
-    pub fn exceptions(&self) -> &Vec<DateTime<Local>> {
+    pub fn exceptions(&self) -> &Vec<NaiveDateTime> {
         &self.exceptions
     }
-    pub fn exceptions_mut(&mut self) -> &mut Vec<DateTime<Local>> {
+    pub fn exceptions_mut(&mut self) -> &mut Vec<NaiveDateTime> {
         &mut self.exceptions
     }
 
     pub fn set_name(&mut self, name: &String) {
         self.name = name.to_string()
     }
-    pub fn set_start(&mut self, new_start: &DateTime<Local>) {
+    pub fn set_start(&mut self, new_start: &NaiveDateTime) {
         self.start = *new_start
     }
-    pub fn set_end(&mut self, new_end: &DateTime<Local>) {
+    pub fn set_end(&mut self, new_end: &NaiveDateTime) {
         self.end = *new_end
     }
     pub fn set_repeat(&mut self, d: &Duration) {

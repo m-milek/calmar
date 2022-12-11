@@ -2,12 +2,12 @@ use crate::{
     cli::{repl::get_input, util::get_now_even, validator::*},
     warning, CONFIG,
 };
-use chrono::{Date, Duration, Local, NaiveTime, TimeZone};
+use chrono::{Date, Duration, Local, NaiveTime, TimeZone, FixedOffset, DateTime, Offset, NaiveDateTime, NaiveDate};
 
 /*
 Return a valid date
 */
-pub fn get_date<T: ToString>(prompt: T) -> Date<Local> {
+pub fn get_date<T: ToString>(prompt: T) -> NaiveDate {
     let mut input = get_input(&prompt.to_string(), None);
     while !validate_date(&input) {
         warning!("{input} is not a valid date.");
@@ -45,7 +45,7 @@ pub fn get_duration() -> Duration {
 Return a valid date equal or greater than start date
 TODO: Different errors depending on error type (match expression)
 */
-pub fn get_end_date(start_date: &Date<Local>) -> Date<Local> {
+pub fn get_end_date(start_date: &NaiveDate) -> NaiveDate {
     let prompt: &str = "End Date: ";
     let mut input = get_input(prompt, None);
     while !validate_date(&input) || &parse_into_date(&input) < start_date {
@@ -61,9 +61,9 @@ Return a valid time equal or greater than start time
 TODO: Different error messages (same as in `get_end_date`)
 */
 pub fn get_end_time(
-    start_date: &Date<Local>,
+    start_date: &NaiveDate,
     start_time: &NaiveTime,
-    end_date: &Date<Local>,
+    end_date: &NaiveDate,
 ) -> NaiveTime {
     let prompt: &str = "End Time: ";
     let mut input = get_input(prompt, None);
@@ -142,9 +142,9 @@ pub fn get_valid_event_name() -> String {
     input
 }
 
-pub fn parse_into_date(input: &str) -> Date<Local> {
+pub fn parse_into_date(input: &str) -> NaiveDate {
     if input.trim().is_empty() {
-        return Local::now().date();
+        return Local::now().naive_local().date()
     }
 
     let split_string: Vec<&str> = input.split('/').collect();
@@ -155,7 +155,7 @@ pub fn parse_into_date(input: &str) -> Date<Local> {
             .parse()
             .expect("A number was given as month"),
         split_string[0].parse().expect("A number was given as day"),
-    )
+    ).naive_local()
 }
 
 pub fn parse_into_time(input: &str) -> NaiveTime {

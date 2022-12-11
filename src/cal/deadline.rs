@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, NaiveDateTime};
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result};
 
@@ -8,7 +8,7 @@ use super::calmar_trait::CalendarDataType;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Deadline {
     name: String,
-    date: DateTime<Local>,
+    date: NaiveDateTime,
     priority: u8,
 }
 
@@ -19,11 +19,11 @@ impl Display for Deadline {
             // name, date, time, priority, days left
             "{}\t{}\t{}\t{}\t{}",
             self.name,
-            self.date.date_naive(),
+            self.date,
             self.date.time(),
             self.priority,
             {
-                let days = (self.date - Local::now()).num_days();
+                let days = (self.date - Local::now().naive_local()).num_days();
                 if days > 0 {
                     format!("In {days} day(s)")
                 } else if days < 0 {
@@ -47,14 +47,14 @@ impl CalendarDataType for Deadline {
 }
 
 impl Deadline {
-    pub fn new(name: String, date: DateTime<Local>, priority: u8) -> Self {
+    pub fn new(name: String, date: NaiveDateTime, priority: u8) -> Self {
         Deadline {
             name,
             date,
             priority,
         }
     }
-    pub fn date(&self) -> DateTime<Local> {
+    pub fn date(&self) -> NaiveDateTime {
         self.date
     }
 }
